@@ -1,4 +1,4 @@
-# casehub-assisteddev — Claude Code Project Guide
+# casehub-devtown — Claude Code Project Guide
 
 ## Platform Context
 
@@ -31,7 +31,7 @@ type: java
 
 ## What This Project Is
 
-`casehub-assisteddev` is the AI-assisted software development **application layer** built on the CaseHub platform foundation. It is deliberately NOT part of the foundation — the foundation (casehub-engine, casehub-qhorus, casehub-ledger, casehub-work) has no domain knowledge. This repo provides the software engineering domain logic on top of those primitives.
+`casehub-devtown` is the AI-assisted software development **application layer** built on the CaseHub platform foundation. It is deliberately NOT part of the foundation — the foundation (casehub-engine, casehub-qhorus, casehub-ledger, casehub-work) has no domain knowledge. This repo provides the software engineering domain logic on top of those primitives.
 
 **This repo owns:**
 - Capability tag definitions for the software development domain (security-review, architecture-review, style-review, test-coverage)
@@ -89,7 +89,7 @@ JAVA_HOME=/Library/Java/JavaVirtualMachines/graalvm-25.jdk/Contents/Home  # Graa
 ## Work Tracking
 
 **Issue tracking:** enabled
-**GitHub repo:** casehubio/assisteddev
+**GitHub repo:** casehubio/devtown
 
 **Automatic behaviours (Claude follows these at all times):**
 - **Before implementation begins** — check if an active issue exists. If not, run issue-workflow Phase 1 before writing any code.

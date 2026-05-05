@@ -1,12 +1,10 @@
-# casehub-assisteddev
-
-> **Note:** This is a placeholder name. The repository name will change when the product name is finalised.
+# casehub-devtown
 
 AI-assisted software development application built on the [CaseHub](https://github.com/casehubio/parent) platform foundation.
 
 ## What This Is
 
-`casehub-assisteddev` is the first application layer built on CaseHub's domain-agnostic foundation. It applies CaseHub's orchestration, normative accountability, and trust model to the software engineering domain — providing AI-assisted code review, merge queue orchestration, and trusted agent routing for development teams.
+`casehub-devtown` is the first application layer built on CaseHub's domain-agnostic foundation. It applies CaseHub's orchestration, normative accountability, and trust model to the software engineering domain — providing AI-assisted code review, merge queue orchestration, and trusted agent routing for development teams.
 
 **Built on:**
 - `casehub-engine` — ACM orchestration (cases, bindings, blackboard)

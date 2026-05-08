@@ -846,67 +846,20 @@ These are not design flaws — the prescriptive, normative, and evaluative layer
 
 ---
 
-## 12. devtown Implementation Improvement Log
-
-> **Protocol:** During brainstorming, add entries at "Designed" status with the reasoning captured while fresh. After implementation, update to "Implemented" with epic/commit reference. On session end, HANDOFF.md notes in-flight entries. Never defer — drift compounds.
->
-> This section tracks improvements over Gastown's application layer that emerge specifically from devtown's design and implementation decisions. Foundation advantages (normative layer, Merkle audit, trust scoring) are covered in sections 4–6. This section captures what devtown adds through its own domain model choices — things Gastown structurally cannot do because its vocabulary, trust model, and routing are too coarse.
 
 ---
 
-### DT-001 — Typed vocabulary split: three types instead of a flat namespace
+## 12. devtown Implementation Improvements
 
-| | devtown | Gastown |
-|---|---|---|
-| **Vocabulary** | Three typed types: `ReviewDomain` (analysis capabilities), `AgentQualification` (execution capabilities), `HumanDecision` (accountability events) | Single flat string namespace of capability tags — all work types in one space |
-| **Trust scoring** | Different scoring semantics per type: review domains are scored on quality dimensions; executions on outcome; human decisions on human trust profiles | No distinction — all capability tags are routed the same way (first-come-first-served within the matching tag) |
-| **Routing** | `ActorType`, `WorkerSelectionStrategy`, and capability-scoped `TrustGateService` operate per vocabulary type | Capability matching only — no actor type constraint, no trust threshold |
+> **Living document:** [`docs/PROGRESS.md`](PROGRESS.md)
 
-**Why devtown can do this, Gastown cannot:** Gastown's flat namespace fits its flat trust model — GUPP means any available agent with the matching tag takes the work. There is no per-capability trust score, no actor type enforcement, no routing threshold. Splitting the vocabulary would produce no benefit because the routing infrastructure cannot exploit the distinction. CaseHub's foundation provides `ActorType` discrimination, `ScoreType.CAPABILITY` per-capability trust scoring, and the `WorkerSelectionStrategy` SPI — the vocabulary split is the application-layer expression of capabilities the foundation already has.
+Tracks design decisions that produce capabilities Gastown structurally cannot match, alongside the foundation gates those capabilities depend on. Entries move from Designed → Implemented as epics ship.
 
-**Status:** Designed — Epic 2 (devtown#9)
+| Entry | Summary | Status |
+|-------|---------|--------|
+| DT-001 | Typed vocabulary split — `ReviewDomain`, `AgentQualification`, `HumanDecision` instead of flat namespace | Designed — Epic 2 |
+| DT-002 | Human review as formal accountability event with `casehub-work` lifecycle, trust scoring, GDPR Art.22 | Designed — Epic 2 |
+| DT-003 | Trust dimensions grounded in normative layer — `REVIEW_THOROUGHNESS`, `FALSE_POSITIVE_RATE`, `SCOPE_CALIBRATION` | Designed — Epic 2 |
+| DT-004 | Routing thresholds as configurable `RoutingPolicy` artifacts, not hard-coded constants | Designed — Epic 2 |
 
----
-
-### DT-002 — Human review as formal accountability event, not routing constraint
-
-| | devtown | Gastown |
-|---|---|---|
-| **Model** | `HumanDecision` — a first-class vocabulary type with its own routing mechanics, actor type enforcement (`ActorType.HUMAN`), and lifecycle | `human-approval-gate` or equivalent — a capability tag like any other; beads are assigned to humans with the same model as agents |
-| **Lifecycle** | `casehub-work` WorkItem: 10-status lifecycle, SLA, business hours, delegation, escalation | None — no differentiation between human and agent work lifecycle |
-| **Trust** | Human actors accumulate trust scores from review outcomes (just as agents do); senior reviewers who consistently catch what agents miss earn higher routing priority | No trust model for humans; stamps are human-curated, not outcome-derived |
-| **Compliance** | GDPR Art.22 oversight requirement fulfilled structurally — the human decision is a formal record with a named human accountable for it | None |
-
-**Why devtown can do this, Gastown cannot:** Gastown assigns beads to humans the same way it assigns them to polecats — there is no structural distinction. A bead marked DONE by a human carries the same record as one marked DONE by an agent. `casehub-work`'s dedicated WorkItem lifecycle (SLA, business hours, delegation, escalation) is purpose-built for human task semantics. The trust model runs identically for human and agent actors — the same `LedgerAttestation` mechanism records the outcome and feeds `TrustScoreJob`. The naming "gate" diminishes what is actually a formal accountability event; the vocabulary reflects its weight.
-
-**Status:** Designed — Epic 2 (devtown#9)
-
----
-
-### DT-003 — Trust dimensions grounded in normative layer, not duplicating capability scoring
-
-| | devtown | Gastown |
-|---|---|---|
-| **Dimensions** | Three: `REVIEW_THOROUGHNESS`, `FALSE_POSITIVE_RATE`, `SCOPE_CALIBRATION` | Stamps (multi-dimensional: quality, reliability, creativity) — human-curated, not automated |
-| **Per-capability quality** | `LedgerAttestation` carries both `capabilityTag` and `trustDimension` — quality within a capability context is expressed by combining them, not by a separate `security-specialist` dimension | N/A |
-| **`SCOPE_CALIBRATION`** | Maps directly to the normative DECLINED commitment — when an agent correctly recognises it is outside its capability and declines, this is a positive signal automatically captured | No equivalent — Gastown cannot distinguish DECLINED from silent failure |
-| **Auto-computation** | All three dimensions computed from attestation history by `TrustScoreJob` | Stamps assigned manually by humans |
-
-**Why devtown can do this, Gastown cannot:** `SCOPE_CALIBRATION` is only possible because CaseHub has formal DECLINED speech acts — the agent's "I cannot do this" is a first-class normative event with a named obligor, not a timeout or a status flip. Gastown cannot build this dimension because it has no mechanism to distinguish a refusal from a failure. Per-capability quality (what `security-specialist` tried to express) is handled correctly by `ScoreType.CAPABILITY` in the ledger — a separate dimension would duplicate it. The three-dimension set is the minimum meaningful set; no more are added until a concrete measurement gap in routing quality justifies one.
-
-**Status:** Designed — Epic 2 (devtown#9)
-
----
-
-### DT-004 — Routing thresholds as configurable policy, not hard-coded constants
-
-| | devtown | Gastown |
-|---|---|---|
-| **Threshold model** | `RoutingPolicy` value object — configurable per deployment, overridable per binding in the case plan model | None — capability matching is first-come-first-served; there are no trust thresholds |
-| **Contextual adaptation** | A binding for security review of authentication code can specify a higher threshold than one for security review of a config change — the blackboard context drives the threshold | N/A |
-| **Deployment configuration** | Organisations with stricter standards deploy a different `CapabilityRegistry` implementation — no code change | N/A |
-| **Auditability** | The threshold applied to a routing decision is recorded in the EventLog as a case fact | N/A |
-
-**Why devtown can do this, Gastown cannot:** Gastown has no trust-based routing. GUPP means work goes to whoever is available with the matching capability. Introducing thresholds would require changes to the core coordination model. devtown builds on `TrustGateService` (already in `casehub-ledger`) and the `WorkerSelectionStrategy` SPI (already in `casehub-work`) — the policy layer sits on top of infrastructure that already exists. Making thresholds configurable artifacts (rather than constants) avoids the anti-pattern of baking intelligence into the domain model at design time, consistent with the ACM principle that routing should adapt to what is known, not what was predicted.
-
-**Status:** Designed — Epic 2 (devtown#9)
+Full entries with reasoning and foundation gate dependencies: [`docs/PROGRESS.md`](PROGRESS.md)

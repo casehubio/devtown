@@ -68,6 +68,6 @@ public class DevtownCapabilityRegistry implements CapabilityRegistry {
     @Override
     public boolean isKnown(String capability) {
         Objects.requireNonNull(capability, "capability must not be null");
-        return ALL_CAPABILITIES.contains(capability);
+        return capabilities().contains(capability);
     }
 }

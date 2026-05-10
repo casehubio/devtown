@@ -103,6 +103,30 @@ class DevtownCapabilityRegistryTest {
         assertThat(policy.borderlineMargin().getAsDouble()).isEqualTo(0.05);
     }
 
+    @Test
+    void architectureReviewBorderlineMarginIs005() {
+        RoutingPolicy policy = registry.policy(ReviewDomain.ARCHITECTURE_REVIEW).orElseThrow();
+        assertThat(policy.borderlineMargin().getAsDouble()).isEqualTo(0.05);
+    }
+
+    @Test
+    void architectureReviewFallbackIsHumanOversightRoutingReview() {
+        RoutingPolicy policy = registry.policy(ReviewDomain.ARCHITECTURE_REVIEW).orElseThrow();
+        assertThat(policy.fallbackType()).contains(HumanOversight.ROUTING_REVIEW);
+    }
+
+    @Test
+    void styleReviewHasNoFallbackType() {
+        RoutingPolicy policy = registry.policy(ReviewDomain.STYLE_REVIEW).orElseThrow();
+        assertThat(policy.fallbackType()).isEmpty();
+    }
+
+    @Test
+    void mergeExecutorFallbackIsHumanOversightRoutingReview() {
+        RoutingPolicy policy = registry.policy(AgentQualification.MERGE_EXECUTOR).orElseThrow();
+        assertThat(policy.fallbackType()).contains(HumanOversight.ROUTING_REVIEW);
+    }
+
     // === policy() — non-gated capabilities return empty ===
 
     @Test

@@ -49,6 +49,14 @@
         <version>${casehub.version}</version>
       </dependency>
 
+      <!-- AssertJ — test assertion library for all devtown modules -->
+      <dependency>
+        <groupId>org.assertj</groupId>
+        <artifactId>assertj-core</artifactId>
+        <version>3.24.2</version>
+        <scope>test</scope>
+      </dependency>
+
       <!-- devtown inter-module -->
       <dependency>
         <groupId>io.casehub</groupId>

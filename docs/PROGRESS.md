@@ -67,7 +67,7 @@ Design decisions that produce capabilities Gastown structurally cannot match. Ea
 
 ### DT-001 — Typed vocabulary split: four types instead of a flat namespace
 
-**Status:** Designed — Epic 2 (devtown#9)
+**Status:** ✅ Implemented — Epic 2 (devtown#9)
 **Requires:** #68 ✅ (capability-scoped trust scoring); P1.3 ⚠️ (routing enforcement)
 
 | | devtown | Gastown |
@@ -83,7 +83,7 @@ Design decisions that produce capabilities Gastown structurally cannot match. Ea
 
 ### DT-002 — Two distinct human involvement types: decision and oversight
 
-**Status:** Designed — Epic 2 (devtown#9)
+**Status:** ✅ Implemented — Epic 2 (devtown#9)
 **Requires:** casehub-work ✅; HITL wiring ⚠️ (for end-to-end); qhorus#124 ⚠️ (for trust to accumulate per human persona)
 
 | | devtown | Gastown |
@@ -98,7 +98,7 @@ Design decisions that produce capabilities Gastown structurally cannot match. Ea
 
 ### DT-003 — Trust dimensions grounded in normative layer, not duplicating capability scoring
 
-**Status:** Designed — Epic 2 (devtown#9)
+**Status:** ✅ Implemented — Epic 2 (devtown#9)
 **Requires:** P0.2 ✅; #68 ✅; qhorus#124 ⚠️ (for SCOPE_CALIBRATION to accumulate per persona)
 
 | | devtown | Gastown |
@@ -114,7 +114,7 @@ Design decisions that produce capabilities Gastown structurally cannot match. Ea
 
 ### DT-004 — Routing thresholds as configurable policy, not hard-coded constants
 
-**Status:** Designed — Epic 2 (devtown#9)
+**Status:** ✅ Implemented — Epic 2 (devtown#9)
 **Requires:** P1.3 ⚠️ (for thresholds to be enforced at assignment); P0.2 ✅ (for trust scores to exist)
 
 | | devtown | Gastown |
@@ -130,7 +130,7 @@ Design decisions that produce capabilities Gastown structurally cannot match. Ea
 
 ### DT-005 — `RoutingPolicy`: trust-aware routing with uncertainty handling and audit rationale
 
-**Status:** Designed — Epic 2 (devtown#9)
+**Status:** ✅ Implemented — Epic 2 (devtown#9)
 **Requires:** P0.2 ✅ (trust scores exist); P1.3 ⚠️ (enforcement at assignment); ledger#76 ⚠️ (per-capability quality floors, additive extension)
 
 | | devtown | Gastown |
@@ -148,7 +148,7 @@ Design decisions that produce capabilities Gastown structurally cannot match. Ea
 
 ### DT-006 — Trust maturity model: four phases from bootstrap to adaptive routing
 
-**Status:** Designed — Epic 2 (devtown#9)
+**Status:** ✅ Implemented — Epic 2 (devtown#9)
 **Requires:** P0.2 ✅ (attestations exist to accumulate); P1.3 ⚠️ (enforcement at assignment); ledger#76 ⚠️ (Phase 3 quality floors)
 
 | | devtown | Gastown |
@@ -171,4 +171,4 @@ Design decisions that produce capabilities Gastown structurally cannot match. Ea
 
 **Why devtown can do this, Gastown cannot:** Gastown is permanently in Phase 0 — it has no trust model to mature. The GUPP model has no concept of "this agent now has enough history that we can trust their score." devtown starts identically to Gastown (Phase 0) and automatically improves routing as evidence accumulates. The maturity model means the architectural sophistication is always appropriate to the data that exists — no ceremony, no manual trust seeding, no configuration changes required at deployment time.
 
-**Platform pattern:** the maturity model is not devtown-specific. Any CaseHub application using trust-based routing faces the cold-start problem. The four-phase model and `minimumObservations` gate are a reusable methodology tracked for PLATFORM.md (parent#13).
+**Platform pattern:** the maturity model is not devtown-specific. Any CaseHub application using trust-based routing faces the cold-start problem. The four-phase model and `minimumObservations` gate are a reusable methodology tracked for PLATFORM.md (parent#14).

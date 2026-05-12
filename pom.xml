@@ -45,7 +45,7 @@
       <!-- casehub-connectors — not in casehub-parent BOM -->
       <dependency>
         <groupId>io.casehub</groupId>
-        <artifactId>casehub-connectors</artifactId>
+        <artifactId>casehub-connectors-core</artifactId>
         <version>${casehub.version}</version>
       </dependency>
 

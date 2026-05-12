@@ -176,7 +176,7 @@ class DevtownCapabilityRegistryTest {
                 .isLessThanOrEqualTo(1.0));
     }
 
-    // === isKnown() ===
+    // === isKnown() — inherited SPI default method; tested here for end-to-end delegation ===
 
     @Test
     void isKnownReturnsTrueForAllCapabilities() {

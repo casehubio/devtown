@@ -6,11 +6,11 @@
 
   <parent>
     <groupId>io.casehub</groupId>
-    <artifactId>casehub-devtown</artifactId>
+    <artifactId>casehub-devtown-parent</artifactId>
     <version>0.2-SNAPSHOT</version>
   </parent>
 
-  <artifactId>devtown-app</artifactId>
+  <artifactId>casehub-devtown-app</artifactId>
   <name>DevTown :: App</name>
   <description>Quarkus assembly — REST entry points, notification wiring, runtime deps</description>
 
@@ -18,19 +18,19 @@
     <!-- devtown modules -->
     <dependency>
       <groupId>io.casehub</groupId>
-      <artifactId>devtown-domain</artifactId>
+      <artifactId>casehub-devtown-domain</artifactId>
     </dependency>
     <dependency>
       <groupId>io.casehub</groupId>
-      <artifactId>devtown-review</artifactId>
+      <artifactId>casehub-devtown-review</artifactId>
     </dependency>
     <dependency>
       <groupId>io.casehub</groupId>
-      <artifactId>devtown-queue</artifactId>
+      <artifactId>casehub-devtown-queue</artifactId>
     </dependency>
     <dependency>
       <groupId>io.casehub</groupId>
-      <artifactId>devtown-github</artifactId>
+      <artifactId>casehub-devtown-github</artifactId>
     </dependency>
 
     <!-- foundation runtime -->

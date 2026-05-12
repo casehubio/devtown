@@ -6,26 +6,24 @@
 
   <parent>
     <groupId>io.casehub</groupId>
-    <artifactId>casehub-devtown</artifactId>
+    <artifactId>casehub-devtown-parent</artifactId>
     <version>0.2-SNAPSHOT</version>
   </parent>
 
-  <artifactId>devtown-queue</artifactId>
-  <name>DevTown :: Queue</name>
-  <description>Merge queue orchestration — batch management and batch-then-bisect</description>
+  <artifactId>casehub-devtown-domain</artifactId>
+  <name>DevTown :: Domain</name>
+  <description>Capability tags, trust dimensions, routing thresholds — pure Java domain vocabulary</description>
 
   <dependencies>
     <dependency>
-      <groupId>io.casehub</groupId>
-      <artifactId>devtown-domain</artifactId>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter</artifactId>
+      <scope>test</scope>
     </dependency>
     <dependency>
-      <groupId>io.casehub</groupId>
-      <artifactId>devtown-review</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>io.casehub</groupId>
-      <artifactId>casehub-engine-api</artifactId>
+      <groupId>org.assertj</groupId>
+      <artifactId>assertj-core</artifactId>
+      <scope>test</scope>
     </dependency>
   </dependencies>
 

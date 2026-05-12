@@ -10,7 +10,7 @@
     <version>0.2-SNAPSHOT</version>
   </parent>
 
-  <artifactId>casehub-devtown</artifactId>
+  <artifactId>casehub-devtown-parent</artifactId>
   <version>0.2-SNAPSHOT</version>
   <packaging>pom</packaging>
 
@@ -19,11 +19,11 @@
   <url>https://github.com/casehubio/devtown</url>
 
   <modules>
-    <module>devtown-domain</module>
-    <module>devtown-review</module>
-    <module>devtown-queue</module>
-    <module>devtown-github</module>
-    <module>devtown-app</module>
+    <module>domain</module>
+    <module>review</module>
+    <module>queue</module>
+    <module>github</module>
+    <module>app</module>
   </modules>
 
   <dependencyManagement>
@@ -60,22 +60,22 @@
       <!-- devtown inter-module -->
       <dependency>
         <groupId>io.casehub</groupId>
-        <artifactId>devtown-domain</artifactId>
+        <artifactId>casehub-devtown-domain</artifactId>
         <version>${project.version}</version>
       </dependency>
       <dependency>
         <groupId>io.casehub</groupId>
-        <artifactId>devtown-review</artifactId>
+        <artifactId>casehub-devtown-review</artifactId>
         <version>${project.version}</version>
       </dependency>
       <dependency>
         <groupId>io.casehub</groupId>
-        <artifactId>devtown-queue</artifactId>
+        <artifactId>casehub-devtown-queue</artifactId>
         <version>${project.version}</version>
       </dependency>
       <dependency>
         <groupId>io.casehub</groupId>
-        <artifactId>devtown-github</artifactId>
+        <artifactId>casehub-devtown-github</artifactId>
         <version>${project.version}</version>
       </dependency>
     </dependencies>

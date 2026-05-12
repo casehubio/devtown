@@ -6,34 +6,26 @@
 
   <parent>
     <groupId>io.casehub</groupId>
-    <artifactId>casehub-devtown</artifactId>
+    <artifactId>casehub-devtown-parent</artifactId>
     <version>0.2-SNAPSHOT</version>
   </parent>
 
-  <artifactId>devtown-github</artifactId>
-  <name>DevTown :: GitHub</name>
-  <description>GitHub boundary — webhook/polling receiver, CI status reader, merge executor</description>
+  <artifactId>casehub-devtown-queue</artifactId>
+  <name>DevTown :: Queue</name>
+  <description>Merge queue orchestration — batch management and batch-then-bisect</description>
 
   <dependencies>
     <dependency>
       <groupId>io.casehub</groupId>
-      <artifactId>devtown-domain</artifactId>
+      <artifactId>casehub-devtown-domain</artifactId>
     </dependency>
     <dependency>
       <groupId>io.casehub</groupId>
-      <artifactId>devtown-review</artifactId>
+      <artifactId>casehub-devtown-review</artifactId>
     </dependency>
     <dependency>
       <groupId>io.casehub</groupId>
-      <artifactId>devtown-queue</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>io.quarkus</groupId>
-      <artifactId>quarkus-rest-client</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>io.quarkus</groupId>
-      <artifactId>quarkus-rest-client-jackson</artifactId>
+      <artifactId>casehub-engine-api</artifactId>
     </dependency>
   </dependencies>
 

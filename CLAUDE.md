@@ -68,22 +68,22 @@ Before any git operation, run `git rev-parse --show-toplevel` to confirm which r
 
 This repo is one component of the casehubio multi-repo platform. **Before implementing anything — any feature, SPI, data model, or abstraction — run the Platform Coherence Protocol.**
 
-> **Platform docs:** Local paths use `~/claude/casehub/parent/docs/` as root. If a path doesn't exist, the parent repo isn't cloned locally — fetch from `https://raw.githubusercontent.com/casehubio/parent/main/docs/<path>` instead.
+> **Platform docs:** Local paths use `../parent/docs/` as root. If a path doesn't exist, the parent repo isn't cloned locally — fetch from `https://raw.githubusercontent.com/casehubio/parent/main/docs/<path>` instead.
 
 The protocol asks: Does this already exist elsewhere? Is this the right repo for it? Does this create a consolidation opportunity? Is this consistent with how the platform handles the same concern in other repos?
 
 **Platform architecture (fetch before any implementation decision):**
 ```
-~/claude/casehub/parent/docs/PLATFORM.md
+../parent/docs/PLATFORM.md
 ```
 
 **Foundation repo deep-dives** (fetch the relevant ones when your implementation touches their domain):
-- casehub-engine: `~/claude/casehub/parent/docs/repos/casehub-engine.md`
-- casehub-ledger: `~/claude/casehub/parent/docs/repos/casehub-ledger.md`
-- casehub-work: `~/claude/casehub/parent/docs/repos/casehub-work.md`
-- casehub-qhorus: `~/claude/casehub/parent/docs/repos/casehub-qhorus.md`
-- casehub-connectors: `~/claude/casehub/parent/docs/repos/casehub-connectors.md`
-- claudony: `~/claude/casehub/parent/docs/repos/claudony.md`
+- casehub-engine: `../parent/docs/repos/casehub-engine.md`
+- casehub-ledger: `../parent/docs/repos/casehub-ledger.md`
+- casehub-work: `../parent/docs/repos/casehub-work.md`
+- casehub-qhorus: `../parent/docs/repos/casehub-qhorus.md`
+- casehub-connectors: `../parent/docs/repos/casehub-connectors.md`
+- claudony: `../parent/docs/repos/claudony.md`
 
 ---
 
@@ -97,7 +97,7 @@ type: java
 
 ## Agentic Harness Goals
 
-**Read first:** `~/claude/casehub/parent/docs/AGENTIC-HARNESS-GUIDE.md`
+**Read first:** `../parent/docs/AGENTIC-HARNESS-GUIDE.md`
 
 **Primary goal:** Reference architecture and field showcase for Java developers in software engineering and DevOps — demonstrating formal accountability, tamper-evident review records, and adaptive routing in a domain every developer knows from daily practice.
 
@@ -140,11 +140,11 @@ Never add to the foundation what is specific to this domain. Never re-implement 
 
 | Document | What it covers |
 |----------|---------------|
-| `~/claude/casehub/parent/docs/AGENTIC-HARNESS-GUIDE.md` | Goals, what to produce, retroactive work instructions, layer maintenance |
-| `~/claude/casehub/parent/docs/repos/casehub-devtown.md` | Harness structure, tutorial layers table, layer status |
-| `~/claude/casehub/parent/docs/tutorial-strategy.md` | Devtown tutorial layers §7.5 — teaching objectives and code sketches per layer |
-| `~/claude/casehub/parent/docs/protocols/casehub/HARNESS-INDEX.md` | CaseHub app protocols |
-| `~/claude/casehub/parent/docs/protocols/universal/INDEX.md` | Universal Java/Quarkus protocols |
+| `../parent/docs/AGENTIC-HARNESS-GUIDE.md` | Goals, what to produce, retroactive work instructions, layer maintenance |
+| `../parent/docs/repos/casehub-devtown.md` | Harness structure, tutorial layers table, layer status |
+| `../parent/docs/tutorial-strategy.md` | Devtown tutorial layers §7.5 — teaching objectives and code sketches per layer |
+| `../parent/docs/protocols/casehub/HARNESS-INDEX.md` | CaseHub app protocols |
+| `../parent/docs/protocols/universal/INDEX.md` | Universal Java/Quarkus protocols |
 
 ## Reference Documents (this repo)
 

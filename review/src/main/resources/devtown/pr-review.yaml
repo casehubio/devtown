@@ -3,7 +3,6 @@ version: "1.0.0"
 name: pr-review
 namespace: devtown
 title: PR Review — content-driven routing and parallel checks
-expressionLang: jq
 
 spec:
 

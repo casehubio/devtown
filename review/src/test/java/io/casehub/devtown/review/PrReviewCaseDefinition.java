@@ -55,7 +55,8 @@ final class PrReviewCaseDefinition {
             .name("pr-approved")
             .kind(GoalKind.SUCCESS)
             .condition(ctx ->
-                "APPROVED".equals(ctx.getPath("securityReview.outcome")) &&
+                (Boolean.FALSE.equals(ctx.getPath("codeAnalysis.securitySensitive")) ||
+                    "APPROVED".equals(ctx.getPath("securityReview.outcome"))) &&
                 (Boolean.FALSE.equals(ctx.getPath("codeAnalysis.architectureCrossing")) ||
                     "APPROVED".equals(ctx.getPath("architectureReview.outcome"))) &&
                 "APPROVED".equals(ctx.getPath("styleCheck.outcome")) &&

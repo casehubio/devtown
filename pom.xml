@@ -35,6 +35,13 @@
         <version>${casehub.version}</version>
       </dependency>
 
+      <!-- casehub-engine runtime — needed by app/ for YamlCaseHub CDI wiring -->
+      <dependency>
+        <groupId>io.casehub</groupId>
+        <artifactId>casehub-engine</artifactId>
+        <version>${casehub.version}</version>
+      </dependency>
+
       <!-- casehub-qhorus-api — not in casehub-parent BOM -->
       <dependency>
         <groupId>io.casehub</groupId>

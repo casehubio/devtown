@@ -44,6 +44,9 @@ class InMemoryLedgerEntryRepository implements ReactiveLedgerEntryRepository {
             entries.stream().filter(e -> subjectId.equals(e.subjectId)).toList());
     }
 
+    // Stub returns — these methods are not exercised in Layer 1 tests.
+    // Implement against the in-memory list if a test exercises these paths.
+
     @Override
     public Uni<List<LedgerEntry>> findBySubjectIdAndTimeRange(UUID subjectId, Instant from, Instant to) {
         return Uni.createFrom().item(List.of());
@@ -51,7 +54,10 @@ class InMemoryLedgerEntryRepository implements ReactiveLedgerEntryRepository {
 
     @Override
     public Uni<Optional<LedgerEntry>> findLatestBySubjectId(UUID subjectId) {
-        return Uni.createFrom().item(Optional.empty());
+        return Uni.createFrom().item(
+            entries.stream()
+                .filter(e -> subjectId.equals(e.subjectId))
+                .max(java.util.Comparator.comparing(e -> e.occurredAt)));
     }
 
     @Override
@@ -62,7 +68,7 @@ class InMemoryLedgerEntryRepository implements ReactiveLedgerEntryRepository {
 
     @Override
     public Uni<List<LedgerEntry>> findAllEvents() {
-        return Uni.createFrom().item(new ArrayList<>(entries));
+        return listAll();
     }
 
     @Override

@@ -12,6 +12,8 @@ import org.eclipse.microprofile.config.inject.ConfigProperty;
 @ApplicationScoped
 public class PrReviewCaseService implements PrReviewApplicationService {
 
+    private static final String VERDICT_CASE_OPENED = "case-opened";
+
     @Inject
     PrReviewCaseHub caseHub;
 
@@ -43,7 +45,8 @@ public class PrReviewCaseService implements PrReviewApplicationService {
             "pr", prContext,
             "policy", policy
         );
+        // CompletionStage<UUID> case ID — not surfaced in PrReviewOutcome until Layer 6 adds case tracking (devtown#10)
         caseHub.startCase(initialContext);
-        return new PrReviewOutcome("case-opened", List.of());
+        return new PrReviewOutcome(VERDICT_CASE_OPENED, List.of());
     }
 }

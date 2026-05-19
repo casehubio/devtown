@@ -2,6 +2,8 @@ package io.casehub.devtown.app;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.casehub.api.model.Binding;
+import io.casehub.api.model.Goal;
 import io.quarkus.test.junit.QuarkusTest;
 import jakarta.inject.Inject;
 import org.junit.jupiter.api.Test;
@@ -24,7 +26,7 @@ class PrReviewCaseHubTest {
     void hasNineBindings() {
         var def = caseHub.getDefinition();
         assertThat(def.getBindings()).hasSize(9);
-        var names = def.getBindings().stream().map(b -> b.getName()).toList();
+        var names = def.getBindings().stream().map(Binding::getName).toList();
         assertThat(names).containsExactlyInAnyOrder(
             "initial-analysis", "run-ci",
             "security-review", "architecture-review", "style-check",
@@ -36,7 +38,7 @@ class PrReviewCaseHubTest {
     void hasThreeGoals() {
         var def = caseHub.getDefinition();
         assertThat(def.getGoals()).hasSize(3);
-        var names = def.getGoals().stream().map(g -> g.getName()).toList();
+        var names = def.getGoals().stream().map(Goal::getName).toList();
         assertThat(names).containsExactlyInAnyOrder("pr-approved", "security-verified", "ci-passing");
     }
 

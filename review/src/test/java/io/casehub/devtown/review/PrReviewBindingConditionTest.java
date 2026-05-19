@@ -122,6 +122,12 @@ class PrReviewBindingConditionTest {
                 "codeAnalysis", analysis(false, true),
                 "architectureReview", Map.of("outcome", "APPROVED"))))).isFalse();
         }
+        @Test void doesNotFire_whenAnalysisNotComplete() {
+            assertThat(condition("architecture-review").test(ctx(Map.of(
+                "pr", pr(100),
+                "codeAnalysis", Map.of("complete", false,
+                    "securitySensitive", false, "architectureCrossing", true))))).isFalse();
+        }
     }
 
     @Nested class ParallelChecks {
@@ -135,13 +141,31 @@ class PrReviewBindingConditionTest {
                 "codeAnalysis", analysis(false, false),
                 "styleCheck", Map.of("outcome", "APPROVED"))))).isFalse();
         }
+        @Test void styleCheck_doesNotFire_whenAnalysisNotComplete() {
+            assertThat(condition("style-check").test(ctx(Map.of(
+                "pr", pr(100),
+                "codeAnalysis", Map.of("complete", false,
+                    "securitySensitive", false, "architectureCrossing", false))))).isFalse();
+        }
         @Test void testCoverage_fires_whenAnalysisComplete() {
             assertThat(condition("test-coverage").test(ctx(Map.of(
                 "pr", pr(100), "codeAnalysis", analysis(false, false))))).isTrue();
         }
+        @Test void testCoverage_doesNotFire_whenAnalysisNotComplete() {
+            assertThat(condition("test-coverage").test(ctx(Map.of(
+                "pr", pr(100),
+                "codeAnalysis", Map.of("complete", false,
+                    "securitySensitive", false, "architectureCrossing", false))))).isFalse();
+        }
         @Test void performanceAnalysis_fires_whenAnalysisComplete() {
             assertThat(condition("performance-analysis").test(ctx(Map.of(
                 "pr", pr(100), "codeAnalysis", analysis(false, false))))).isTrue();
+        }
+        @Test void performanceAnalysis_doesNotFire_whenAnalysisNotComplete() {
+            assertThat(condition("performance-analysis").test(ctx(Map.of(
+                "pr", pr(100),
+                "codeAnalysis", Map.of("complete", false,
+                    "securitySensitive", false, "architectureCrossing", false))))).isFalse();
         }
     }
 

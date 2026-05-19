@@ -1,8 +1,11 @@
 package io.casehub.devtown.app;
 
+import io.casehub.devtown.domain.ReviewDomain;
+import io.casehub.devtown.review.PrFinding;
 import io.casehub.devtown.review.PrPayload;
 import io.casehub.devtown.review.PrReviewApplicationService;
 import io.casehub.devtown.review.PrReviewOutcome;
+import io.casehub.devtown.review.PrVerdict;
 import io.quarkus.arc.DefaultBean;
 import jakarta.enterprise.context.ApplicationScoped;
 
@@ -22,16 +25,16 @@ public class NaivePrReviewService implements PrReviewApplicationService {
         // LAYER 1 GAP: no formal DECLINE — if a specialist can't review, it silently fails or errors.
         // LAYER 1 GAP: no tamper-evident audit trail — cannot trace a production incident to this review.
         // LAYER 1 GAP: no trust weighting — a novice and an expert are treated identically.
-        var allFindings = new ArrayList<String>(securityFindings);
+        var allFindings = new ArrayList<PrFinding>(securityFindings);
         allFindings.addAll(architectureFindings);
-        return new PrReviewOutcome("reviewed", allFindings);
+        return new PrReviewOutcome(PrVerdict.REVIEWED, allFindings);
     }
 
-    private List<String> analyzeSecurityDirectly(PrPayload pr) {
-        return List.of("security-analysis-complete");
+    private List<PrFinding> analyzeSecurityDirectly(PrPayload pr) {
+        return List.of(new PrFinding(ReviewDomain.SECURITY_REVIEW, "security-analysis-complete"));
     }
 
-    private List<String> reviewArchitectureDirectly(PrPayload pr) {
-        return List.of("architecture-review-complete");
+    private List<PrFinding> reviewArchitectureDirectly(PrPayload pr) {
+        return List.of(new PrFinding(ReviewDomain.ARCHITECTURE_REVIEW, "architecture-review-complete"));
     }
 }

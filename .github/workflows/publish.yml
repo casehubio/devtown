@@ -22,9 +22,10 @@ jobs:
           distribution: 'temurin'
           server-id: github
           server-username: GITHUB_ACTOR
-          server-password: GITHUB_TOKEN
+          server-password: GH_PAT
 
       - name: Publish to GitHub Packages
         run: mvn --batch-mode deploy -DskipTests
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_PAT: ${{ secrets.GH_PAT }}

@@ -9,5 +9,8 @@ public record StringPreference(String value) implements SingleValuePreference {
     }
     public static StringPreference of(String value) { return new StringPreference(value); }
     // parse is the Function<String,T> reference used by PreferenceKey; identical to of() for strings
-    public static StringPreference parse(String raw) { return new StringPreference(raw); }
+    public static StringPreference parse(String raw) {
+        Objects.requireNonNull(raw, "raw must not be null");
+        return new StringPreference(raw);
+    }
 }

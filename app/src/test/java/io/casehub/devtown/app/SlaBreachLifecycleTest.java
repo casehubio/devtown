@@ -119,6 +119,6 @@ class SlaBreachLifecycleTest {
     }
 
     private static boolean isHumanApprovalFor(WorkItem item, UUID caseId) {
-        return item.callerRef != null && item.callerRef.contains(caseId.toString());
+        return item.callerRef != null && item.callerRef.startsWith("case:" + caseId);
     }
 }

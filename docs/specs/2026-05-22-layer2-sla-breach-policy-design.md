@@ -164,7 +164,7 @@ public class SlaBreachHandler {
 
     @Inject PrReviewCaseHub caseHub;
 
-    void onBreach(@ObservesAsync SlaBreachEvent event) {
+    void onBreach(@Observes SlaBreachEvent event) {
         CallerRef ref = CallerRef.parse(event.context().task().callerRef());
         if (ref == null) return;  // not a case-managed WorkItem
 

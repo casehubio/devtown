@@ -20,9 +20,5 @@ public final class SlaPreferenceKeys {
         new PreferenceKey<>("devtown.sla", "completion-hours",
             IntPreference.of(24), IntPreference::parse);
 
-    public static final PreferenceKey<StringPreference> CANDIDATE_GROUP =
-        new PreferenceKey<>("devtown.sla", "candidate-group",
-            StringPreference.of("pr-reviewers"), StringPreference::parse);
-
     private SlaPreferenceKeys() {}
 }

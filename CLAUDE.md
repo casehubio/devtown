@@ -200,13 +200,14 @@ Read these **before designing**, not after. The concern column tells you when ea
 |---------|-----------|
 | Writing a new Flyway migration | `../garden/docs/protocols/universal/flyway-migration-rules.md` — naming, H2 MODE=PostgreSQL |
 | Assigning a migration version number | V1–V999 devtown domain; V2000+ ledger subclass join tables |
-| Adding casehub-work JPA persistence | devtown#34 — `casehub-persistence-hibernate` must be in the production assembly; without it, engine CDI SPIs are unsatisfied at augmentation |
+| Engine persistence SPIs (EventLogRepository, CaseInstanceRepository, etc.) | Satisfied by `@ApplicationScoped` subclasses in `app/src/main/java/io/casehub/devtown/app/spi/` (devtown#40 ✅ 2026-05-24). Do not use `quarkus.arc.selected-alternatives` — it does not activate beans during `quarkus:build`. |
+| Adding casehub-work JPA persistence | devtown#34 still open — `casehub-persistence-hibernate` for production PostgreSQL backend |
 
 ### Testing
 
 | Concern | Read first |
 |---------|-----------|
-| Writing a `@QuarkusTest` for HITL bindings | PP-20260521-134c38 (pre-seed all parallel check keys with non-null values); PP-20260521-a36692 (MemoryPlanItemStore in `quarkus.arc.selected-alternatives`) |
+| Writing a `@QuarkusTest` for HITL bindings | PP-20260521-134c38 (pre-seed all parallel check keys with non-null values); only `MemoryPlanItemStore` remains in `quarkus.arc.selected-alternatives` — `MemorySubCaseGroupRepository` replaced by `DevtownSubCaseGroupRepository @ApplicationScoped` in `app/spi/` |
 | Testing SPI wiring | `../garden/docs/protocols/universal/spi-testing-alternative-inner-classes.md` — `@Alternative` static inner classes, not Mockito |
 | `@QuarkusTest` database setup | `../garden/docs/protocols/universal/quarkus-test-database.md` — H2 MODE=PostgreSQL, datasource config |
 

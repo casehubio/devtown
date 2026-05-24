@@ -144,7 +144,7 @@ These were in the original Gastown-derived 13-tag vocabulary and removed. They a
 **Completed:** Epic 3 (devtown#10) shipped 2026-05-19
 **Issues:** casehubio/devtown#10 (Epic 3: PR review CasePlanModel — content-driven routing and parallel checks)
 **Design specs:** `docs/specs/2026-05-15-epic3-pr-review-caseplanmodel-design.md`
-**Blog:** `blog/2026-05-19-mdp01-from-naive-to-adaptive.md` 🔲 (not yet drafted)
+**Blog:** `blog/2026-05-19-mdp01-layer-5-case-definition-lands.md`
 **Improvement log:** `docs/PROGRESS.md` — DT entries to be added as improvement decisions are formalised
 
 **Key files:**

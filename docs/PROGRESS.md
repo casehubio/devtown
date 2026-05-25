@@ -29,7 +29,7 @@ Each gate is a foundation capability devtown depends on. Status shown here; full
 | P0.2 qhorus#123 — commitment outcomes → `LedgerAttestation` | ✅ DONE | 2026-04-28 | DONE → SOUND, FAILURE → FLAGGED, DECLINE → FLAGGED; `TrustScoreJob` now has input; trust model active |
 | P0.3 ledger#47 — `ActorTypeResolver` + all consumers updated | ✅ DONE | 2026-04-29 | Canonical `actorId` derivation across all repos; trust accumulates consistently |
 | P0.3 qhorus#124 — `InstanceActorIdProvider` SPI | ✅ DONE (SPI) | 2026-04-29 | SPI contract defined; `DefaultInstanceActorIdProvider` shipped |
-| P0.3 qhorus#124 — claudony persona→session mapping | ⚠️ PENDING | — | Trust accumulates per persona across sessions, not per ephemeral session; required before routing reflects long-term trust |
+| P0.3 qhorus#124 — claudony persona→session mapping | ✅ DONE | 2026-05-03 | `ClaudonyInstanceActorIdProvider` (claudony#107) maps `claudony-worker-{uuid}` → `claude:{roleName}@v1`. Trust now accumulates per persona across sessions. Closed feedback loop is end-to-end. |
 
 ### P1 — Scale and Quality
 
@@ -46,16 +46,16 @@ Each gate is a foundation capability devtown depends on. Status shown here; full
 | Gate | Status | Date | Unlocks for devtown |
 |------|--------|------|---------------------|
 | casehub-work work#157 — GitHub Issues sync | ✅ DONE | — | WorkItems sync to GitHub Issues; human review tasks visible in standard tooling |
-| parent#6 — SLA propagation case→WorkItem | ⚠️ PENDING | — | Case-level deadlines flow into human review WorkItems; SLA enforcement end-to-end |
-| casehub-work-adapter — HITL wiring (WorkItem COMPLETED → case signal) | ⚠️ PENDING | — | Human review completion unblocks case progression; end-to-end human-in-the-loop |
+| parent#6 — SLA propagation case→WorkItem | ✅ DONE | 2026-05-20 | Engine-side: `HumanTaskScheduleHandler` applies `min(taskDeadline, caseBudgetDeadline)` from `PropagationContext.caseBudgetDeadline`. Claudony Commitment deadline bounding still deferred (no COMMAND-creation code yet). |
+| casehub-work-adapter — HITL wiring (WorkItem COMPLETED → case signal) | ✅ DONE (happy path) | 2026-05-23 | devtown#33 wired; devtown#30 e2e test passes. Escalation-during-wait path ⚠️ still pending: `ExpiryLifecycleService` escalation doesn't signal engine (work#225, blocked on engine#349 `CaseSignalSink` SPI). |
 
 ### What devtown can build today
 
-Based on ✅ gates: case plan models, content-driven routing bindings, capability vocabulary, trust dimension tracking, parallel AI checks, cryptographic audit of case decisions, GitHub Issues sync for human review tasks.
+Based on ✅ gates: case plan models, content-driven routing bindings (Layer 5 ✅), capability vocabulary, trust dimension tracking, parallel AI checks, cryptographic audit of case decisions, GitHub Issues sync for human review tasks, Layer 2 SLA-bounded human review gate with escalation (devtown#41 ✅), HITL end-to-end happy path (devtown#33, devtown#30 ✅), trust accumulation per persona across sessions (qhorus#124 ✅).
 
-**Blocked until qhorus#124:** trust routing that reflects long-term agent reputation (scores accumulate per session only).
-**Blocked until P1.3:** routing thresholds enforced at assignment (design complete; enforcement not yet wired).
-**Blocked until HITL wiring:** full human-in-the-loop PR approval cycles.
+**Blocked until P1.3 (engine#336 + engine#337 → TrustWeightedSelectionStrategy):** routing thresholds enforced at assignment. Note: qhorus#199 (`TrustGateService` never called at COMMAND creation) is an additional prerequisite — trust scores are computed but not checked when obligations open.
+**Blocked until engine#349 (`CaseSignalSink` SPI):** complete escalation-during-wait signal path (work#225).
+**Blocked until engine#326 (failure goal support):** SLA breach → case FAILED transition for Layer 2 complete path.
 
 ---
 
@@ -84,7 +84,7 @@ Design decisions that produce capabilities Gastown structurally cannot match. Ea
 ### DT-002 — Two distinct human involvement types: decision and oversight
 
 **Status:** ✅ Implemented — Epic 2 (devtown#9)
-**Requires:** casehub-work ✅; HITL wiring ⚠️ (for end-to-end); qhorus#124 ⚠️ (for trust to accumulate per human persona)
+**Requires:** casehub-work ✅; HITL wiring ✅ (happy path devtown#33); qhorus#124 ✅ claudony#107 (trust accumulates per persona); escalation-during-wait ⚠️ (work#225, engine#349)
 
 | | devtown | Gastown |
 |---|---|---|
@@ -99,7 +99,7 @@ Design decisions that produce capabilities Gastown structurally cannot match. Ea
 ### DT-003 — Trust dimensions grounded in normative layer, not duplicating capability scoring
 
 **Status:** ✅ Implemented — Epic 2 (devtown#9)
-**Requires:** P0.2 ✅; #68 ✅; qhorus#124 ⚠️ (for SCOPE_CALIBRATION to accumulate per persona)
+**Requires:** P0.2 ✅; #68 ✅; qhorus#124 ✅ claudony#107 (SCOPE_CALIBRATION now accumulates per persona)
 
 | | devtown | Gastown |
 |---|---|---|
@@ -115,7 +115,7 @@ Design decisions that produce capabilities Gastown structurally cannot match. Ea
 ### DT-004 — Routing thresholds as configurable policy, not hard-coded constants
 
 **Status:** ✅ Implemented — Epic 2 (devtown#9)
-**Requires:** P1.3 ⚠️ (for thresholds to be enforced at assignment); P0.2 ✅ (for trust scores to exist)
+**Requires:** P1.3 ⚠️ (engine#336 + engine#337 prerequisites open; qhorus#199 also blocks enforcement); P0.2 ✅
 
 | | devtown | Gastown |
 |---|---|---|
@@ -131,7 +131,7 @@ Design decisions that produce capabilities Gastown structurally cannot match. Ea
 ### DT-005 — `RoutingPolicy`: trust-aware routing with uncertainty handling and audit rationale
 
 **Status:** ✅ Implemented — Epic 2 (devtown#9)
-**Requires:** P0.2 ✅ (trust scores exist); P1.3 ⚠️ (enforcement at assignment); ledger#76 ⚠️ (per-capability quality floors, additive extension)
+**Requires:** P0.2 ✅; P1.3 ⚠️ (enforcement at assignment); ledger#76 ✅ DONE 2026-05-15 — `CAPABILITY_DIMENSION` score type with `scope_key = "{capabilityTag}:{dimensionName}"`
 
 | | devtown | Gastown |
 |---|---|---|
@@ -149,7 +149,7 @@ Design decisions that produce capabilities Gastown structurally cannot match. Ea
 ### DT-006 — Trust maturity model: four phases from bootstrap to adaptive routing
 
 **Status:** ✅ Implemented — Epic 2 (devtown#9)
-**Requires:** P0.2 ✅ (attestations exist to accumulate); P1.3 ⚠️ (enforcement at assignment); ledger#76 ⚠️ (Phase 3 quality floors)
+**Requires:** P0.2 ✅; P1.3 ⚠️ (enforcement at assignment); ledger#76 ✅ DONE 2026-05-15 (Phase 3 `CAPABILITY_DIMENSION` quality floors now available)
 
 | | devtown | Gastown |
 |---|---|---|
@@ -171,4 +171,71 @@ Design decisions that produce capabilities Gastown structurally cannot match. Ea
 
 **Why devtown can do this, Gastown cannot:** Gastown is permanently in Phase 0 — it has no trust model to mature. The GUPP model has no concept of "this agent now has enough history that we can trust their score." devtown starts identically to Gastown (Phase 0) and automatically improves routing as evidence accumulates. The maturity model means the architectural sophistication is always appropriate to the data that exists — no ceremony, no manual trust seeding, no configuration changes required at deployment time.
 
-**Platform pattern:** the maturity model is not devtown-specific. Any CaseHub application using trust-based routing faces the cold-start problem. The four-phase model and `minimumObservations` gate are a reusable methodology tracked for PLATFORM.md (parent#14).
+**Platform pattern:** the maturity model is not devtown-specific. Any CaseHub application using trust-based routing faces the cold-start problem. The four-phase model and `minimumObservations` gate are documented in PLATFORM.md (parent#14 closed 2026-05-21).
+
+---
+
+### DT-007 — Layer 2: SLA-bounded human review gate with two-tier escalation
+
+**Status:** ✅ Implemented — devtown#41 (code), devtown#42 (wiring test)
+**Requires:** casehub-work SlaBreachPolicy SPI ✅ (work#212–213); casehub-work-adapter HITL ✅ (devtown#33); engine#326 ⚠️ (failure goal — SLA breach → case FAILED transition pending)
+
+| | devtown | Gastown |
+|---|---|---|
+| **First SLA breach** | `SlaBreachPolicyBean.onBreach(BreachDecision.EscalateTo)` — WorkItem `candidateGroups` rotates to `pr-leads`, status reset to PENDING for reassignment | No equivalent — bead assigned to human same as agent, no differentiation, no escalation |
+| **Second SLA breach** | `SlaBreachHandler.onFail()` signals case context `{status: "sla-breach"}` via `caseHub.signal()`, triggering binding re-evaluation | No equivalent |
+| **SLA policy** | `DefaultSlaBreachPolicy` — stateless, two-tier, configurable via `SlaPreferenceKey`. Displaces no-op bean at CDI level; subsequent layers can further displace | N/A |
+| **Obligation lifecycle** | WorkItem carries formal SLA timer, escalation path, audit entry per state transition | Bead has a timeout but no formal obligation lifecycle |
+
+**Why devtown can do this, Gastown cannot:** Gastown's GUPP model assigns work to humans identically to agents — bead on hook, no differentiation, no escalation chain, no formal SLA enforcement. The `SlaBreachPolicy` SPI (casehub-work#213) provides a purpose-built HITL obligation lifecycle: timers, candidateGroup rotation, and case-context signaling on terminal breach. This is possible because casehub-work treats human task completion as a first-class normative event, not just a delivery acknowledgement.
+
+---
+
+### DT-008 — Content-driven binding routing: specialist review fires on code content, not author labels
+
+**Status:** ✅ Implemented — devtown#10 (Epic 3 CasePlanModel)
+**Requires:** engine P0.1 ✅
+
+| | devtown | Gastown |
+|---|---|---|
+| **Security review trigger** | `when: .securitySensitive == true` — fires only if code analysis placed this flag in case context; author labelling has no effect | Formula step with role directive — author or operator declares whether security review is needed |
+| **Automatic parallelism** | Multiple checks (style, test coverage, performance) fire simultaneously when their binding conditions are satisfied by the same context update — no explicit parallel declaration | Explicit formula structure required to express parallelism |
+| **Human + CI in parallel** | Human approval and CI check enter WAITING state simultaneously — total wall time = max(approval, CI), not sum | Sequential by default; explicit convoy structure to express overlap |
+| **Routing audit** | Every binding dispatch recorded in EventLog as a case fact — why security review ran (or didn't) is queryable | No routing rationale captured |
+
+**Why devtown can do this, Gastown cannot:** Gastown uses formula steps (TOML) with explicit sequence and role directives. Content-driven conditional dispatch — route to specialist only if the content warrants it — requires a rule evaluation engine over accumulated blackboard state. CaseHub's binding system evaluates JQ predicates over CaseContext on every `CONTEXT_CHANGED` event: content analysis runs first, specialist review fires only if analysis finds security-sensitive code. Gastown has no equivalent to predicate-gated, content-reactive routing. **Note:** as of engine#335, the `when:` field is evaluated via `contextChange.filter` at the engine level — the application-level unit tests confirm correctness independently.
+
+---
+
+### DT-009 — Ed25519 bilateral agent signing: non-repudiation beyond admin trust
+
+**Status:** ✅ Implemented (foundation — inherited by all domain apps) — ledger#79, #80, #83, #84
+**Requires:** casehub-ledger ✅
+
+| | devtown (via foundation) | Gastown |
+|---|---|---|
+| **Platform signing** | Ed25519-signed COMMAND — agent cannot claim it never received an instruction | Dolt history is admin-trusted; a database admin can rewrite history |
+| **Agent signing** | Ed25519-signed RESPONSE — platform cannot deny what the agent returned | No equivalent |
+| **Bilateral** | Both sides sign; neither can unilaterally repudiate | N/A |
+| **Compromise detection** | Signature verification failure fires CDI event for real-time alerting | N/A |
+| **Key rotation** | Key versioning with rotation history; each entry carries `signingKeyVersion` | N/A |
+| **Post-quantum path** | Algorithm-transparent SPI; ADR documenting PQC migration path (ledger#84) | N/A |
+| **Third-party verification** | Ed25519-signed Merkle checkpoints publishable to external transparency log; verifiable without server access | Verification requires server access |
+
+**Why devtown can do this, Gastown cannot:** Gastown's tamper-evidence model stops at Dolt's git-level audit — the database admin is the trusted party. CaseHub's bilateral Ed25519 signing means: (a) agents cannot dispute having received a COMMAND or issued a RESPONSE, (b) Merkle inclusion proofs are verifiable by any third party without server access, (c) signing key compromise is detected and alerted in real time. This capability is inherited automatically by all domain applications including devtown without any application-layer implementation.
+
+---
+
+### DT-010 — Trust federation: cross-deployment reputation via ledger export/import
+
+**Status:** ✅ Implemented (foundation — inherited by all domain apps) — ledger#63, #64, #65 (shipped 2026-05-14)
+**Requires:** casehub-ledger ✅
+
+| | devtown (via foundation) | Gastown |
+|---|---|---|
+| **Export** | `TrustExportService` — publishes `ActorTrustScore` deltas in canonical format, endpoint behind config flag | Wasteland stamps travel across organizations via DoltHub — production-ready |
+| **Import** | `TrustImportService` SPI — consumes trust deltas from external deployments, seeds Beta(α,β) priors | N/A |
+| **Trust basis** | Cryptographically derived from attested outcomes (DONE → SOUND, FAILURE/DECLINE → FLAGGED) — imported trust carries mathematical guarantees of Bayesian Beta model | Human-curated stamps — not automatically derived from attested outcomes |
+| **Cold start** | New agent: Beta(1,1) prior; with imported trust: Beta(α,β) seeded from external history — bootstraps immediately | No equivalent bootstrapping mechanism |
+
+**Why devtown can do this, Gastown cannot:** Gastown's Wasteland is more mature (production-ready, portable). CaseHub now has structural parity with `TrustExportService` + `TrustImportService` (P2.1 complete). The architectural difference: Gastown's stamps are human-curated — a trusted person assigns them. CaseHub's exported trust is automatically derived from cryptographically attested commitment outcomes. Imported trust carries the same mathematical provenance as locally-computed trust, making cross-deployment reputation structurally more reliable than stamp-based models.

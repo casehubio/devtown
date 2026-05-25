@@ -66,7 +66,7 @@ void slaBreachHandler_onFail_signalsCaseContext() throws Exception {
     var task = new BreachedTask(UUID.randomUUID(), callerRef,
                                 "PR approval", Set.of("pr-leads"));
     var ctx  = new SlaBreachContext(BreachType.CLAIM_EXPIRED, task,
-                                    Path.root(), MapPreferences.empty());
+                                    Path.root(), new MapPreferences(Map.of()));
     breachEvents.fire(new SlaBreachEvent(ctx, new BreachDecision.Fail("sla-breach")));
 
     await().atMost(3, SECONDS).pollInterval(100, MILLISECONDS).untilAsserted(() -> {

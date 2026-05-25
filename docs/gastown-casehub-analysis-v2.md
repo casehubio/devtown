@@ -1,7 +1,7 @@
 # CaseHub vs Gastown: Architectural Analysis
 
-> **Status:** Working document — updated 2026-05-02
-> **Date:** 2026-04-27 (last revised 2026-05-02)
+> **Status:** Working document — updated 2026-05-25
+> **Date:** 2026-04-27 (last revised 2026-05-25)
 > **Version:** v2 — full rewrite with foundation/application separation
 
 ---
@@ -416,22 +416,27 @@ Gastown's application-layer capabilities are tightly integrated with its infrast
 
 These capabilities are operational and battle-tested at v1.0.1. For the software engineering domain, this is a complete application.
 
-### 5.2 What casehub-devtown Would Provide
+### 5.2 What casehub-devtown Provides
 
-`casehub-devtown` is a planned separate repo — not a module in `casehub-engine`. The foundation provides the primitives; the application wires them for the domain:
+`casehub-devtown` is an active separate repo — not a module in `casehub-engine`. The foundation provides the primitives; the application wires them for the domain. Multiple tutorial layers have shipped as of 2026-05-25:
 
-| Application capability | CaseHub primitive used |
-|-----------------------|----------------------|
-| Merge queue as a process | `CasePlanModel` — each case is a batch of MRs |
-| MR human review gate | `WorkItem` with SLA + form schema + escalation policy |
-| CI / lint / security check | Lambda worker or Quarkus Flow workflow worker |
-| Batch-then-bisect strategy | Choreography binding: tip-of-batch fails → binding condition routes to bisect sub-case |
-| Agent-to-agent review communication | qhorus typed channels (COMMAND, RESPONSE, DONE, FAILURE) |
-| Failure notification | casehub-connectors Slack/Teams delivery |
-| Commitment tracking per MR | qhorus 7-state Commitment lifecycle |
-| Audit trail per merge decision | Merkle ledger entry with W3C PROV-DM lineage |
+| Application capability | CaseHub primitive used | Status |
+|-----------------------|----------------------|--------|
+| Content-driven PR routing | `CasePlanModel` — security review fires on code content, not author labels | ✅ Layer 5 (devtown#10) |
+| MR human review gate with SLA | `WorkItem` with SLA + escalation via `SlaBreachPolicy` SPI | ✅ Layer 2 (devtown#41) |
+| Human + CI parallel execution | WAITING state — both fire simultaneously, total time = max not sum | ✅ Layer 5 (devtown#10) |
+| HITL case resumption (happy path) | `casehub-work-adapter` wired; `WorkItemLifecycleEvent(COMPLETED)` → case signal | ✅ devtown#33 |
+| Cryptographic audit per case event | `CaseLedgerEntry` Merkle ledger entry | ✅ P1.4 (engine) |
+| SLA breach → failure goal | `CasePlanModel` failure goal (kind: failure) | ⚠️ engine#326 open |
+| Merge queue as a process | `CasePlanModel` — each case is a batch of MRs | Not started |
+| Batch-then-bisect strategy | Choreography binding: tip-of-batch fails → bisect sub-case | Not started |
+| Agent-to-agent review communication | qhorus typed channels (COMMAND, RESPONSE, DONE, FAILURE) | Layer 3 (upcoming) |
+| Failure notification | casehub-connectors Slack/Teams delivery | Not started |
+| Trust-weighted reviewer assignment | `TrustWeightedSelectionStrategy` | ⚠️ P1.3 pending |
+| Commitment tracking per MR | qhorus 7-state Commitment lifecycle | ⚠️ P1.3 + qhorus#199 |
+| Cross-deployment reputation | ledger `TrustExportService` / `TrustImportService` | ✅ P2.1 (ledger, inherited) |
 
-`casehub-devtown` does not exist yet. Gastown's Refinery is in production. This is the most significant application-layer gap.
+Gastown's Refinery is in production at v1.0.1. devtown is pre-production and actively building toward feature parity with architectural improvements Gastown cannot provide structurally. The most significant remaining gap is merge queue (Bors-style batch-then-bisect) and operational tooling equivalent to Gastown's `gt` CLI.
 
 ### 5.3 What casehub-devtown Would Add That Gastown Cannot
 
@@ -548,7 +553,7 @@ These are direct infrastructure advantages — not minimised, not framed as futu
 
 **Single source of truth.** Everything flows through one Dolt server per town. There are no cross-repo coherence gaps of the kind CaseHub's platform audit documents (findings #1, #2, #4, #5, #7). CaseHub's distributed, SPI-pluggable persistence model is architecturally superior for extensibility and compliance, but it creates integration gaps by design. Gastown avoids them by design.
 
-**Cross-deployment reputation.** Wasteland stamps are federated via DoltHub, production-ready, and portable across organizations. CaseHub's TrustExportService/TrustImportService is planned.
+**Cross-deployment reputation.** Wasteland stamps are federated via DoltHub, production-ready, and portable across organizations. CaseHub's `TrustExportService` / `TrustImportService` SPI shipped (ledger#63–65, 2026-05-14 — P2.1 closed). Structural parity achieved. Key distinction: CaseHub's trust is derived from cryptographically attested outcomes, not human-curated stamps.
 
 ---
 
@@ -589,17 +594,13 @@ Wiring issues in the existing design. Not new features — completion of designe
 
 **Closed:** `LedgerWriteService.record()` now writes `LedgerAttestation` on DONE (SOUND, 0.7), FAILURE (FLAGGED, 0.6), DECLINE (FLAGGED, 0.4). Confidence values config-driven via `casehub.ledger.attestations.*`. 899 tests passing. Commit `17556e0`.
 
-#### P0.3 — Actor identity fragmentation ([ledger#47](https://github.com/casehubio/ledger/issues/47), [qhorus#124](https://github.com/casehubio/qhorus/issues/124))
+#### ~~P0.3 — Actor identity fragmentation ([ledger#47](https://github.com/casehubio/ledger/issues/47), [qhorus#124](https://github.com/casehubio/qhorus/issues/124))~~ ✅ FULLY DONE 2026-05-03
 
-**Symptom:** Every new Claude session starts with zero trust, even if the same AI persona has built a strong track record. EigenTrust computes over session IDs, not personas.
+~~**Symptom:** Every new Claude session starts with zero trust, even if the same AI persona has built a strong track record. EigenTrust computes over session IDs, not personas.~~
 
-**Root cause:** Qhorus `LedgerWriteService` writes `actorId = message.sender` (raw instance ID like `claudony-worker-abc123`). Persona format (`claude:analyst@v1`) never reaches the ledger from Qhorus interactions.
+**Closed:** All four consumers updated to `ActorTypeResolver.resolve()` (2026-04-29). `InstanceActorIdProvider` SPI + `DefaultInstanceActorIdProvider` shipped (2026-04-29). **claudony-casehub implementation:** `ClaudonyInstanceActorIdProvider` (`@Alternative @Priority(1)`) maps `claudony-worker-{uuid}` → `claude:{roleName}@v1` via reverse lookup in `WorkerSessionMapping` (claudony#107, closed 2026-05-03). Trust now accumulates per persona across sessions. The normative→trust closed feedback loop is end-to-end active.
 
-~~**Fix 1:** Add `ActorTypeResolver` utility to casehub-ledger — single canonical `actorId` derivation for all consumers. ([ledger#47](https://github.com/casehubio/ledger/issues/47))~~ **✅ DONE 2026-04-28** — utility created. **Consumer updates ✅ DONE 2026-04-29** — casehub-qhorus (`3cb5749`), casehub-work (`dcad49b`), claudony (`434d7df`) all now use `ActorTypeResolver.resolve()`. All four consumers complete.
-
-~~**Fix 2:** Add `InstanceActorIdProvider` SPI to casehub-qhorus — maps Qhorus instance IDs to ledger persona IDs. claudony-casehub implements it. ([qhorus#124](https://github.com/casehubio/qhorus/issues/124)) — *pending*~~ **✅ SPI DONE 2026-04-29** — `InstanceActorIdProvider` + `DefaultInstanceActorIdProvider` (no-op identity) shipped. `CommitmentAttestationPolicy` SPI also shipped. claudony-casehub session→persona mapping implementation still pending — trust accumulation per persona not yet active (qhorus#124 open).
-
-**Repos:** casehub-ledger, casehub-qhorus, claudony-casehub
+**Repos:** casehub-ledger ✅, casehub-qhorus ✅, claudony-casehub ✅
 
 ### P1 — Breaks at Scale (10+ Concurrent Cases / Agents)
 
@@ -613,10 +614,10 @@ New capabilities, but hard blockers before CaseHub can operate at meaningful age
 | **#54 — TrustGateService** | ✅ DONE | `TrustGateService` CDI bean: `meetsThreshold(actorId, minTrust)` Phase 1 shipped. Phase 2 (capability-scoped) ready for wiring once #61 completes. |
 | **#53 — ActorTypeResolver consumers** | ✅ DONE | All three consumers updated (see P0.3 above). |
 | **Attestation confidence** | ✅ DONE (bonus) | Bayesian Beta score now incorporates attestation confidence values, not just verdict polarity. |
-| #56 — Ledger health checks | Pending | |
-| #57 — Multi-attestation aggregation | Pending | |
-| #58 — Compliance report API | Pending | |
-| #59 — ProvenanceSupplement enricher | Pending (needs #67 ✅) | |
+| ~~#56 — Ledger health checks~~ | ✅ DONE 2026-05-05 | `LedgerHealthJob` + `LedgerReconciliationSource` SPI + `LedgerGapDetected` CDI event |
+| ~~#57 — Multi-attestation aggregation~~ | ✅ DONE 2026-05-05 | `AttestationAggregator` with `WEIGHTED_MAJORITY`, `UNANIMOUS_REQUIRED`, `FIRST_ATTESTOR` strategies |
+| ~~#58 — Compliance report API~~ | ✅ DONE 2026-05-05 | `LedgerComplianceReportService` — `JSON_LD`, `CSV`, `PLAIN_JSON`; Merkle root anchor |
+| ~~#59 — ProvenanceSupplement enricher~~ | ✅ DONE 2026-05-05 | `@ProvenanceCapture` CDI interceptor + `ProvenanceContext @RequestScoped` + `@PrePersist` listener |
 
 ---
 
@@ -690,13 +691,13 @@ Gate via `@IfBuildProperty("casehub.ledger.backend", "postgresql")` / `@UnlessBu
 
 ### P2 — Production Quality
 
-#### P2.1 — Cross-deployment trust federation
+#### ~~P2.1 — Cross-deployment trust federation~~ ✅ DONE 2026-05-14
 
-**Symptom:** Trust built by an agent in one CaseHub deployment is invisible to another.
+~~**Symptom:** Trust built by an agent in one CaseHub deployment is invisible to another.~~
 
-**Fix:** Add to casehub-ledger: `TrustExportService` (publishes `ActorTrustScore` deltas in canonical format) and `TrustImportService` SPI (consumes trust deltas from external source, seeds Bayesian priors). Seeding Beta(α, β) from an external source rather than Beta(1,1) is a one-line change in `TrustScoreJob`. The work is the data exchange format and transport.
+**Closed:** `TrustExportService` (canonical trust delta format, export endpoint behind config flag) and `TrustImportService` SPI (seeds Beta(α,β) from external source) both shipped in casehub-ledger (ledger#63, #64, #65). Trust bootstrapping from prior deployment on first registration: ledger#65. This closes the P2.1 gap and gives CaseHub structural parity with Gastown's Wasteland federation. Key distinction: CaseHub's exported trust is derived from cryptographically attested commitment outcomes, not human-curated stamps.
 
-**Repos:** casehub-ledger
+**Repos:** casehub-ledger ✅
 
 #### ~~P2.2 — OTel trace alignment ([engine#185](https://github.com/casehubio/engine/issues/185))~~ ✅ DONE 2026-04-28
 
@@ -744,9 +745,9 @@ Gate via `@IfBuildProperty("casehub.ledger.backend", "postgresql")` / `@UnlessBu
 
 | Phase | Items | Gate to next phase |
 |-------|-------|-------------------|
-| **P0 — Wiring** | ~~ledger#47~~ ✅ ~~qhorus#123~~ ✅ ~~qhorus#124 SPI~~ ✅ ~~engine#186 engine-side~~ ✅ · **qhorus#124 claudony persona mapping open** | Normative layer functional end-to-end; trust accumulates from real behaviour |
-| **P1 — Scale** | Concurrency throttle, RecoveryPolicy SPI, trust routing wired · ~~CaseLedgerEntry merged~~ ✅ · Doltgres backend (P1.5) | Can run 10+ agents; trust actually drives routing; time-travel + branching available |
-| **P2 — Quality** | ~~OTel alignment~~ ✅ · causal chain (partial ✅) · trust federation | Full observability; audit trail complete; cross-deployment trust |
+| **P0 — Wiring** | ~~ledger#47~~ ✅ ~~qhorus#123~~ ✅ ~~qhorus#124 SPI~~ ✅ ~~engine#186 engine-side~~ ✅ ~~claudony#107 persona mapping~~ ✅ · **P0 COMPLETE** | Normative layer functional end-to-end; trust accumulates from real behaviour ✅ |
+| **P1 — Scale** | Concurrency throttle ⚠️ · RecoveryPolicy SPI ⚠️ · trust routing wired (engine#336+#337+qhorus#199) ⚠️ · ~~CaseLedgerEntry merged~~ ✅ · Doltgres backend (P1.5) ⚠️ | Can run 10+ agents; trust actually drives routing; time-travel + branching available |
+| **P2 — Quality** | ~~OTel alignment~~ ✅ · causal chain (partial ✅, provisioner wiring pending claudony#94) · ~~trust federation~~ ✅ | Full observability; audit trail complete; cross-deployment trust |
 
 ---
 
@@ -758,16 +759,20 @@ Application work is distinct from foundation work. These items are built on top 
 
 `casehub-devtown` is a separate repo — not a module in casehub-engine. The foundation knows nothing about git, PRs, or CI; the application provides all domain logic.
 
-| Application capability | CaseHub primitive | Foundation gate |
-|-----------------------|------------------|----------------|
-| Merge queue as a process | `CasePlanModel` per batch of MRs | P0 complete |
-| MR human review gate | `WorkItem` with SLA + form schema | P1 complete |
-| CI / lint / security check | Lambda or Quarkus Flow workflow worker | P0 complete |
-| Batch-then-bisect strategy | Choreography binding: tip-of-batch fails → binding routes to bisect sub-case | P0 complete |
-| Agent-to-agent review | qhorus typed channels (COMMAND/RESPONSE/DONE/FAILURE) | P0 complete |
-| Failure notifications | casehub-connectors Slack/Teams delivery | A2 complete |
-| Trust-weighted reviewer assignment | TrustWeightedSelectionStrategy | P1 complete |
-| Cryptographic merge audit | Merkle ledger entry, CaseLedgerEntry | P1 complete |
+| Application capability | CaseHub primitive | Foundation gate | devtown status |
+|-----------------------|------------------|----------------|----------------|
+| Content-driven PR routing | `CasePlanModel` — bindings gate on code content | P0 ✅ | ✅ Layer 5 (devtown#10) |
+| MR human review gate with SLA | `WorkItem` + `SlaBreachPolicy` SPI | P0 ✅ | ✅ Layer 2 (devtown#41) |
+| CI / lint / security check | Lambda binding worker | P0 ✅ | ✅ Layer 5 (devtown#10) |
+| HITL case resumption (happy path) | `casehub-work-adapter` wired | P0 ✅ | ✅ devtown#33 |
+| Cryptographic audit per case event | `CaseLedgerEntry`, Merkle ledger | P1.4 ✅ | ✅ Inherited from foundation |
+| Cross-deployment reputation | `TrustExportService` / `TrustImportService` | P2.1 ✅ | ✅ Inherited from foundation |
+| SLA breach → case failure goal | CasePlanModel `kind: failure` | ✅ (pending engine#326) | ⚠️ engine#326 open |
+| Agent-to-agent review | qhorus typed channels (COMMAND/RESPONSE/DONE/FAILURE) | P0 ✅ | Layer 3 (upcoming) |
+| Trust-weighted reviewer assignment | `TrustWeightedSelectionStrategy` | P1.3 ⚠️ | ⚠️ P1.3 pending |
+| Merge queue as a process | `CasePlanModel` per batch of MRs | P0 ✅ | Not started |
+| Batch-then-bisect strategy | Choreography binding: tip-of-batch fails → bisect sub-case | P0 ✅ | Not started |
+| Failure notifications | casehub-connectors Slack/Teams delivery | parent#5 ⚠️ | Not started |
 
 This establishes the application layer pattern for any future domain applications. The pattern is always the same: separate repo, foundation primitives, domain logic, no changes to the foundation. The foundation does not know or care what domain is above it.
 
@@ -775,13 +780,13 @@ This establishes the application layer pattern for any future domain application
 
 These capabilities are needed by every application domain but are implemented at the adapter/integration layer, not in the foundation itself.
 
-**SLA propagation ([parent#6](https://github.com/casehubio/parent/issues/6)):** Case budget bounds child WorkItem and Commitment deadlines. Currently a 1-hour case can spawn a 48-hour WorkItem. Fix in `casehub-work-adapter`.
+**~~SLA propagation ([parent#6](https://github.com/casehubio/parent/issues/6))~~** ✅ DONE 2026-05-20 — Engine-side: `HumanTaskScheduleHandler` applies `min(taskDeadline, caseBudgetDeadline)` from `PropagationContext.caseBudgetDeadline`. Claudony Commitment deadline bounding still deferred (no COMMAND-creation code yet in claudony).
 
-**Notification consolidation ([parent#5](https://github.com/casehubio/parent/issues/5)):** `casehub-work-notifications` Slack/Teams implementations replaced with `casehub-connectors` delegation. Unblocks unified delivery for stalled commitment alerts, case fault notifications, and escalation notifications.
+**Notification consolidation ([parent#5](https://github.com/casehubio/parent/issues/5)):** ⚠️ PENDING — `casehub-work-notifications` Slack/Teams implementations replaced with `casehub-connectors` delegation. No progress since filed. Blocking: qhorus#200 `WatchdogAlertEvent + ConnectorAlertBridge` cannot be wired until parent#5 provides a consolidated `Connector` SPI.
 
-**Critical event notifications:** Wire three event sources to casehub-connectors: `WatchdogEvaluationService` stall detection, `CaseLifecycleEvent(FAULTED)`, and `EscalationPolicy.escalate()` in casehub-work. Depends on notification consolidation completing first.
+**Critical event notifications:** Wire three event sources to casehub-connectors: `WatchdogEvaluationService` stall detection, `CaseLifecycleEvent(FAULTED)`, and SLA breach escalation in casehub-work. Depends on parent#5 completing first.
 
-**Human-in-the-loop end-to-end:** Complete `casehub-work-adapter` so that `WorkItemLifecycleEvent(COMPLETED)` with a `callerRef` encoding `case:{id}/pi:{planItemId}` fires `CaseHubReactor.signal()`, transitioning the plan item from WAITING to active and triggering binding re-evaluation. Without this, CaseHub cannot orchestrate any process requiring human judgment mid-case.
+**~~Human-in-the-loop end-to-end (happy path)~~** ✅ DONE 2026-05-23 — `casehub-work-adapter` wired (devtown#33); `WorkItemLifecycleEvent(COMPLETED)` → `CaseHubReactor.signal()` → plan item WAITING → active (devtown#30 e2e test passing). **Remaining gap:** escalation-during-wait signal path — when a WorkItem escalates (SLA breach), `ExpiryLifecycleService` does not signal the engine, leaving WAITING plan items frozen (work#225, blocked on engine#349 `CaseSignalSink` SPI).
 
 ### A3 — Other Planned Application Domains
 
@@ -804,11 +809,11 @@ Individual issues exist for the top 8:
 | ~~1~~ | ~~Commitment terminal states don't write LedgerAttestation — trust scoring has no normative signal~~ **✅ DONE 2026-04-28** | qhorus, ledger | [qhorus#123](https://github.com/casehubio/qhorus/issues/123) | ~~P0.2~~ |
 | ~~2~~ | ~~ActorType derivation uses 4 different logics — same actor gets different ActorType across repos.~~ **✅ DONE 2026-04-29** — `ActorTypeResolver` utility shipped; all consumers (qhorus `3cb5749`, work `dcad49b`, claudony `434d7df`, engine) updated. | ledger, work, qhorus, engine | [ledger#47](https://github.com/casehubio/ledger/issues/47) | ~~P0.3~~ |
 | 3 | Two parallel delivery SPIs (casehub-connectors + casehub-work-notifications) with overlapping Slack/Teams | connectors, work | [parent#5](https://github.com/casehubio/parent/issues/5) | A2 |
-| 4 | Qhorus instanceId and ledger actorId unjoined — trust doesn't accumulate across sessions of same persona | qhorus, ledger, claudony | [qhorus#124](https://github.com/casehubio/qhorus/issues/124) | P0.3 |
+| ~~4~~ | ~~Qhorus instanceId and ledger actorId unjoined — trust doesn't accumulate across sessions of same persona~~ **✅ DONE 2026-05-03** — `ClaudonyInstanceActorIdProvider` (claudony#107) maps session IDs to persona format. Trust now accumulates per persona. | qhorus, ledger, claudony | [qhorus#124](https://github.com/casehubio/qhorus/issues/124) | ~~P0.3~~ |
 | 5 | Cross-repo causal chain broken — no causedByEntryId linking MessageLedgerEntry → CaseLedgerEntry → WorkItemLedgerEntry | claudony, engine, qhorus | [claudony#94](https://github.com/casehubio/claudony/issues/94) | P2.3 |
 | ~~6~~ | ~~PropagationContext.traceId is UUID, OTel trace ID is W3C hex — case spans not correlatable in Jaeger~~ **✅ DONE 2026-04-28** | engine, ledger | [engine#185](https://github.com/casehubio/engine/issues/185) | ~~P2.2~~ |
-| 7 | CaseHub work assignments don't create Qhorus COMMITMENTs — normative obligation lifecycle bypassed entirely. **Partial ✅ 2026-05-01** — engine side done (engine#186 closed); claudony persona→session mapping (qhorus#124) still open. | engine, qhorus, claudony | [engine#186](https://github.com/casehubio/engine/issues/186) | P0.1 |
-| 8 | No SLA propagation from case budget to child WorkItems or Commitments | engine, work, qhorus | [parent#6](https://github.com/casehubio/parent/issues/6) | A2 |
+| ~~7~~ | ~~CaseHub work assignments don't create Qhorus COMMITMENTs — normative obligation lifecycle bypassed entirely.~~ **✅ DONE 2026-05-03** — engine#186 closed 2026-05-01; claudony persona→session mapping (claudony#107) closed 2026-05-03. Full normative loop active. | engine, qhorus, claudony | [engine#186](https://github.com/casehubio/engine/issues/186) | ~~P0.1~~ |
+| ~~8~~ | ~~No SLA propagation from case budget to child WorkItems or Commitments~~ **✅ DONE 2026-05-20** — engine-side fix: `HumanTaskScheduleHandler` applies `min(taskDeadline, caseBudgetDeadline)`. Claudony Commitment deadline bounding still deferred. | engine, work, qhorus | [parent#6](https://github.com/casehubio/parent/issues/6) | ~~A2~~ |
 
 Four structural themes run through all 32 findings:
 
@@ -862,6 +867,10 @@ Tracks design decisions that produce capabilities Gastown structurally cannot ma
 | DT-003 | Trust dimensions grounded in normative layer — `REVIEW_THOROUGHNESS`, `FALSE_POSITIVE_RATE`, `SCOPE_CALIBRATION` | ✅ Implemented — Epic 2 |
 | DT-004 | Routing thresholds as configurable `RoutingPolicy` artifacts, not hard-coded constants | ✅ Implemented — Epic 2 |
 | DT-005 | `RoutingPolicy` with uncertainty handling — `borderlineMargin` triggers `HumanOversight`; `minimumObservations` credibility gate; `rationale` for audit | ✅ Implemented — Epic 2 |
-| DT-006 | Trust maturity model — four automatic phases (bootstrap→emerging→active→adaptive); degradation guarantee; platform pattern (parent#14) | ✅ Implemented — Epic 2 |
+| DT-006 | Trust maturity model — four automatic phases (bootstrap→emerging→active→adaptive); degradation guarantee; platform pattern (parent#14 closed 2026-05-21) | ✅ Implemented — Epic 2 |
+| DT-007 | Layer 2: SLA-bounded human review gate with two-tier escalation — first breach rotates candidateGroups, second breach signals case context; built on `SlaBreachPolicy` SPI | ✅ Implemented — devtown#41, devtown#42 |
+| DT-008 | Content-driven binding routing — security review fires on code content, not author labels; multiple checks fire in parallel without explicit declaration; human + CI in parallel via WAITING state | ✅ Implemented — devtown#10 (Epic 3) |
+| DT-009 | Ed25519 bilateral agent signing — platform signs COMMAND, agent signs RESPONSE; neither can repudiate; compromise detection via CDI event; post-quantum migration path ADR; inherited by all domain apps | ✅ Implemented — ledger#79, #80, #83, #84 |
+| DT-010 | Trust federation across deployments — `TrustExportService` + `TrustImportService` SPI; cross-deployment Beta(α,β) seeding; mathematically-derived trust vs Gastown's human-curated stamps | ✅ Implemented — ledger#63, #64, #65 (P2.1 closed) |
 
 Full entries with reasoning and foundation gate dependencies: [`docs/PROGRESS.md`](PROGRESS.md)

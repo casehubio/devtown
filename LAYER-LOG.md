@@ -1,24 +1,18 @@
 # devtown — Slice-Indexed Architecture Log (SIAL)
 
-This is devtown's LAYER-LOG.md, structured as a SIAL. It serves two purposes:
+Architecture record of what was built at each integration layer. The Vertical Slice Index
+shows what the system can DO at each milestone, which architectural patterns are in play,
+and how to navigate to the implementation detail. Enter from a capability (slice) to find
+the layer, or enter from a layer to find the architectural context.
 
-**1 — LLM replication and teaching.** An LLM reading the layer entries should be able
-to reproduce every layer in a different domain harness without asking questions. Each
-entry captures what was built, the non-obvious wiring, what went wrong, and
-domain-agnostic steps to replicate the pattern.
+**Migration note:** This file will migrate to `ARC42STORIES.MD §9.4` Layer Entries when
+that document is bootstrapped. Format: `../parent/docs/arc42stories-spec.md` and
+`../parent/docs/arc42stories-casehub-profile.md`.
 
-**2 — Planning and architectural navigation.** The Vertical Slice Index below shows
-what the system can DO at each milestone, which architectural patterns are in play, and
-how to navigate to the rationale. Enter from a capability (slice) to find the
-implementation detail, or enter from a layer to find the architectural context.
-
-**Build approach:** Layer ordering here is for reading — it is the sequence in which
-a developer encounters the layers to understand the system. Building follows vertical
-slices: identify a slice (a user-visible capability), then implement each layer that
-slice requires, one at a time, until the slice is working end-to-end. Layers are the
-implementation unit; slices are the planning and delivery unit. Layers 1 and 5 were
-built before this guidance existed — the index below retrospectively presents the
-correct planning structure.
+**Layer ordering:** Layers are ordered for reading comprehension, not chronology. Building
+follows vertical slices: identify a slice (a user-visible capability), then implement each
+layer that slice requires, one at a time, until the slice is working end-to-end. Layers are
+the implementation unit; slices are the planning and delivery unit.
 
 **Protocol:** `../parent/docs/protocols/universal/vertical-slice-planning.md`
 
@@ -27,7 +21,6 @@ correct planning structure.
 - `../parent/docs/PLATFORM.md` — capability ownership; boundary rules
 - `docs/gastown-casehub-analysis-v2.md` — 32-finding Gastown comparison; phase gates
 - `docs/orchestration-advantages.md` — 7 ACM advantages over workflow engines
-- `../parent/docs/tutorial-strategy.md §7.5` — teaching objectives per layer
 - `../aml/LAYER-LOG.md` — AML reference implementation
 
 **Session artifacts:**
@@ -53,7 +46,7 @@ correct planning structure.
 - S2 before S3: SLA and human gate (S2) before formal obligation per agent (S3) — obligation tracking assumes the accountability infrastructure is in place
 - S3 before S4: qhorus messaging generates the MessageLedgerEntry chain that makes S4's tamper-evident audit meaningful
 - S4 before S5: trust scoring reads attestation data written by ledger — S4 is a hard dependency for S5
-- S1/S5 built out of teaching order (S5 before S2–S4): engine CasePlanModel was the architectural priority; vertical slice practice accepts this — LAYER-LOG presents teaching order
+- S1/S5 built out of reading order (S5 before S2–S4): engine CasePlanModel was the architectural priority; vertical slice practice accepts this — LAYER-LOG presents reading order
 
 ---
 
@@ -88,7 +81,7 @@ correct planning structure.
 - `app/src/main/java/io/casehub/devtown/app/PrReviewResource.java` — thin REST dispatcher; `POST /api/reviews`
 - `app/src/test/java/io/casehub/devtown/app/PrReviewServiceTest.java` — plain unit tests; no Quarkus; 3 contract assertions
 
-### What it shows
+### What it adds
 
 Layer 1 has two distinct parts. The first (Epics 1–2, done) establishes the devtown vocabulary — a typed split of what Gastown keeps in a flat namespace. The second shows the domain baseline: direct service calls with no accountability, no SLA, no formal obligation. Together they form the baseline everything else improves upon.
 
@@ -98,7 +91,7 @@ The domain model is pure Java, no CaseHub dependencies. The vocabulary split is 
 
 **Part B — Baseline PR review service (2026-05-15, devtown#27)**
 
-`PrReviewService` with `@ApplicationScoped @DefaultBean` makes direct stub calls via private methods. The accountability gaps are documented in LAYER-LOG.md rather than as code comments (see accountability gaps table). `PrReviewResource` exposes `POST /api/reviews` so the layer is runnable with a single HTTP call. This is the teaching baseline — each subsequent layer displaces it at the CDI level via a non-`@DefaultBean @ApplicationScoped` implementation.
+`PrReviewService` with `@ApplicationScoped @DefaultBean` makes direct stub calls via private methods. The accountability gaps are documented in LAYER-LOG.md (see accountability gaps table). `PrReviewResource` exposes `POST /api/reviews` so the layer is runnable with a single HTTP call. Each subsequent layer displaces it at the CDI level via a non-`@DefaultBean @ApplicationScoped` implementation.
 
 ### Accountability gaps
 
@@ -113,7 +106,7 @@ The domain model is pure Java, no CaseHub dependencies. The vocabulary split is 
 ### Key wiring
 
 **Module structure — pure Java domain, Quarkus only in `app/`.**
-`devtown-domain` has zero framework dependencies. All constants, SPI, and default implementation live there. `devtown-app` owns all CDI and Quarkus wiring. This split is mandatory for the tutorial to work — each layer needs to show domain logic independently of the framework.
+`devtown-domain` has zero framework dependencies. All constants, SPI, and default implementation live there. `devtown-app` owns all CDI and Quarkus wiring. This split enforces the dependency rule — domain logic must be independent of the framework.
 
 **`@DefaultBean` displacement pattern.**
 The baseline service carries `@DefaultBean`. Each subsequent layer adds an `@ApplicationScoped` implementation in `review` without it — CDI displacement means the new one wins, the baseline one stays in the build but is inactive. Both classes coexist; no code is deleted across layers.
@@ -189,12 +182,12 @@ These were in the original Gastown-derived 13-tag vocabulary and removed. They a
 **Architectural pattern:** Hexagonal (WorkItem as port; SlaBreachPolicy SPI); Event-Driven (`@ObservesAsync SlaBreachEvent`, `WorkItemLifecycleEvent → PlanItem` bridge) — `../parent/docs/ARCHITECTURE.md §Foundation, §Orchestration`
 **Key protocols:** `module-tier-structure.md`, `flyway-migration-rules.md` (default datasource for work tables)
 **Design refs:** `DESIGN.md §Layer 2 SLA Breach Policy`; `docs/specs/2026-05-22-layer2-sla-breach-policy-design.md`
-**Completed:** devtown#41 ✅ devtown#42 ✅; full LAYER-LOG entry 🔲 pending engine#326 (failure goal support — needed to close the breach escalation teaching narrative end-to-end)
+**Completed:** devtown#41 ✅ devtown#42 ✅; full LAYER-LOG entry 🔲 pending engine#326 (failure goal support — needed to document the full breach escalation path end-to-end)
 **Issues:** casehubio/devtown#41 (work adapter wiring), casehubio/devtown#42 (SLA breach handler wiring test)
 **Navigation:** `git log --grep="#41" --oneline`
 **Blog:** 🔲 at layer close
 
-### What it shows
+### What it adds
 
 🔲 Full entry at layer close (blocked on engine#326). Known content below.
 
@@ -245,11 +238,11 @@ Layer 2 adds `casehub-work` to the PR review case. The gap it closes: analysis c
 - `app/src/main/java/io/casehub/devtown/app/agents/TestCoverageReviewAgent.java` — `Completed` stub; returns coverage finding
 - `app/src/test/java/io/casehub/devtown/app/PrReviewQhorusLifecycleTest.java` — `@QuarkusTest` 5 tests: channel creation, COMMAND dispatch, DONE discharges commitment, DECLINE recorded, DECLINE content preserved
 
-### What it shows
+### What it adds
 
 Layer 3 adds casehub-qhorus typed messaging to the PR review case. Every specialist review assignment becomes a speech act: COMMAND creates a tracked Commitment; DONE discharges it with findings appended; DECLINE is a formal scope refusal with a recorded reason — not a timeout, not an exception.
 
-This replaces Layer 1's direct method invocation with an obligation-tracked, audit-recorded protocol. The message sequence for each specialist — COMMAND → DONE or DECLINE — is structurally identical regardless of whether the agent is in-process (Layer 3 stubs), out-of-process (real Claudony agent), or deferred (future layers). The stubs in `app/agents/` are teaching placeholders; the CDI wiring, channel structure, and commitment lifecycle are production-correct.
+This replaces Layer 1's direct method invocation with an obligation-tracked, audit-recorded protocol. The message sequence for each specialist — COMMAND → DONE or DECLINE — is structurally identical regardless of whether the agent is in-process (Layer 3 stubs), out-of-process (real Claudony agent), or deferred (future layers). The stubs in `app/agents/` are in-process placeholders for future Claudony agents; the CDI wiring, channel structure, and commitment lifecycle are production-correct.
 
 Layer 5 (`PrReviewCaseService @Priority(2)`) is the CDI winner in the full build. Layer 3 (`QhorusPrReviewService @Priority(1)`) is present and testable by direct type injection — `@Inject QhorusPrReviewService service` bypasses priority ordering and resolves the concrete type directly, so no test profile is needed.
 
@@ -285,7 +278,7 @@ class PrReviewCaseService implements PrReviewApplicationService
 `PrReviewCaseService` required `@Alternative @Priority(2)` only when `QhorusPrReviewService` was added. Without `@Alternative` on both beans, CDI treats two non-`@DefaultBean @ApplicationScoped` implementations as ambiguous and fails at startup.
 
 **`ReviewerAgent` as driven port — typed domain parameter, not `Message`.**
-`handle(PrPayload pr)` passes the typed domain object. AML uses `AgentBehaviour.handle(Message command)`. Devtown diverges deliberately: no nullable qhorus primitive leaks into the port interface; the tutorial reader sees a clean domain boundary at the cost of a small API difference. The `Message` parameter becomes meaningful only with real out-of-process agents where the command content must be deserialised — that is a future layer concern.
+`handle(PrPayload pr)` passes the typed domain object. AML uses `AgentBehaviour.handle(Message command)`. Devtown diverges deliberately: no nullable qhorus primitive leaks into the port interface; the domain boundary is clean at the cost of a small API difference vs AML. The `Message` parameter becomes meaningful only with real out-of-process agents where the command content must be deserialised — that is a future layer concern.
 
 **Shared `/work` channel per PR — three channels total.**
 All specialist COMMAND/DONE/DECLINE messages share `pr-review-{N}/work`. Two additional channels are created empty: `pr-review-{N}/observe` (Layer 4 audit events) and `pr-review-{N}/oversight` (Layer 2 oversight). Per-specialist channels would require `3 × n` channels and imply three separate oversight gates per PR — semantically wrong and misaligned with Layer 5's one-case-per-PR model. The naming convention establishes normative intent; `allowedTypes` enforcement is a Claudony `NormativeChannelLayout` concern (devtown#54).
@@ -361,13 +354,13 @@ private Channel findOrCreate(String name) {
 - `app/src/test/java/io/casehub/devtown/app/PrReviewCaseHubTest.java` — `@QuarkusTest` YAML round-trip: 5 tests verifying binding/goal/capability counts
 - `app/src/test/java/io/casehub/devtown/app/InMemoryLedgerEntryRepository.java` — `@ApplicationScoped` test stub; needed for `@QuarkusTest` CDI resolution when `casehub-ledger` runtime is on the classpath
 
-### What it shows
+### What it adds
 
 Layer 5 introduces casehub-engine into devtown. The PR review case becomes an Adaptive Case Management instance with declared goals and content-driven bindings — security review fires only when code analysis finds security-sensitive code, not from author labels. Multiple checks (style, test coverage, performance) fire simultaneously via the ACM binding system without explicit parallelism declaration. Human approval and CI run in parallel via the WAITING state (total time = max, not sum). The routing logic lives in the case definition YAML and applies consistently to every PR, producing an audit trail of every routing decision.
 
 Contrast with Layer 1: `PrReviewService` makes direct calls with no adaptive routing, no formal obligation, and no audit. Layer 5 displaces it with a `@ApplicationScoped` implementation that opens a `CaseInstance` and lets the engine drive coordination.
 
-See `docs/orchestration-advantages.md` §1 (content-driven routing), §2 (parallel human+CI), §3 (automatic parallelism) for the detailed teaching narrative.
+See `docs/orchestration-advantages.md` §1–§3 for the detailed architectural rationale.
 
 ### The gap comments
 

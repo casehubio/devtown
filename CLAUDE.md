@@ -100,19 +100,17 @@ type: java
 
 **Read first:** `../parent/docs/AGENTIC-HARNESS-GUIDE.md`
 
-**Primary goal:** Reference architecture and field showcase for Java developers in software engineering and DevOps — demonstrating formal accountability, tamper-evident review records, and adaptive routing in a domain every developer knows from daily practice.
+**Goal:** Production-grade software engineering coordination harness demonstrating that PR review accountability, trust-weighted routing, and tamper-evident merge records are structurally better served by a formal accountability layer than by best-effort coordination tools.
 
-**Secondary goal:** LLM and human tutorial material, produced as a by-product of building the application correctly. The tutorial structure emerges from the layered adoption sequence — do not design for the tutorial.
+**Architecture record:** `LAYER-LOG.md` tracks integration layer entries. A layer is not complete until its entry is written. Arc42Stories migration planned — layer entries will move to `ARC42STORIES.MD §9.4` when the document is bootstrapped. See `../parent/docs/arc42stories-spec.md` and `../parent/docs/arc42stories-casehub-profile.md`.
 
-**LAYER-LOG.md** (`LAYER-LOG.md` at project root) is the primary new artifact. A layer entry is complete when the layer closes — written in full at that point, not incrementally with placeholders.
-
-**Epics ≠ layers.** Epics organize work by build convenience; layers organize knowledge by teaching progression. One layer may span multiple epics. The layer table in `../parent/docs/repos/casehub-devtown.md` tracks layer status (pending / in progress / complete) — update it when a layer makes meaningful progress, not only when it finishes.
+**Epics ≠ layers.** Epics organize work by build convenience; layers are the integration unit. One layer may span multiple epics. The layer table in `../parent/docs/repos/casehub-devtown.md` tracks layer status (pending / in progress / complete) — update it when a layer makes meaningful progress, not only when it finishes.
 
 ---
 
 ## What This Project Is
 
-`casehub-devtown` is an **agentic harness for software engineering coordination** built on the CaseHub platform foundation. It coordinates specialist code reviewers, human review task gates with SLA, and adaptive PR routing based on code content — producing a tamper-evident review record where every missed finding is traceable. Field showcase and tutorial for Java developers in software engineering and DevOps.
+`casehub-devtown` is an **agentic harness for software engineering coordination** built on the CaseHub platform foundation. It coordinates specialist code reviewers, human review task gates with SLA, and adaptive PR routing based on code content — producing a tamper-evident review record where every missed finding is traceable.
 
 It is the CaseHub answer to Gastown — a production software engineering coordination system — but built on a domain-agnostic foundation rather than baked into infrastructure.
 
@@ -144,8 +142,7 @@ Never add to the foundation what is specific to this domain. Never re-implement 
 | Document | What it covers |
 |----------|---------------|
 | `../parent/docs/AGENTIC-HARNESS-GUIDE.md` | Goals, what to produce, retroactive work instructions, layer maintenance |
-| `../parent/docs/repos/casehub-devtown.md` | Harness structure, tutorial layers table, layer status |
-| `../parent/docs/tutorial-strategy.md` | Devtown tutorial layers §7.5 — teaching objectives and code sketches per layer |
+| `../parent/docs/repos/casehub-devtown.md` | Harness structure, layer status |
 | `../garden/docs/protocols/casehub/HARNESS-INDEX.md` | CaseHub app protocols |
 | `../garden/docs/protocols/universal/INDEX.md` | Universal Java/Quarkus protocols |
 
@@ -174,13 +171,12 @@ Read these **before designing**, not after. The concern column tells you when ea
 | Naming capability tags or trust dimensions | `ReviewDomain`, `AgentQualification`, `HumanDecision`, `HumanOversight`, `DevtownTrustDimension` in `devtown-domain` — extend these rather than creating parallel types |
 | Mapping features to Gastown parity | `docs/gastown-casehub-analysis-v2.md` Gastown feature parity checklist — which Gastown capability does this correspond to, and does devtown's approach improve on it? |
 
-### Tutorial layer design
+### Layer design
 
 | Concern | Read first |
 |---------|-----------|
-| Deciding which layer a feature belongs in | `tutorial-strategy.md §7.5` — layer teaching objectives and what each layer must NOT include |
-| Understanding the `@DefaultBean` displacement pattern | LAYER-LOG.md Layer 1 §Key wiring — `NaivePrReviewService @DefaultBean` is displaced at CDI level by each subsequent layer; the naive class is never deleted |
-| Writing gap comments | `NaivePrReviewService.java` — five gap comments model the Layer 1 anti-pattern; each subsequent layer closes exactly one gap |
+| Deciding which layer a feature belongs in | Foundation Layers section below |
+| Understanding the `@DefaultBean` displacement pattern | LAYER-LOG.md Layer 1 §Key wiring — `PrReviewService @DefaultBean` is displaced at CDI level by each subsequent layer; the baseline service is never deleted |
 | Documenting a completed layer | LAYER-LOG.md — write the entry in full when the layer closes; no incremental placeholders |
 
 ### Foundation integration
@@ -294,21 +290,21 @@ Read these **before designing**, not after. The concern column tells you when ea
 - **Remaining P0:** qhorus#124 claudony persona→session mapping (no end-to-end trust accumulation yet)
 - **Remaining P1:** concurrency throttling (P1.1), RecoveryPolicy SPI (P1.2), TrustWeightedSelectionStrategy wired (P1.3), Doltgres backend (P1.5)
 
-### Tutorial Structure (layer-by-layer, from tutorial-strategy.md §7.5)
+### Foundation Layers
 
 ```
 Layer 1: naive Java — vocabulary model, @DefaultBean naive service, REST entry point ✅ (devtown#8, #9, #27)
-Layer 2: + casehub-work — SLA-bounded human review gate with escalation (devtown#41, in progress)
-Layer 3: + casehub-qhorus — typed COMMAND/RESPONSE/DONE/DECLINE per reviewer agent interaction
+Layer 2: + casehub-work — SLA-bounded human review gate with escalation ✅ (devtown#41, #42)
+Layer 3: + casehub-qhorus — typed COMMAND/RESPONSE/DONE/DECLINE per reviewer agent interaction ✅ (devtown#52)
 Layer 4: + casehub-ledger — tamper-evident merge decision audit trail
 Layer 5: + casehub-engine — adaptive paths, CasePlanModel, content-driven PR routing ✅ (devtown#10)
 Layer 6: trust routing — trust-weighted reviewer assignment from outcome attestations
 Layer 7: comparison vs Gastown (Refinery/Deacon/Witness architecture)
 ```
 
-**Note on layer ordering vs build order:** Layer 5 was built before Layers 2–4 because the engine CasePlanModel (adaptive routing, HITL binding) was the architectural priority. Tutorial ordering differs from chronological build order — LAYER-LOG.md preserves teaching sequence, not build sequence.
+**Reading order vs build order:** Layer 5 was built before Layers 2–4 because the engine CasePlanModel (adaptive routing, HITL binding) was the architectural priority. Reading order differs from chronological build order — LAYER-LOG.md preserves reading order, not build sequence.
 
-**`@DefaultBean` displacement pattern:** devtown uses CDI displacement throughout. `NaivePrReviewService @DefaultBean` is never deleted — each layer adds an `@ApplicationScoped` implementation (without `@DefaultBean`) in `review/` that takes CDI priority. The naive class remains in the build, inactive. This is the structural mechanism that makes each layer independently teachable.
+**`@DefaultBean` displacement pattern:** devtown uses CDI displacement throughout. `PrReviewService @DefaultBean` is never deleted — each layer adds an `@ApplicationScoped` implementation (without `@DefaultBean`) in `review/` that takes CDI priority. The baseline service remains in the build, inactive.
 
 ---
 

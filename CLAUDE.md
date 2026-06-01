@@ -102,7 +102,7 @@ type: java
 
 **Goal:** Production-grade software engineering coordination harness demonstrating that PR review accountability, trust-weighted routing, and tamper-evident merge records are structurally better served by a formal accountability layer than by best-effort coordination tools.
 
-**Architecture record:** `ARC42STORIES.MD` (workspace root) is the primary architecture record — §9.4 Layer entries, §9.3 Chapter entries, §9.2 Chapter Index. `LAYER-LOG.md` (project root) is the source-of-truth draft that feeds `ARC42STORIES.MD`; both must be kept in sync. See `../parent/docs/arc42stories-spec.md` and `../parent/docs/arc42stories-casehub-profile.md`.
+**Architecture record:** `ARC42STORIES.MD` (workspace root) is the sole architecture record — §9.4 Layer entries, §9.3 Chapter entries, §9.2 Chapter Index. `LAYER-LOG.md` is retired: new layer documentation goes directly into `ARC42STORIES.MD §9.4`. See `../parent/docs/arc42stories-spec.md` and `../parent/docs/arc42stories-casehub-profile.md`.
 
 **Epics ≠ layers.** Epics organize work by build convenience; layers are the integration unit. One layer may span multiple epics. The layer table in `../parent/docs/repos/casehub-devtown.md` tracks layer status (pending / in progress / complete) — update it when a layer makes meaningful progress, not only when it finishes.
 

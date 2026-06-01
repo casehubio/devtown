@@ -102,7 +102,7 @@ type: java
 
 **Goal:** Production-grade software engineering coordination harness demonstrating that PR review accountability, trust-weighted routing, and tamper-evident merge records are structurally better served by a formal accountability layer than by best-effort coordination tools.
 
-**Architecture record:** `LAYER-LOG.md` tracks integration layer entries. A layer is not complete until its entry is written. Arc42Stories migration planned — layer entries will move to `ARC42STORIES.MD §9.4` when the document is bootstrapped. See `../parent/docs/arc42stories-spec.md` and `../parent/docs/arc42stories-casehub-profile.md`.
+**Architecture record:** `ARC42STORIES.MD` (workspace root) is the primary architecture record — §9.4 Layer entries, §9.3 Chapter entries, §9.2 Chapter Index. `LAYER-LOG.md` (project root) is the source-of-truth draft that feeds `ARC42STORIES.MD`; both must be kept in sync. See `../parent/docs/arc42stories-spec.md` and `../parent/docs/arc42stories-casehub-profile.md`.
 
 **Epics ≠ layers.** Epics organize work by build convenience; layers are the integration unit. One layer may span multiple epics. The layer table in `../parent/docs/repos/casehub-devtown.md` tracks layer status (pending / in progress / complete) — update it when a layer makes meaningful progress, not only when it finishes.
 
@@ -176,8 +176,8 @@ Read these **before designing**, not after. The concern column tells you when ea
 | Concern | Read first |
 |---------|-----------|
 | Deciding which layer a feature belongs in | Foundation Layers section below |
-| Understanding the `@DefaultBean` displacement pattern | LAYER-LOG.md Layer 1 §Key wiring — `PrReviewService @DefaultBean` is displaced at CDI level by each subsequent layer; the baseline service is never deleted |
-| Documenting a completed layer | LAYER-LOG.md — write the entry in full when the layer closes; no incremental placeholders |
+| Understanding the `@DefaultBean` displacement pattern | `ARC42STORIES.MD §9.4 Layer — Domain Baseline §Key wiring` — `PrReviewService @DefaultBean` is displaced at CDI level by each subsequent layer; the baseline service is never deleted |
+| Documenting a completed layer | Write the LAYER-LOG.md entry in full when the layer closes; then transcribe to `ARC42STORIES.MD §9.4` (see devtown#63 for the process) |
 
 ### Foundation integration
 
@@ -302,7 +302,7 @@ Layer 6: trust routing — trust-weighted reviewer assignment from outcome attes
 Layer 7: comparison vs Gastown (Refinery/Deacon/Witness architecture)
 ```
 
-**Reading order vs build order:** Layer 5 was built before Layers 2–4 because the engine CasePlanModel (adaptive routing, HITL binding) was the architectural priority. Reading order differs from chronological build order — LAYER-LOG.md preserves reading order, not build sequence.
+**Reading order vs build order:** Layer 5 was built before Layers 2–4 because the engine CasePlanModel (adaptive routing, HITL binding) was the architectural priority. Reading order differs from chronological build order — `ARC42STORIES.MD §9.4` preserves reading order; build order is reflected in the blog entries.
 
 **`@DefaultBean` displacement pattern:** devtown uses CDI displacement throughout. `PrReviewService @DefaultBean` is never deleted — each layer adds an `@ApplicationScoped` implementation (without `@DefaultBean`) in `review/` that takes CDI priority. The baseline service remains in the build, inactive.
 

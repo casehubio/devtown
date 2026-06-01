@@ -517,7 +517,7 @@ Threshold/minimumObservations/borderlineMargin are declared in `DevtownCapabilit
 
 3. **Floor sentinel.** `MapPreferences.get()` returns `null` when a key is absent (does NOT fall back to `PreferenceKey.defaultValue`). Floor keys use `DoublePreference.of(0.0)` as a non-null constructor sentinel; the provider's `addFloor()` skips values where `value == null || value.value() <= 0.0`.
 
-4. **Qhorus trust gate not enabled.** `casehub.qhorus.commitment.min-obligor-trust` defaults to 0.0 (disabled). Enabling it requires bootstrap exemption design — tracked in devtown#58. The bootstrap > borderline rule (BOOTSTRAP agents outscore BORDERLINE agents) means new agents can receive merge tasks before building history; devtown#58 addresses this for the merge-executor case.
+4. **Qhorus trust gate enabled at 0.30 global floor (devtown#58).** `DevtownObligorTrustPolicy @ApplicationScoped` applies a minimum trust floor with bootstrap exemption: agents with `Optional.empty()` trust score (no observations) are always permitted — the platform rule is "never block on missing trust data"; agents with a score below 0.30 are refused. The merge-executor bootstrap gap (devtown#62) — Phase 0 availability routing can select a zero-history agent for an irreversible merge — is a routing-layer concern, not addressable by the trust gate (BOOTSTRAP agents are exempt by design).
 
 5. **`RoutingPolicy.isBorderline()` is deprecated.** The domain method is one-sided; the engine's `TrustRoutingPolicy.isBorderline()` is symmetric. The routing path uses `TrustRoutingPolicy` exclusively. Marked `@Deprecated` — tracked for removal.
 

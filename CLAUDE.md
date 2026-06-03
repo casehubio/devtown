@@ -59,7 +59,8 @@ Before any git operation, run `git rev-parse --show-toplevel` to confirm which r
 | plans      | workspace   | stay in workspace permanently |
 | design     | workspace   | epic journal stays in workspace |
 | snapshots  | workspace   | stay in workspace permanently |
-| handover   | workspace   | |
+| handover      | workspace   | |
+| ARC42STORIES.MD | project   | lives in project repo root — same convention as DESIGN.md before migration |
 
 ---
 
@@ -102,7 +103,7 @@ type: java
 
 **Goal:** Production-grade software engineering coordination harness demonstrating that PR review accountability, trust-weighted routing, and tamper-evident merge records are structurally better served by a formal accountability layer than by best-effort coordination tools.
 
-**Architecture record:** `ARC42STORIES.MD` (workspace root) is the sole architecture record — §9.4 Layer entries, §9.3 Chapter entries, §9.2 Chapter Index. `LAYER-LOG.md` is retired: new layer documentation goes directly into `ARC42STORIES.MD §9.4`. See `../parent/docs/arc42stories-spec.md` and `../parent/docs/arc42stories-casehub-profile.md`.
+**Architecture record:** `ARC42STORIES.MD` (project repo root) is the sole architecture record — §9.4 Layer entries, §9.3 Chapter entries, §9.2 Chapter Index. `LAYER-LOG.md` is retired: new layer documentation goes directly into `ARC42STORIES.MD §9.4`. See `../parent/docs/arc42stories-spec.md` and `../parent/docs/arc42stories-casehub-profile.md`.
 
 **Epics ≠ layers.** Epics organize work by build convenience; layers are the integration unit. One layer may span multiple epics. The layer table in `../parent/docs/repos/casehub-devtown.md` tracks layer status (pending / in progress / complete) — update it when a layer makes meaningful progress, not only when it finishes.
 

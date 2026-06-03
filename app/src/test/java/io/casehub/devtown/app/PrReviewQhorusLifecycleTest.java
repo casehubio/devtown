@@ -2,17 +2,28 @@ package io.casehub.devtown.app;
 
 import io.casehub.devtown.domain.ReviewDomain;
 import io.casehub.devtown.review.PrPayload;
+import io.casehub.platform.api.identity.ActorType;
+import io.casehub.qhorus.api.channel.ChannelSemantic;
+import io.casehub.qhorus.api.message.MessageDispatch;
 import io.casehub.qhorus.api.message.MessageType;
+import io.casehub.qhorus.api.message.MessageTypeViolationException;
 import io.casehub.qhorus.runtime.channel.ChannelService;
 import io.casehub.qhorus.runtime.message.Message;
 import io.casehub.qhorus.runtime.message.MessageService;
 import io.casehub.qhorus.runtime.store.CommitmentStore;
 import io.quarkus.test.junit.QuarkusTest;
 import jakarta.inject.Inject;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
+import java.util.UUID;
+import java.util.stream.Collectors;
 import org.junit.jupiter.api.Test;
 
+import static io.casehub.qhorus.api.message.MessageType.*;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatNoException;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @QuarkusTest
 class PrReviewQhorusLifecycleTest {
@@ -110,5 +121,221 @@ class PrReviewQhorusLifecycleTest {
 
         assertThat(decline.content)
                 .isEqualTo("distributed transaction outside scope");
+    }
+
+    // --- allowedTypes enforcement (devtown#54) ---
+    // PR numbers 210–220 for type-enforcement tests; 299 for migration guard.
+
+    @Test
+    void workChannel_allowedTypes_containsExpectedSet() {
+        service.review(new PrPayload("casehubio/devtown", 210, "sha210", "main", 100));
+        var work = channelService.findByName("pr-review-210/work").orElseThrow();
+        assertThat(parseAllowedTypes(work.allowedTypes))
+                .containsExactlyInAnyOrder(COMMAND, STATUS, DONE, DECLINE, FAILURE);
+    }
+
+    @Test
+    void observeChannel_allowedTypes_isEventOnly() {
+        service.review(new PrPayload("casehubio/devtown", 211, "sha211", "main", 100));
+        var observe = channelService.findByName("pr-review-211/observe").orElseThrow();
+        assertThat(parseAllowedTypes(observe.allowedTypes))
+                .containsExactly(EVENT);
+    }
+
+    @Test
+    void oversightChannel_allowedTypes_containsExpectedSet() {
+        service.review(new PrPayload("casehubio/devtown", 212, "sha212", "main", 100));
+        var oversight = channelService.findByName("pr-review-212/oversight").orElseThrow();
+        assertThat(parseAllowedTypes(oversight.allowedTypes))
+                .containsExactlyInAnyOrder(COMMAND, DONE, DECLINE);
+    }
+
+    @Test
+    void workChannel_acceptsStatusDispatch() {
+        service.review(new PrPayload("casehubio/devtown", 213, "sha213", "main", 100));
+        var work = channelService.findByName("pr-review-213/work").orElseThrow();
+        assertThatNoException().isThrownBy(() ->
+                messageService.dispatch(MessageDispatch.builder()
+                        .channelId(work.id)
+                        .sender("security-review")
+                        .type(STATUS)
+                        .content("analysing large diff")
+                        .actorType(ActorType.AGENT)
+                        .build()));
+    }
+
+    @Test
+    void workChannel_acceptsFailureDispatch() {
+        service.review(new PrPayload("casehubio/devtown", 214, "sha214", "main", 100));
+        var work = channelService.findByName("pr-review-214/work").orElseThrow();
+        // FAILURE requires inReplyTo (builder validation) — open a COMMAND first
+        final String corrId = UUID.randomUUID().toString();
+        final var commandResult = messageService.dispatch(MessageDispatch.builder()
+                .channelId(work.id)
+                .sender(ORCHESTRATOR)
+                .type(COMMAND)
+                .content("review this")
+                .correlationId(corrId)
+                .actorType(ActorType.SYSTEM)
+                .build());
+        assertThatNoException().isThrownBy(() ->
+                messageService.dispatch(MessageDispatch.builder()
+                        .channelId(work.id)
+                        .sender("security-review")
+                        .type(FAILURE)
+                        .content("agent process crashed")
+                        .correlationId(corrId)
+                        .inReplyTo(commandResult.messageId())
+                        .actorType(ActorType.AGENT)
+                        .build()));
+    }
+
+    @Test
+    void observeChannel_acceptsEventDispatch() {
+        service.review(new PrPayload("casehubio/devtown", 215, "sha215", "main", 100));
+        var observe = channelService.findByName("pr-review-215/observe").orElseThrow();
+        assertThatNoException().isThrownBy(() ->
+                messageService.dispatch(MessageDispatch.builder()
+                        .channelId(observe.id)
+                        .sender("ledger-audit")
+                        .type(EVENT)
+                        .content("{\"entry\":\"audit-record\"}")
+                        .actorType(ActorType.SYSTEM)
+                        .build()));
+    }
+
+    @Test
+    void oversightChannel_acceptsCommandAndDoneDispatch() {
+        service.review(new PrPayload("casehubio/devtown", 216, "sha216", "main", 100));
+        var oversight = channelService.findByName("pr-review-216/oversight").orElseThrow();
+        // DONE requires inReplyTo (builder validation) — open a COMMAND first
+        final String corrId = UUID.randomUUID().toString();
+        final var commandResult = messageService.dispatch(MessageDispatch.builder()
+                .channelId(oversight.id)
+                .sender(ORCHESTRATOR)
+                .type(COMMAND)
+                .content("approve-or-reject?")
+                .correlationId(corrId)
+                .actorType(ActorType.SYSTEM)
+                .build());
+        assertThatNoException().isThrownBy(() ->
+                messageService.dispatch(MessageDispatch.builder()
+                        .channelId(oversight.id)
+                        .sender("human-reviewer")
+                        .type(DONE)
+                        .content("approved")
+                        .correlationId(corrId)
+                        .inReplyTo(commandResult.messageId())
+                        .actorType(ActorType.SYSTEM)
+                        .build()));
+    }
+
+    @Test
+    void observeChannel_rejectsSpeechActDispatch() {
+        service.review(new PrPayload("casehubio/devtown", 221, "sha221", "main", 100));
+        var observe = channelService.findByName("pr-review-221/observe").orElseThrow();
+        // /observe is EVENT-only; any speech-act type must be rejected
+        assertThatThrownBy(() ->
+                messageService.dispatch(MessageDispatch.builder()
+                        .channelId(observe.id)
+                        .sender("pr-orchestrator")
+                        .type(STATUS)
+                        .content("progress note")
+                        .actorType(ActorType.SYSTEM)
+                        .build()))
+                .isInstanceOf(MessageTypeViolationException.class);
+    }
+
+    @Test
+    void workChannel_rejectsEventDispatch() {
+        service.review(new PrPayload("casehubio/devtown", 217, "sha217", "main", 100));
+        var work = channelService.findByName("pr-review-217/work").orElseThrow();
+        assertThatThrownBy(() ->
+                messageService.dispatch(MessageDispatch.builder()
+                        .channelId(work.id)
+                        .sender("telemetry")
+                        .type(EVENT)
+                        .content("noise")
+                        .actorType(ActorType.SYSTEM)
+                        .build()))
+                .isInstanceOf(MessageTypeViolationException.class);
+    }
+
+    @Test
+    void observeChannel_rejectsCommandDispatch() {
+        service.review(new PrPayload("casehubio/devtown", 218, "sha218", "main", 100));
+        var observe = channelService.findByName("pr-review-218/observe").orElseThrow();
+        assertThatThrownBy(() ->
+                messageService.dispatch(MessageDispatch.builder()
+                        .channelId(observe.id)
+                        .sender(ORCHESTRATOR)
+                        .type(COMMAND)
+                        .content("do something")
+                        .correlationId(UUID.randomUUID().toString())
+                        .actorType(ActorType.SYSTEM)
+                        .build()))
+                .isInstanceOf(MessageTypeViolationException.class);
+    }
+
+    @Test
+    void oversightChannel_rejectsFailureDispatch() {
+        service.review(new PrPayload("casehubio/devtown", 219, "sha219", "main", 100));
+        var oversight = channelService.findByName("pr-review-219/oversight").orElseThrow();
+        // Must provide inReplyTo to pass builder validation; type enforcement fires after
+        final String corrId = UUID.randomUUID().toString();
+        final var commandResult = messageService.dispatch(MessageDispatch.builder()
+                .channelId(oversight.id)
+                .sender(ORCHESTRATOR)
+                .type(COMMAND)
+                .content("oversight gate")
+                .correlationId(corrId)
+                .actorType(ActorType.SYSTEM)
+                .build());
+        assertThatThrownBy(() ->
+                messageService.dispatch(MessageDispatch.builder()
+                        .channelId(oversight.id)
+                        .sender("broken-agent")
+                        .type(FAILURE)
+                        .content("crashed")
+                        .correlationId(corrId)
+                        .inReplyTo(commandResult.messageId())
+                        .actorType(ActorType.AGENT)
+                        .build()))
+                .isInstanceOf(MessageTypeViolationException.class);
+    }
+
+    @Test
+    void oversightChannel_rejectsEventDispatch() {
+        service.review(new PrPayload("casehubio/devtown", 220, "sha220", "main", 100));
+        var oversight = channelService.findByName("pr-review-220/oversight").orElseThrow();
+        assertThatThrownBy(() ->
+                messageService.dispatch(MessageDispatch.builder()
+                        .channelId(oversight.id)
+                        .sender("telemetry")
+                        .type(EVENT)
+                        .content("noise")
+                        .actorType(ActorType.SYSTEM)
+                        .build()))
+                .isInstanceOf(MessageTypeViolationException.class);
+    }
+
+    @Test
+    void existingPermissiveWorkChannel_throwsOnAllowedTypesMismatch() {
+        // Simulate a pre-fix channel created without allowedTypes (null).
+        // requireAllowedTypes must fail fast rather than silently operate with weaker enforcement.
+        channelService.create("pr-review-299/work", null, ChannelSemantic.APPEND, ORCHESTRATOR);
+
+        assertThatThrownBy(() ->
+                service.review(new PrPayload("casehubio/devtown", 299, "sha299", "main", 100)))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("allowedTypes");
+    }
+
+    private static final String ORCHESTRATOR = "pr-orchestrator";
+
+    private static Set<MessageType> parseAllowedTypes(final String allowedTypes) {
+        return Arrays.stream(allowedTypes.split(","))
+                .map(MessageType::valueOf)
+                .collect(Collectors.toUnmodifiableSet());
     }
 }

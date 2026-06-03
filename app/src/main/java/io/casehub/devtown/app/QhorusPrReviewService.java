@@ -18,8 +18,12 @@ import jakarta.enterprise.inject.Alternative;
 import jakarta.enterprise.inject.Instance;
 import jakarta.inject.Inject;
 import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
+
+import static io.casehub.qhorus.api.message.MessageType.*;
 
 /**
  * Layer 3: replaces direct specialist invocation (Layer 1) with typed speech-act messaging.
@@ -36,6 +40,28 @@ public class QhorusPrReviewService implements PrReviewApplicationService {
 
     private static final String ORCHESTRATOR = "pr-orchestrator";
 
+    // Package-visible for test assertion; see PrReviewQhorusLifecycleTest#*_allowedTypes_*.
+    // EnumSet preserves enum declaration order — compile-safe: renamed constants fail at
+    // compile time, not at dispatch time. qhorus#247 tracks a Set<MessageType> overload on
+    // ChannelService.create() that would eliminate this joining step entirely.
+    static final String WORK_ALLOWED_TYPES =
+            EnumSet.of(COMMAND, STATUS, DONE, DECLINE, FAILURE)
+                   .stream().map(Enum::name).collect(Collectors.joining(","));
+
+    // Package-visible for test assertion; see PrReviewQhorusLifecycleTest#*_allowedTypes_*.
+    static final String OBSERVE_ALLOWED_TYPES =
+            EnumSet.of(EVENT)
+                   .stream().map(Enum::name).collect(Collectors.joining(","));
+
+    // Package-visible for test assertion; see PrReviewQhorusLifecycleTest#*_allowedTypes_*.
+    // STATUS excluded: human oversight is a terminal decision gate, not an async long-running op.
+    // FAILURE excluded: human decisions are DONE or DECLINE; FAILURE on oversight is a bug.
+    // HANDOFF excluded: specialist delegation is orchestrator-mediated (DECLINE → re-COMMAND),
+    //   not peer-to-peer. HANDOFF on oversight bypasses the orchestrator — wrong architecture.
+    static final String OVERSIGHT_ALLOWED_TYPES =
+            EnumSet.of(COMMAND, DONE, DECLINE)
+                   .stream().map(Enum::name).collect(Collectors.joining(","));
+
     @Inject
     ChannelService channelService;
 
@@ -47,15 +73,15 @@ public class QhorusPrReviewService implements PrReviewApplicationService {
 
     @Override
     public PrReviewOutcome review(PrPayload pr) {
-        String prefix = "pr-review-" + pr.prNumber();
-        Channel work = findOrCreate(prefix + "/work");
-        findOrCreate(prefix + "/observe");
-        findOrCreate(prefix + "/oversight");
+        final String prefix = "pr-review-" + pr.prNumber();
+        final Channel work = findOrCreateWorkChannel(prefix);
+        findOrCreateObserveChannel(prefix);
+        findOrCreateOversightChannel(prefix);
 
-        List<String> allFindings = new ArrayList<>();
+        final List<String> allFindings = new ArrayList<>();
 
         for (ReviewerAgent agent : agents) {
-            String correlationId = UUID.randomUUID().toString();
+            final String correlationId = UUID.randomUUID().toString();
 
             var commandResult = messageService.dispatch(MessageDispatch.builder()
                     .channelId(work.id)
@@ -98,8 +124,43 @@ public class QhorusPrReviewService implements PrReviewApplicationService {
         return new PrReviewOutcome("qhorus-reviewed", allFindings);
     }
 
-    private Channel findOrCreate(String name) {
+    private Channel findOrCreateWorkChannel(final String prefix) {
+        final String name = prefix + "/work";
         return channelService.findByName(name)
-                .orElseGet(() -> channelService.create(name, null, ChannelSemantic.APPEND, ORCHESTRATOR));
+                .map(ch -> requireAllowedTypes(ch, WORK_ALLOWED_TYPES))
+                .orElseGet(() -> channelService.create(
+                        name, null, ChannelSemantic.APPEND, ORCHESTRATOR,
+                        null, null, null, null, WORK_ALLOWED_TYPES));
+    }
+
+    private Channel findOrCreateObserveChannel(final String prefix) {
+        final String name = prefix + "/observe";
+        return channelService.findByName(name)
+                .map(ch -> requireAllowedTypes(ch, OBSERVE_ALLOWED_TYPES))
+                .orElseGet(() -> channelService.create(
+                        name, null, ChannelSemantic.APPEND, ORCHESTRATOR,
+                        null, null, null, null, OBSERVE_ALLOWED_TYPES));
+    }
+
+    private Channel findOrCreateOversightChannel(final String prefix) {
+        final String name = prefix + "/oversight";
+        return channelService.findByName(name)
+                .map(ch -> requireAllowedTypes(ch, OVERSIGHT_ALLOWED_TYPES))
+                .orElseGet(() -> channelService.create(
+                        name, null, ChannelSemantic.APPEND, ORCHESTRATOR,
+                        null, null, null, null, OVERSIGHT_ALLOWED_TYPES));
+    }
+
+    // Fail fast if an existing channel's type contract doesn't match what we expect.
+    // This surfaces pre-fix permissive channels rather than silently bypassing enforcement.
+    // Long-term fix: qhorus#246 adds setAllowedTypes() for proper migration without deletion.
+    private static Channel requireAllowedTypes(final Channel ch, final String expected) {
+        if (!expected.equals(ch.allowedTypes)) {
+            throw new IllegalStateException(
+                    "Channel '" + ch.name + "' has allowedTypes='" + ch.allowedTypes
+                    + "' but expected '" + expected + "'. "
+                    + "Delete and recreate, or wait for qhorus#246 (setAllowedTypes).");
+        }
+        return ch;
     }
 }

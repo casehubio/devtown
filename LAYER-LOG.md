@@ -327,19 +327,13 @@ class PrReviewCaseService implements PrReviewApplicationService
 `handle(PrPayload pr)` passes the typed domain object. AML uses `AgentBehaviour.handle(Message command)`. Devtown diverges deliberately: no nullable qhorus primitive leaks into the port interface; the domain boundary is clean at the cost of a small API difference vs AML. The `Message` parameter becomes meaningful only with real out-of-process agents where the command content must be deserialised — that is a future layer concern.
 
 **Shared `/work` channel per PR — three channels total.**
-All specialist COMMAND/DONE/DECLINE messages share `pr-review-{N}/work`. Two additional channels are created empty: `pr-review-{N}/observe` (Layer 4 audit events) and `pr-review-{N}/oversight` (Layer 2 oversight). Per-specialist channels would require `3 × n` channels and imply three separate oversight gates per PR — semantically wrong and misaligned with Layer 5's one-case-per-PR model. The naming convention establishes normative intent; `allowedTypes` enforcement is a Claudony `NormativeChannelLayout` concern (devtown#54).
+All specialist COMMAND/DONE/DECLINE messages share `pr-review-{N}/work`. Two additional channels are created empty: `pr-review-{N}/observe` (Layer 4 audit events) and `pr-review-{N}/oversight` (Layer 2 oversight). Per-specialist channels would require `3 × n` channels and imply three separate oversight gates per PR — semantically wrong and misaligned with Layer 5's one-case-per-PR model. Type contracts are enforced via `allowedTypes` set at channel creation (devtown#54 ✅): `/work` = `COMMAND,STATUS,DONE,DECLINE,FAILURE`; `/observe` = `EVENT`; `/oversight` = `COMMAND,DONE,DECLINE`. `NormativeChannelLayout` is not a real SPI — enforcement is in `StoredMessageTypePolicy.validate()` and triggered by `ChannelService.create(…, allowedTypes)` directly.
 
 **`target=capability()` on COMMAND — the obligor recorded in the Commitment.**
 `MessageDispatch.target` is the `ReviewDomain` constant (`"security-review"`, etc.). `MessageService.dispatch()` auto-creates a Commitment when `type=COMMAND` and `correlationId` is non-null (GE-20260517-5de55b). The target string becomes the Commitment's obligor. DONE discharges it; DECLINE closes it. The internal state transitions (FULFILLED, DECLINED) are qhorus internals — the test-observable form is `commitmentStore.findOpenByObligor(capability, channelId)` returning empty after either response.
 
-**Idempotent channel creation — `findByName()` before `create()`.**
-```java
-private Channel findOrCreate(String name) {
-    return channelService.findByName(name)
-            .orElseGet(() -> channelService.create(name, null, ChannelSemantic.APPEND, ORCHESTRATOR));
-}
-```
-`ChannelService.create()` throws if called twice with the same name (GE-20260529-88b7b6). Pattern: always `findByName` first. `findOrCreate` is not a platform primitive — it is implemented in devtown.
+**Idempotent channel creation — `findByName()` before `create()`, with type guard.**
+The original generic `findOrCreate(String)` was replaced (devtown#54) with three named methods (`findOrCreateWorkChannel`, `findOrCreateObserveChannel`, `findOrCreateOversightChannel`). Each calls `channelService.create(…, allowedTypes)` with the channel's specific type contract and validates existing channels via `requireAllowedTypes()`. `ChannelService.create()` throws if called twice with the same name (GE-20260529-88b7b6). Pattern: always `findByName` first. The typed factory methods are not a platform primitive — they are implemented in devtown.
 
 **Per-request correlation — `UUID.randomUUID()` per COMMAND.**
 `correlationId` is generated per COMMAND, not per review request. Each specialist gets its own correlation thread so DONE/DECLINE messages are matched to the correct COMMAND. `inReplyTo=commandResult.messageId()` links the response to the specific COMMAND message in the ledger.

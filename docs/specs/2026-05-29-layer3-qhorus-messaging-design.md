@@ -77,11 +77,11 @@ One normative 3-channel set per PR review. All specialist interactions share the
 
 | Channel | Semantic | `allowedTypes` | Used in Layer 3 |
 |---|---|---|---|
-| `pr-review-{prNumber}/work` | `APPEND` | none enforced | Yes — COMMAND/DONE/DECLINE per specialist |
-| `pr-review-{prNumber}/observe` | `APPEND` | none enforced | Created but empty; Layer 4 posts events here |
-| `pr-review-{prNumber}/oversight` | `APPEND` | none enforced | Created but empty; Layer 2 oversight uses this |
+| `pr-review-{prNumber}/work` | `APPEND` | `COMMAND,STATUS,DONE,DECLINE,FAILURE` | Yes — COMMAND/DONE/DECLINE per specialist; STATUS/FAILURE included for Layer 6 forward-compatibility |
+| `pr-review-{prNumber}/observe` | `APPEND` | `EVENT` | Created but empty; Layer 4 posts audit events here |
+| `pr-review-{prNumber}/oversight` | `APPEND` | `COMMAND,DONE,DECLINE` | Created but empty; Layer 2 oversight uses this |
 
-**`allowedTypes`:** `ChannelService.create()` does not expose `allowedTypes` — type enforcement is a Claudony `NormativeChannelLayout` SPI concern. Devtown creates channels directly without type restriction. The channel naming convention (`/work`, `/observe`, `/oversight`) establishes the normative intent; enforcement is Claudony's domain. Forward concern (FAILURE handling if type restriction is ever added) tracked as devtown#54.
+**`allowedTypes`:** Enforced via `StoredMessageTypePolicy.validate()` at dispatch time. `ChannelService.create()` accepts `allowedTypes` as a comma-separated string (9-arg overload); devtown uses `EnumSet`-built constants for compile-time safety. `NormativeChannelLayout` is not a real SPI — enforcement is in qhorus directly. Type contracts were set in devtown#54 (✅ closed). Design rationale in `docs/specs/2026-06-03-allowedtypes-channel-enforcement-design.md`.
 
 **Rationale for shared `/work`:** Oversight and observe are PR-level concerns, not specialist-level. One channel set per PR is the correct model: a per-specialist layout incoherently implies three separate oversight gates per PR, and would require 9 channels per PR (3 specialists × 3 channels) instead of 3. This also aligns with Layer 5's one-case-per-PR model: a future design where Layer 5 delegates to a qhorus-aware component could pass `subjectId=caseId` when creating messages, linking all `MessageLedgerEntry` records to the engine case by subject. That integration is not Layer 3's concern; the channel structure it creates is compatible.
 
@@ -180,4 +180,4 @@ All existing `@QuarkusTest` runs are unaffected — `PrReviewCaseService @Altern
 | Flat capability channels (AML pattern) | Mixes all PR reviews on one channel; loses "channel = review workspace" teaching point |
 | `AgentDispatchMechanism` / `PushAgentDispatch` | No architectural benefit in Layer 3; agents are synchronous CDI beans |
 | `ReviewerOutcome.Failed` | Layer 3 stubs don't exercise FAILURE; adding it now is YAGNI |
-| `allowedTypes` enforcement at channel creation | API doesn't expose it; Claudony's domain; tracked as devtown#54 |
+| `allowedTypes` enforcement at channel creation | ~~API doesn't expose it; Claudony's domain; tracked as devtown#54~~ — Implemented in devtown#54 ✅; type contracts set via `ChannelService.create()` 9-arg overload |

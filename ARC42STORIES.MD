@@ -467,11 +467,11 @@ C4Component
 
 #### Chapter 2 — Human Review with SLA
 
-**Journey:** PR Review Coordination | **Sequence:** 2 of 5 | **Status:** ✅ complete (code); L2 §9.4 entry 🔲 pending engine#326
+**Journey:** PR Review Coordination | **Sequence:** 2 of 5 | **Status:** ✅ complete (code); L2 §9.4 entry 🔲 pending (narrative not yet written)
 **Delivered:** 2026-05-22+ | **Issues:** casehubio/devtown#41, #42 | **Blog:** 🔲 at L2 close
 
 **What this delivers**
-Human review assignments are now SLA-bounded — a reviewer who misses their deadline triggers automatic escalation (to a senior reviewer, extended deadline, or failure) rather than indefinite stall. Review accountability tracks per individual, not per group. Caveat: breach-triggered case failure requires engine#326 to close fully.
+Human review assignments are now SLA-bounded — a reviewer who misses their deadline triggers automatic escalation (to a senior reviewer, extended deadline, or failure) rather than indefinite stall. Review accountability tracks per individual, not per group. (Note: engine#326 — failure goal support — is now ✅ CLOSED; breach-triggered case failure path is unblocked.)
 
 **Accountability gaps closed**
 - No response SLA → `WorkItem.claimDeadline` + `SlaBreachPolicy`
@@ -700,11 +700,11 @@ Initially written as a concrete method in `DevtownCapabilityRegistry` calling th
 **Navigation:** `git log --grep="#41\|#42" --oneline`
 **Blog:** 🔲 at layer close
 **Improvement refs:** 🔲 at layer close
-**Completed:** devtown#41 ✅ devtown#42 ✅; full entry 🔲 pending engine#326 (failure goal support — needed to close the breach escalation path end-to-end)
+**Completed:** devtown#41 ✅ devtown#42 ✅; engine#326 ✅ CLOSED; full entry 🔲 narrative not yet written
 
 #### What it adds
 
-🔲 Full narrative at layer close (blocked on engine#326 — failure goal support needed to demonstrate breach-triggered case failure end-to-end).
+🔲 Full narrative not yet written. engine#326 (failure goal support) is now CLOSED — breach-triggered case failure path is unblocked. Layer 2 narrative can be completed.
 
 **Known scope:** Layer 2 adds `casehub-work` to the PR review case. The gap it closes: analysis can stall indefinitely with no escalation. After Layer 2, every human review assignment is a `WorkItem` with a configurable `claimDeadline`. When the reviewer misses the deadline, `SlaBreachPolicy` fires: escalate to a senior reviewer, extend, or fail — governed by the domain policy.
 
@@ -928,20 +928,20 @@ Per the Arc42Stories spec: only decisions not captured inline elsewhere. Layer-s
 | Risk | Mitigation | Tracked |
 |---|---|---|
 | `quarkus:build` fails standalone without full dependency stack | Test suite passes; production packaging deferred until claudony + persistence modules present | devtown#31 |
-| `Path.root()` not yet on platform main | `buildBreachContext()` uses `Path.root()` as null fallback; blocks `work#212` until platform publishes it | platform#24 |
-| engine#326 (failure goal support) blocking Layer 2 documentation completion | SLA breach code complete; breach-triggered case failure path deferred | engine#326 |
+| ~~`Path.root()` not yet on platform main~~ | platform#24 ✅ CLOSED; work#212 ✅ CLOSED — resolved | ~~platform#24~~ |
+| ~~engine#326 blocking Layer 2 documentation~~ | engine#326 ✅ CLOSED — narrative can now be written | ~~engine#326~~ |
 | Bootstrap routing is identical to Gastown | By design — Phase 0. Routing quality improves as attestations accumulate. DT-006 documents the four-phase maturity model. | DT-006 |
 
 ### Technical Debt
 
 | Item | Description | Layer | Tracked |
 |---|---|---|---|
-| SLA breach from engine scope propagation | `HumanTaskTarget.scope` not propagated to WorkItem until engine#330 ships; `SlaBreachPolicy` enriches scope from `callerRef` independently | L2 | engine#330 |
-| `BreachDecision.Extend` not wired | `WorkItemService.extend()` needed | L2 | work#211 |
+| ~~SLA breach from engine scope propagation~~ | engine#330 ✅ CLOSED — `HumanTaskTarget.scope` shipped | L2 | ~~engine#330~~ |
+| ~~`BreachDecision.Extend` not wired~~ | work#211 ✅ CLOSED — `WorkItemService.extend()` shipped | L2 | ~~work#211~~ |
 | Policy config via `@ConfigProperty` | Temporary until `PreferenceProvider.resolve(scope).asMap()` ships | L5 | parent#26 |
 | Concurrency throttling not yet built | `SpawnThrottle` in `ClaudonyConfig` (P1.1) — significant gap at scale vs Gastown | L5+ | — |
 | Recovery on stuck reviewer not yet built | `RecoveryPolicy` SPI (P1.2) — detection only, no automated recovery | L5+ | — |
-| Merge queue (batch-then-bisect) not yet built | Gastown parity feature; CasePlanModel approach designed, not started | L5+ | devtown#20 |
+| Merge queue (batch-then-bisect) not yet built | Gastown parity feature; CasePlanModel approach designed (naming deferred to Epics 4/5) | L5+ | devtown#11 |
 
 ### Layer Churn
 

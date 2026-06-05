@@ -136,6 +136,14 @@
         <artifactId>casehub-devtown-github</artifactId>
         <version>${project.version}</version>
       </dependency>
+
+      <!-- casehub-platform-memory-inmem — in-memory CaseMemoryStore for testing -->
+      <dependency>
+        <groupId>io.casehub</groupId>
+        <artifactId>casehub-platform-memory-inmem</artifactId>
+        <version>${casehub.version}</version>
+        <scope>test</scope>
+      </dependency>
     </dependencies>
   </dependencyManagement>
 

@@ -42,7 +42,7 @@ class PrReviewQhorusLifecycleTest {
 
     @Test
     void channelsCreated() {
-        var pr = new PrPayload("casehubio/devtown", 201, "sha201", "main", 100);
+        var pr = new PrPayload("casehubio/devtown", 201, "sha201", "main", 100, "test-contributor", List.of());
 
         service.review(pr);
 
@@ -53,7 +53,7 @@ class PrReviewQhorusLifecycleTest {
 
     @Test
     void commandsDispatched() {
-        var pr = new PrPayload("casehubio/devtown", 202, "sha202", "main", 100);
+        var pr = new PrPayload("casehubio/devtown", 202, "sha202", "main", 100, "test-contributor", List.of());
 
         service.review(pr);
 
@@ -73,7 +73,7 @@ class PrReviewQhorusLifecycleTest {
 
     @Test
     void doneDischargesCommitment() {
-        var pr = new PrPayload("casehubio/devtown", 203, "sha203", "main", 100);
+        var pr = new PrPayload("casehubio/devtown", 203, "sha203", "main", 100, "test-contributor", List.of());
 
         service.review(pr);
 
@@ -90,7 +90,7 @@ class PrReviewQhorusLifecycleTest {
 
     @Test
     void declineRecorded() {
-        var pr = new PrPayload("casehubio/devtown", 204, "sha204", "main", 100);
+        var pr = new PrPayload("casehubio/devtown", 204, "sha204", "main", 100, "test-contributor", List.of());
 
         service.review(pr);
 
@@ -109,7 +109,7 @@ class PrReviewQhorusLifecycleTest {
 
     @Test
     void declineContentRecorded() {
-        var pr = new PrPayload("casehubio/devtown", 205, "sha205", "main", 100);
+        var pr = new PrPayload("casehubio/devtown", 205, "sha205", "main", 100, "test-contributor", List.of());
 
         service.review(pr);
 
@@ -128,7 +128,7 @@ class PrReviewQhorusLifecycleTest {
 
     @Test
     void workChannel_allowedTypes_containsExpectedSet() {
-        service.review(new PrPayload("casehubio/devtown", 210, "sha210", "main", 100));
+        service.review(new PrPayload("casehubio/devtown", 210, "sha210", "main", 100, "test-contributor", List.of()));
         var work = channelService.findByName("pr-review-210/work").orElseThrow();
         assertThat(parseAllowedTypes(work.allowedTypes))
                 .containsExactlyInAnyOrder(COMMAND, STATUS, DONE, DECLINE, FAILURE);
@@ -136,7 +136,7 @@ class PrReviewQhorusLifecycleTest {
 
     @Test
     void observeChannel_allowedTypes_isEventOnly() {
-        service.review(new PrPayload("casehubio/devtown", 211, "sha211", "main", 100));
+        service.review(new PrPayload("casehubio/devtown", 211, "sha211", "main", 100, "test-contributor", List.of()));
         var observe = channelService.findByName("pr-review-211/observe").orElseThrow();
         assertThat(parseAllowedTypes(observe.allowedTypes))
                 .containsExactly(EVENT);
@@ -144,7 +144,7 @@ class PrReviewQhorusLifecycleTest {
 
     @Test
     void oversightChannel_allowedTypes_containsExpectedSet() {
-        service.review(new PrPayload("casehubio/devtown", 212, "sha212", "main", 100));
+        service.review(new PrPayload("casehubio/devtown", 212, "sha212", "main", 100, "test-contributor", List.of()));
         var oversight = channelService.findByName("pr-review-212/oversight").orElseThrow();
         assertThat(parseAllowedTypes(oversight.allowedTypes))
                 .containsExactlyInAnyOrder(COMMAND, DONE, DECLINE);
@@ -152,7 +152,7 @@ class PrReviewQhorusLifecycleTest {
 
     @Test
     void workChannel_acceptsStatusDispatch() {
-        service.review(new PrPayload("casehubio/devtown", 213, "sha213", "main", 100));
+        service.review(new PrPayload("casehubio/devtown", 213, "sha213", "main", 100, "test-contributor", List.of()));
         var work = channelService.findByName("pr-review-213/work").orElseThrow();
         assertThatNoException().isThrownBy(() ->
                 messageService.dispatch(MessageDispatch.builder()
@@ -166,7 +166,7 @@ class PrReviewQhorusLifecycleTest {
 
     @Test
     void workChannel_acceptsFailureDispatch() {
-        service.review(new PrPayload("casehubio/devtown", 214, "sha214", "main", 100));
+        service.review(new PrPayload("casehubio/devtown", 214, "sha214", "main", 100, "test-contributor", List.of()));
         var work = channelService.findByName("pr-review-214/work").orElseThrow();
         // FAILURE requires inReplyTo (builder validation) — open a COMMAND first
         final String corrId = UUID.randomUUID().toString();
@@ -192,7 +192,7 @@ class PrReviewQhorusLifecycleTest {
 
     @Test
     void observeChannel_acceptsEventDispatch() {
-        service.review(new PrPayload("casehubio/devtown", 215, "sha215", "main", 100));
+        service.review(new PrPayload("casehubio/devtown", 215, "sha215", "main", 100, "test-contributor", List.of()));
         var observe = channelService.findByName("pr-review-215/observe").orElseThrow();
         assertThatNoException().isThrownBy(() ->
                 messageService.dispatch(MessageDispatch.builder()
@@ -206,7 +206,7 @@ class PrReviewQhorusLifecycleTest {
 
     @Test
     void oversightChannel_acceptsCommandAndDoneDispatch() {
-        service.review(new PrPayload("casehubio/devtown", 216, "sha216", "main", 100));
+        service.review(new PrPayload("casehubio/devtown", 216, "sha216", "main", 100, "test-contributor", List.of()));
         var oversight = channelService.findByName("pr-review-216/oversight").orElseThrow();
         // DONE requires inReplyTo (builder validation) — open a COMMAND first
         final String corrId = UUID.randomUUID().toString();
@@ -232,7 +232,7 @@ class PrReviewQhorusLifecycleTest {
 
     @Test
     void observeChannel_rejectsSpeechActDispatch() {
-        service.review(new PrPayload("casehubio/devtown", 221, "sha221", "main", 100));
+        service.review(new PrPayload("casehubio/devtown", 221, "sha221", "main", 100, "test-contributor", List.of()));
         var observe = channelService.findByName("pr-review-221/observe").orElseThrow();
         // /observe is EVENT-only; any speech-act type must be rejected
         assertThatThrownBy(() ->
@@ -248,7 +248,7 @@ class PrReviewQhorusLifecycleTest {
 
     @Test
     void workChannel_rejectsEventDispatch() {
-        service.review(new PrPayload("casehubio/devtown", 217, "sha217", "main", 100));
+        service.review(new PrPayload("casehubio/devtown", 217, "sha217", "main", 100, "test-contributor", List.of()));
         var work = channelService.findByName("pr-review-217/work").orElseThrow();
         assertThatThrownBy(() ->
                 messageService.dispatch(MessageDispatch.builder()
@@ -263,7 +263,7 @@ class PrReviewQhorusLifecycleTest {
 
     @Test
     void observeChannel_rejectsCommandDispatch() {
-        service.review(new PrPayload("casehubio/devtown", 218, "sha218", "main", 100));
+        service.review(new PrPayload("casehubio/devtown", 218, "sha218", "main", 100, "test-contributor", List.of()));
         var observe = channelService.findByName("pr-review-218/observe").orElseThrow();
         assertThatThrownBy(() ->
                 messageService.dispatch(MessageDispatch.builder()
@@ -279,7 +279,7 @@ class PrReviewQhorusLifecycleTest {
 
     @Test
     void oversightChannel_rejectsFailureDispatch() {
-        service.review(new PrPayload("casehubio/devtown", 219, "sha219", "main", 100));
+        service.review(new PrPayload("casehubio/devtown", 219, "sha219", "main", 100, "test-contributor", List.of()));
         var oversight = channelService.findByName("pr-review-219/oversight").orElseThrow();
         // Must provide inReplyTo to pass builder validation; type enforcement fires after
         final String corrId = UUID.randomUUID().toString();
@@ -306,7 +306,7 @@ class PrReviewQhorusLifecycleTest {
 
     @Test
     void oversightChannel_rejectsEventDispatch() {
-        service.review(new PrPayload("casehubio/devtown", 220, "sha220", "main", 100));
+        service.review(new PrPayload("casehubio/devtown", 220, "sha220", "main", 100, "test-contributor", List.of()));
         var oversight = channelService.findByName("pr-review-220/oversight").orElseThrow();
         assertThatThrownBy(() ->
                 messageService.dispatch(MessageDispatch.builder()
@@ -326,7 +326,7 @@ class PrReviewQhorusLifecycleTest {
         channelService.create("pr-review-299/work", null, ChannelSemantic.APPEND, ORCHESTRATOR);
 
         assertThatThrownBy(() ->
-                service.review(new PrPayload("casehubio/devtown", 299, "sha299", "main", 100)))
+                service.review(new PrPayload("casehubio/devtown", 299, "sha299", "main", 100, "test-contributor", List.of())))
                 .isInstanceOf(IllegalStateException.class)
                 .hasMessageContaining("allowedTypes");
     }

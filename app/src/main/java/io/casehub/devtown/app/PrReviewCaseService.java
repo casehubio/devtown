@@ -7,6 +7,7 @@ import jakarta.annotation.Priority;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.inject.Alternative;
 import jakarta.inject.Inject;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
@@ -21,6 +22,9 @@ public class PrReviewCaseService implements PrReviewApplicationService {
     @Inject
     PrReviewCaseHub caseHub;
 
+    @Inject
+    CaseMemoryRecaller memoryRecaller;
+
     @ConfigProperty(name = "devtown.policy.human-approval-threshold", defaultValue = "500")
     int humanApprovalThreshold;
 
@@ -32,6 +36,8 @@ public class PrReviewCaseService implements PrReviewApplicationService {
 
     @Override
     public PrReviewOutcome review(PrPayload pr) {
+        var memoryContext = memoryRecaller.recall(pr);
+
         // TODO(parent#26): replace @ConfigProperty injection with PreferenceProvider.resolve(scope).asMap()
         var policy = Map.<String, Object>of(
             "humanApprovalThreshold", humanApprovalThreshold,
@@ -43,12 +49,15 @@ public class PrReviewCaseService implements PrReviewApplicationService {
             "repo", pr.repo(),
             "linesChanged", pr.linesChanged(),
             "baseRef", pr.baseRef(),
-            "headSha", pr.headSha()
+            "headSha", pr.headSha(),
+            "contributor", pr.contributor(),
+            "changedPaths", pr.changedPaths()
         );
-        var initialContext = Map.<String, Object>of(
-            "pr", prContext,
-            "policy", policy
-        );
+        var initialContext = new HashMap<String, Object>();
+        initialContext.put("pr", prContext);
+        initialContext.put("policy", policy);
+        initialContext.put("memory", memoryContext.toContextMap());
+
         // CompletionStage<UUID> case ID — not surfaced in PrReviewOutcome until Layer 6 adds case tracking (devtown#10)
         caseHub.startCase(initialContext);
         return new PrReviewOutcome(VERDICT_CASE_OPENED, List.of());

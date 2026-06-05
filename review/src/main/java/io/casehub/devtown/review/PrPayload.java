@@ -1,3 +1,13 @@
 package io.casehub.devtown.review;
 
-public record PrPayload(String repo, int prNumber, String headSha, String baseRef, int linesChanged) {}
+import java.util.List;
+
+public record PrPayload(
+    String repo,
+    int prNumber,
+    String headSha,
+    String baseRef,
+    int linesChanged,
+    String contributor,
+    List<String> changedPaths
+) {}

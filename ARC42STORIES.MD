@@ -467,7 +467,7 @@ C4Component
 
 #### Chapter 2 — Human Review with SLA
 
-**Journey:** PR Review Coordination | **Sequence:** 2 of 5 | **Status:** ✅ complete (code); L2 §9.4 entry 🔲 pending (narrative not yet written)
+**Journey:** PR Review Coordination | **Sequence:** 2 of 5 | **Status:** ✅ complete
 **Delivered:** 2026-05-22+ | **Issues:** casehubio/devtown#41, #42 | **Blog:** 🔲 at L2 close
 
 **What this delivers**
@@ -700,13 +700,17 @@ Initially written as a concrete method in `DevtownCapabilityRegistry` calling th
 **Navigation:** `git log --grep="#41\|#42" --oneline`
 **Blog:** 🔲 at layer close
 **Improvement refs:** 🔲 at layer close
-**Completed:** devtown#41 ✅ devtown#42 ✅; engine#326 ✅ CLOSED; full entry 🔲 narrative not yet written
+**Completed:** devtown#41 ✅ devtown#42 ✅; engine#326 ✅ CLOSED; narrative ✅ complete 2026-06-05
 
 #### What it adds
 
-🔲 Full narrative not yet written. engine#326 (failure goal support) is now CLOSED — breach-triggered case failure path is unblocked. Layer 2 narrative can be completed.
+Layer 2 adds `casehub-work` to the PR review case. The gap it closes: a human reviewer can disappear or miss a security finding with no escalation, no individual assignment record, and no signal back to the case. After Layer 2, every human review assignment is a `WorkItem` with a configurable `claimDeadline`. When the reviewer misses the deadline, `SlaBreachPolicy.onBreach()` fires — the domain policy decides: escalate to a senior group with a new deadline, extend, or fail terminally.
 
-**Known scope:** Layer 2 adds `casehub-work` to the PR review case. The gap it closes: analysis can stall indefinitely with no escalation. After Layer 2, every human review assignment is a `WorkItem` with a configurable `claimDeadline`. When the reviewer misses the deadline, `SlaBreachPolicy` fires: escalate to a senior reviewer, extend, or fail — governed by the domain policy.
+`DefaultSlaBreachPolicy` (pure Java, `devtown-domain`) implements two-tier escalation without any state storage. It reads `candidateGroups()` from the breached `WorkItem` to determine tier: if the escalation group (`pr-leads` by default) is already assigned, the task has already been escalated — return `BreachDecision.Fail`. Otherwise return `BreachDecision.EscalateTo.to("pr-leads").withDeadline(...)`. When the escalated `WorkItem` expires, `ExpiryLifecycleService` calls `onBreach()` again on the same in-place-mutated `WorkItem` — the algorithm is purely a function of current group membership. No decision-tree serialisation, no state storage.
+
+The bridge from `WorkItem` lifecycle to `CasePlanModel` uses two paths. The **happy path** goes through `WorkItemLifecycleAdapter` (foundation): on `COMPLETED`, it reads the `outputMapping` declared in the `WorkItem` and signals the engine with the resolution JSON — updating `humanApproval` in the case context via `{ "humanApproval": "." }`. The **breach path** goes through `SlaBreachHandler` (`@Observes SlaBreachEvent`): it decodes the `CallerRef` (a `case:{caseId}:human-approval` token embedded at `WorkItem` creation) and on `BreachDecision.Fail` signals `humanApproval.status = fail.reason()` directly. With engine#326 ✅ CLOSED, the engine's failure-goal support propagates this to a formal case failure.
+
+Contrast with Layer 1: `PrReviewService @DefaultBean` has a direct stub with no deadline, no individual accountability, and no record. Layer 2 registers `SlaBreachPolicyBean @ApplicationScoped` (displacing the no-op) and `SlaBreachHandler @ApplicationScoped` — no Layer 1 code is modified.
 
 #### Accountability gaps closed
 
@@ -717,10 +721,16 @@ Initially written as a concrete method in `DevtownCapabilityRegistry` calling th
 
 #### Key files
 
-🔲 Full file list at layer close. Key decisions from `DESIGN.md §Layer 2`:
-- `SlaBreachPolicy` SPI — lives in `casehub-work-api`; every consumer already has this on classpath
-- `BreachDecision` sealed interface — `Fail`, `EscalateTo`, `Extend`, `Chained` (explicit combinator, no nullable continuations)
-- `DefaultSlaBreachPolicy` — lives in `devtown-domain` (pure Java, no Quarkus); stateless multi-tier escalation
+| File | What it is |
+|------|------------|
+| `domain/…/sla/DefaultSlaBreachPolicy.java` | Two-tier escalation policy (pure Java, no Quarkus); reads `candidateGroups` to determine tier |
+| `domain/…/sla/SlaPreferenceKeys.java` | Preference keys: `escalation-group`, `escalation-hours`, `breach-terminal-reason`, `completion-hours` |
+| `app/…/SlaBreachPolicyBean.java` | CDI `@ApplicationScoped` subclass; displaces no-op `SlaBreachPolicy` from `casehub-work` |
+| `app/…/SlaBreachHandler.java` | `@Observes SlaBreachEvent`; decodes `CallerRef`; on `Fail` signals `humanApproval.status` in case context |
+| `app/…/spi/DevtownWorkloadProvider.java` | No-op `WorkloadProvider`; stand-in until devtown#34 adds JPA-backed production wiring |
+| `app/…/HumanApprovalLifecycleTest.java` | Happy path: WorkItem created → claimed → completed → case context updated → case COMPLETED |
+| `app/…/SlaBreachLifecycleTest.java` | Two-tier SLA breach: Tier 1 escalates to pr-leads (case context unchanged); Tier 2 terminal fail signals `humanApproval.status=sla-breach` |
+| `app/…/SlaBreachHandlerWiringTest.java` | CDI displacement verified; breach event fires directly and signals case context |
 
 #### Key wiring
 
@@ -734,17 +744,28 @@ Alternative: embed `thenOnBreach` on `EscalateTo` and `Extend`. Chose separate `
 When the escalated `WorkItem` expires, `ExpiryLifecycleService` calls `onBreach()` again. The policy reads `ctx.task().candidateGroups()` to determine the current tier — no decision tree serialization, no state storage. If escalation group is already assigned → terminal failure; otherwise → escalate.
 
 **Scope resolution uses `WorkItem.scope` field (new V31 column), with `Path.root()` as null fallback.**
-`buildBreachContext()` calls `Path.root()` when `WorkItem.scope` is null. `Path.root()` is not yet on platform main — blocks `work#212` compilation until platform publishes it.
-
-🔲 Full wiring at layer close.
+`buildBreachContext()` calls `Path.root()` when `WorkItem.scope` is null. `Path.root()` was pending on platform; blocked `work#212` compilation until platform published it (now ✅ CLOSED).
 
 #### Gotchas
 
-🔲 At layer close. Known issue: `SlaBreachEvent` initially carried a `Chained` wrapper — now fires the leaf decision always. `BreachExecutionFailed` escape to `@Transactional` boundary governed by protocol PP-20260522-f08b62 + garden GE-20260522-4e806e.
+**`SlaBreachEvent` fires the leaf `BreachDecision`, not the outer `Chained` wrapper.**
+The executor unwraps chaining before firing. `SlaBreachHandler` only needs to handle `Fail` — escalation decisions don't result in a case signal.
+
+**`BreachExecutionFailed` must not escape the `@Transactional` loop boundary.**
+It is a private exception; validate eagerly at factory and catch at top-level dispatch. Governed by protocol PP-20260522-f08b62 + garden GE-20260522-4e806e.
+
+**Pre-seed all parallel check keys with non-null values in `@QuarkusTest`.**
+If any binding condition `context.x == null` evaluates to true on test start, `tryProvision()` fires asynchronously against the Vert.x event loop — causing spurious failures and timeout races. Pre-seed all keys (`styleCheck`, `testCoverage`, `performanceAnalysis`, `ci`) with PENDING/non-null values so bindings don't trigger unexpectedly. Governed by PP-20260521-134c38.
 
 #### Pattern to replicate
 
-🔲 At layer close.
+1. Define `SlaPreferenceKeys` in `{domain}-domain` — one `PreferenceKey<T>` per policy parameter with safe defaults that encode the production policy
+2. Implement `SlaBreachPolicy` as a stateless function in `{domain}-domain` — read `ctx.task().candidateGroups()` to determine tier; return `EscalateTo` or `Fail`; never store state
+3. Create `{Domain}SlaBreachPolicyBean @ApplicationScoped` in `{domain}-app` — extend the domain class; CDI priority displaces the no-op from `casehub-work`; no `@DefaultBean`
+4. Create `{Domain}SlaBreachHandler @ApplicationScoped` — `@Observes SlaBreachEvent`; decode `CallerRef`; on `BreachDecision.Fail` signal the engine case context with the failure reason
+5. Embed `CallerRef.encode(caseId, bindingName)` at `WorkItem` creation — the YAML `human-decision` PlanItem does this via `HumanTaskScheduleHandler`
+6. Rely on `WorkItemLifecycleAdapter` (foundation) for the happy path — reads `outputMapping` and signals the engine; no code needed in the application layer
+7. Test with three suites: happy-path lifecycle (5 checkpoints), two-tier SLA breach (4 checkpoints), CDI wiring assertion
 
 ---
 

@@ -25,11 +25,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * Tests for {@link CaseMemoryRecaller}.
- * <p>
- * Note: Code-area recall tests omitted due to @QuarkusTest isolation preventing
- * cross-bean memory sharing. The implementation is correct; InMemoryMemoryStore
- * state doesn't persist across recaller.recall() calls in test context.
- * TODO(devtown#43): Add end-to-end integration test for code-area recall.
  */
 @QuarkusTest
 class CaseMemoryRecallerTest {
@@ -151,6 +146,44 @@ class CaseMemoryRecallerTest {
         assertThat(entry.get("text")).isEqualTo("Test coverage passed");
         assertThat(entry.get("outcome")).isEqualTo(ReviewOutcome.COMPLETED.name());
         assertThat(entry.get("capability")).isEqualTo("test-coverage");
+    }
+
+    @Test
+    void recall_with_code_area_history_returns_populated_context() {
+        var pr = new PrPayload(
+            "repo1",
+            10,
+            "codearea1",
+            "main",
+            300,
+            "carol",
+            List.of("app/src/main/java/Foo.java")
+        );
+
+        String tenantId = principal.tenancyId();
+
+        var attrs = new HashMap<String, String>();
+        attrs.put(MemoryAttributeKeys.OUTCOME, ReviewOutcome.COMPLETED.name());
+        attrs.put(DevtownMemoryKeys.CAPABILITY, "security-review");
+        attrs.put(DevtownMemoryKeys.ENTITY_TYPE, "code-area");
+        store.store(new MemoryInput(
+            "module:repo1/app",
+            DevtownMemoryDomain.SOFTWARE_REVIEW,
+            tenantId,
+            UUID.randomUUID().toString(),
+            "review history for app in repo1 — no critical findings",
+            attrs
+        ));
+
+        var result = recaller.recall(pr);
+
+        assertThat(result.codeAreaHistory())
+            .as("code-area recall via recaller.recall()")
+            .isNotEmpty();
+        assertThat(result.codeAreaHistory().get(0).entityId())
+            .isEqualTo("module:repo1/app");
+        assertThat(result.codeAreaHistory().get(0).text())
+            .isEqualTo("review history for app in repo1 — no critical findings");
     }
 
     @Test

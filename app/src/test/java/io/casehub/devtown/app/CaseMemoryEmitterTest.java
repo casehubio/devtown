@@ -219,6 +219,22 @@ class CaseMemoryEmitterTest {
     }
 
     @Test
+    void empty_changedPaths_produces_only_contributor_and_reviewer_facts() {
+        var event = sampleEvent("security-review", "mdproctor", List.of());
+
+        emitter.onReviewCompleted(event);
+
+        var captor = ArgumentCaptor.forClass(List.class);
+        verify(store).storeAll(captor.capture());
+        var facts = (List<MemoryInput>) captor.getValue();
+
+        assertThat(facts).hasSize(2);
+        assertThat(facts)
+            .extracting(f -> f.attributes().get(DevtownMemoryKeys.ENTITY_TYPE))
+            .containsExactlyInAnyOrder("contributor", "reviewer");
+    }
+
+    @Test
     void store_failure_is_swallowed() {
         var event = sampleEvent("security-review", "mdproctor", List.of("app/src/main/Foo.java"));
         doThrow(new RuntimeException("DB down")).when(store).storeAll(anyList());

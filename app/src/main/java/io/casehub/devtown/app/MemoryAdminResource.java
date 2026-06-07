@@ -2,6 +2,7 @@ package io.casehub.devtown.app;
 
 import io.casehub.platform.api.identity.CurrentPrincipal;
 import io.casehub.platform.api.memory.CaseMemoryStore;
+import jakarta.annotation.security.RolesAllowed;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.BadRequestException;
 import jakarta.ws.rs.Consumes;
@@ -13,6 +14,7 @@ import org.jboss.logging.Logger;
 
 @Path("/api/admin/memory")
 @Consumes(MediaType.APPLICATION_JSON)
+@RolesAllowed("admin")
 public class MemoryAdminResource {
 
     private static final Logger LOG = Logger.getLogger(MemoryAdminResource.class);

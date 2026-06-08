@@ -99,24 +99,24 @@ public class QhorusPrReviewService implements PrReviewApplicationService {
                 case ReviewerOutcome.Completed completed -> {
                     messageService.dispatch(MessageDispatch.builder()
                             .channelId(work.id)
-                            .sender(agent.capability())
+                            .sender(ORCHESTRATOR)
                             .type(MessageType.DONE)
                             .content(String.join("; ", completed.findings()))
                             .correlationId(correlationId)
                             .inReplyTo(commandResult.messageId())
-                            .actorType(ActorType.AGENT)
+                            .actorType(ActorType.SYSTEM)
                             .build());
                     allFindings.addAll(completed.findings());
                 }
                 case ReviewerOutcome.Declined declined ->
                     messageService.dispatch(MessageDispatch.builder()
                             .channelId(work.id)
-                            .sender(agent.capability())
+                            .sender(ORCHESTRATOR)
                             .type(MessageType.DECLINE)
                             .content(declined.reason())
                             .correlationId(correlationId)
                             .inReplyTo(commandResult.messageId())
-                            .actorType(ActorType.AGENT)
+                            .actorType(ActorType.SYSTEM)
                             .build());
             }
         }
@@ -127,40 +127,51 @@ public class QhorusPrReviewService implements PrReviewApplicationService {
     private Channel findOrCreateWorkChannel(final String prefix) {
         final String name = prefix + "/work";
         return channelService.findByName(name)
-                .map(ch -> requireAllowedTypes(ch, WORK_ALLOWED_TYPES))
+                .map(ch -> requireContract(ch, WORK_ALLOWED_TYPES, ORCHESTRATOR))
                 .orElseGet(() -> channelService.create(
                         name, null, ChannelSemantic.APPEND, ORCHESTRATOR,
-                        null, null, null, null, WORK_ALLOWED_TYPES));
+                        ORCHESTRATOR, null, null, null, WORK_ALLOWED_TYPES));
     }
 
     private Channel findOrCreateObserveChannel(final String prefix) {
         final String name = prefix + "/observe";
         return channelService.findByName(name)
-                .map(ch -> requireAllowedTypes(ch, OBSERVE_ALLOWED_TYPES))
+                .map(ch -> requireContract(ch, OBSERVE_ALLOWED_TYPES, ORCHESTRATOR))
                 .orElseGet(() -> channelService.create(
                         name, null, ChannelSemantic.APPEND, ORCHESTRATOR,
-                        null, null, null, null, OBSERVE_ALLOWED_TYPES));
+                        ORCHESTRATOR, null, null, null, OBSERVE_ALLOWED_TYPES));
     }
 
     private Channel findOrCreateOversightChannel(final String prefix) {
         final String name = prefix + "/oversight";
         return channelService.findByName(name)
-                .map(ch -> requireAllowedTypes(ch, OVERSIGHT_ALLOWED_TYPES))
+                .map(ch -> requireContract(ch, OVERSIGHT_ALLOWED_TYPES, ORCHESTRATOR))
                 .orElseGet(() -> channelService.create(
                         name, null, ChannelSemantic.APPEND, ORCHESTRATOR,
-                        null, null, null, null, OVERSIGHT_ALLOWED_TYPES));
+                        ORCHESTRATOR, null, null, null, OVERSIGHT_ALLOWED_TYPES));
     }
 
-    // Fail fast if an existing channel's type contract doesn't match what we expect.
-    // This surfaces pre-fix permissive channels rather than silently bypassing enforcement.
-    // Long-term fix: qhorus#246 adds setAllowedTypes() for proper migration without deletion.
-    private static Channel requireAllowedTypes(final Channel ch, final String expected) {
+    private static Channel requireContract(final Channel ch, final String expectedTypes,
+            final String expectedWriters) {
+        requireAllowedTypes(ch, expectedTypes);
+        requireAllowedWriters(ch, expectedWriters);
+        return ch;
+    }
+
+    private static void requireAllowedTypes(final Channel ch, final String expected) {
         if (!expected.equals(ch.allowedTypes)) {
             throw new IllegalStateException(
                     "Channel '" + ch.name + "' has allowedTypes='" + ch.allowedTypes
                     + "' but expected '" + expected + "'. "
                     + "Delete and recreate, or wait for qhorus#246 (setAllowedTypes).");
         }
-        return ch;
+    }
+
+    private static void requireAllowedWriters(final Channel ch, final String expected) {
+        if (!expected.equals(ch.allowedWriters)) {
+            throw new IllegalStateException(
+                    "Channel '" + ch.name + "' has allowedWriters='" + ch.allowedWriters
+                    + "' but expected '" + expected + "'.");
+        }
     }
 }

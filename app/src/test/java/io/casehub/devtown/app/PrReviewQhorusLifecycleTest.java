@@ -157,10 +157,10 @@ class PrReviewQhorusLifecycleTest {
         assertThatNoException().isThrownBy(() ->
                 messageService.dispatch(MessageDispatch.builder()
                         .channelId(work.id)
-                        .sender("security-review")
+                        .sender(ORCHESTRATOR)
                         .type(STATUS)
                         .content("analysing large diff")
-                        .actorType(ActorType.AGENT)
+                        .actorType(ActorType.SYSTEM)
                         .build()));
     }
 
@@ -181,12 +181,12 @@ class PrReviewQhorusLifecycleTest {
         assertThatNoException().isThrownBy(() ->
                 messageService.dispatch(MessageDispatch.builder()
                         .channelId(work.id)
-                        .sender("security-review")
+                        .sender(ORCHESTRATOR)
                         .type(FAILURE)
                         .content("agent process crashed")
                         .correlationId(corrId)
                         .inReplyTo(commandResult.messageId())
-                        .actorType(ActorType.AGENT)
+                        .actorType(ActorType.SYSTEM)
                         .build()));
     }
 
@@ -199,7 +199,6 @@ class PrReviewQhorusLifecycleTest {
                         .channelId(observe.id)
                         .sender("ledger-audit")
                         .type(EVENT)
-                        .content("{\"entry\":\"audit-record\"}")
                         .actorType(ActorType.SYSTEM)
                         .build()));
     }
@@ -221,7 +220,7 @@ class PrReviewQhorusLifecycleTest {
         assertThatNoException().isThrownBy(() ->
                 messageService.dispatch(MessageDispatch.builder()
                         .channelId(oversight.id)
-                        .sender("human-reviewer")
+                        .sender(ORCHESTRATOR)
                         .type(DONE)
                         .content("approved")
                         .correlationId(corrId)
@@ -255,7 +254,6 @@ class PrReviewQhorusLifecycleTest {
                         .channelId(work.id)
                         .sender("telemetry")
                         .type(EVENT)
-                        .content("noise")
                         .actorType(ActorType.SYSTEM)
                         .build()))
                 .isInstanceOf(MessageTypeViolationException.class);
@@ -294,12 +292,12 @@ class PrReviewQhorusLifecycleTest {
         assertThatThrownBy(() ->
                 messageService.dispatch(MessageDispatch.builder()
                         .channelId(oversight.id)
-                        .sender("broken-agent")
+                        .sender(ORCHESTRATOR)
                         .type(FAILURE)
                         .content("crashed")
                         .correlationId(corrId)
                         .inReplyTo(commandResult.messageId())
-                        .actorType(ActorType.AGENT)
+                        .actorType(ActorType.SYSTEM)
                         .build()))
                 .isInstanceOf(MessageTypeViolationException.class);
     }
@@ -313,7 +311,6 @@ class PrReviewQhorusLifecycleTest {
                         .channelId(oversight.id)
                         .sender("telemetry")
                         .type(EVENT)
-                        .content("noise")
                         .actorType(ActorType.SYSTEM)
                         .build()))
                 .isInstanceOf(MessageTypeViolationException.class);
@@ -329,6 +326,41 @@ class PrReviewQhorusLifecycleTest {
                 service.review(new PrPayload("casehubio/devtown", 299, "sha299", "main", 100, "test-contributor", List.of())))
                 .isInstanceOf(IllegalStateException.class)
                 .hasMessageContaining("allowedTypes");
+    }
+
+    // --- allowedWriters enforcement (devtown#64) ---
+    // PR numbers 230–240 for writer-enforcement tests; 249 for migration guard.
+
+    @Test
+    void workChannel_allowedWriters_isOrchestrator() {
+        service.review(new PrPayload("casehubio/devtown", 230, "sha230", "main", 100, "test-contributor", List.of()));
+        var work = channelService.findByName("pr-review-230/work").orElseThrow();
+        assertThat(work.allowedWriters).isEqualTo(ORCHESTRATOR);
+    }
+
+    @Test
+    void observeChannel_allowedWriters_isOrchestrator() {
+        service.review(new PrPayload("casehubio/devtown", 231, "sha231", "main", 100, "test-contributor", List.of()));
+        var observe = channelService.findByName("pr-review-231/observe").orElseThrow();
+        assertThat(observe.allowedWriters).isEqualTo(ORCHESTRATOR);
+    }
+
+    @Test
+    void oversightChannel_allowedWriters_isOrchestrator() {
+        service.review(new PrPayload("casehubio/devtown", 232, "sha232", "main", 100, "test-contributor", List.of()));
+        var oversight = channelService.findByName("pr-review-232/oversight").orElseThrow();
+        assertThat(oversight.allowedWriters).isEqualTo(ORCHESTRATOR);
+    }
+
+    @Test
+    void existingPermissiveWorkChannel_throwsOnAllowedWritersMismatch() {
+        channelService.create("pr-review-249/work", null, ChannelSemantic.APPEND, ORCHESTRATOR,
+                null, null, null, null, QhorusPrReviewService.WORK_ALLOWED_TYPES);
+
+        assertThatThrownBy(() ->
+                service.review(new PrPayload("casehubio/devtown", 249, "sha249", "main", 100, "test-contributor", List.of())))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("allowedWriters");
     }
 
     private static final String ORCHESTRATOR = "pr-orchestrator";

@@ -22,35 +22,39 @@ import io.casehub.api.model.ContextChangeTrigger;
 import io.casehub.api.model.Goal;
 import io.casehub.api.model.GoalExpression;
 import io.casehub.api.model.GoalKind;
+import io.casehub.api.model.HumanTaskTarget;
 import io.casehub.api.model.evaluator.LambdaExpressionEvaluator;
 import io.casehub.devtown.domain.AgentQualification;
-import io.casehub.devtown.domain.HumanDecision;
 import io.casehub.devtown.domain.ReviewDomain;
+import java.time.Duration;
 import java.util.List;
+import java.util.Set;
 
 /**
- * Fluent DSL factory for the PR review case definition.
+ * Fluent DSL companion for the PR review case definition ({@code devtown/pr-review.yaml}).
  *
- * <p>Produces the same logical structure as devtown/pr-review.yaml but uses
- * {@link LambdaExpressionEvaluator} for binding conditions — enabling pure unit
- * tests without YAML parsing or a Quarkus context.
+ * <p>Produces the same logical structure as the YAML but uses
+ * {@link LambdaExpressionEvaluator} for binding conditions and goal predicates —
+ * enabling pure unit tests without YAML parsing or a Quarkus context.
+ *
+ * <p>Protocol: {@code case-definition-layers} — every YAML case definition must have
+ * a companion fluent Java DSL class. All YAML definitions ⊂ fluent DSL; reverse is
+ * not true (DSL supports lambdas, subcases with M-of-N — not expressible in YAML).
  */
-final class PrReviewCaseDefinition {
+public final class PrReviewCaseDefinition {
 
     private PrReviewCaseDefinition() {}
 
-    static CaseDefinition build(int humanApprovalThreshold) {
-        var codeAnalysisCap   = cap(ReviewDomain.CODE_ANALYSIS);
-        var securityReviewCap = cap(ReviewDomain.SECURITY_REVIEW);
-        var archReviewCap     = cap(ReviewDomain.ARCHITECTURE_REVIEW);
-        var styleReviewCap    = cap(ReviewDomain.STYLE_REVIEW);
-        var testCoverageCap   = cap(ReviewDomain.TEST_COVERAGE);
-        var perfAnalysisCap   = cap(ReviewDomain.PERFORMANCE_ANALYSIS);
-        var ciRunnerCap       = cap(AgentQualification.CI_RUNNER);
-        var humanDecisionCap  = cap(HumanDecision.PR_APPROVAL);
-        var mergeExecutorCap  = cap(AgentQualification.MERGE_EXECUTOR);
+    public static CaseDefinition build(int humanApprovalThreshold) {
+        var codeAnalysisCap   = cap(ReviewDomain.CODE_ANALYSIS, "{ pr: .pr }", "{ codeAnalysis: . }");
+        var securityReviewCap = cap(ReviewDomain.SECURITY_REVIEW, "{ pr: .pr, codeAnalysis: .codeAnalysis }", "{ securityReview: { outcome: . } }");
+        var archReviewCap     = cap(ReviewDomain.ARCHITECTURE_REVIEW, "{ pr: .pr, codeAnalysis: .codeAnalysis }", "{ architectureReview: { outcome: . } }");
+        var styleReviewCap    = cap(ReviewDomain.STYLE_REVIEW, "{ pr: .pr }", "{ styleCheck: { outcome: . } }");
+        var testCoverageCap   = cap(ReviewDomain.TEST_COVERAGE, "{ pr: .pr }", "{ testCoverage: { outcome: . } }");
+        var perfAnalysisCap   = cap(ReviewDomain.PERFORMANCE_ANALYSIS, "{ pr: .pr }", "{ performanceAnalysis: { outcome: . } }");
+        var ciRunnerCap       = cap(AgentQualification.CI_RUNNER, "{ pr: .pr }", "{ ci: { status: . } }");
+        var mergeExecutorCap  = cap(AgentQualification.MERGE_EXECUTOR, "{ pr: .pr }", "{}");
 
-        // Goals — use Goal.builder().condition(Predicate) which wraps in LambdaExpressionEvaluator
         var prApproved = Goal.builder()
             .name("pr-approved")
             .kind(GoalKind.SUCCESS)
@@ -78,7 +82,6 @@ final class PrReviewCaseDefinition {
             .condition(ctx -> "passing".equals(ctx.getPath("ci.status")))
             .build();
 
-        // Trigger: fire on any context change (null filter = unconditional)
         var trigger = new ContextChangeTrigger((io.casehub.api.model.evaluator.ExpressionEvaluator) null);
 
         CaseDefinition def = CaseDefinition.builder()
@@ -91,7 +94,7 @@ final class PrReviewCaseDefinition {
         def.getCapabilities().addAll(List.of(
             codeAnalysisCap, securityReviewCap, archReviewCap,
             styleReviewCap, testCoverageCap, perfAnalysisCap,
-            ciRunnerCap, humanDecisionCap, mergeExecutorCap));
+            ciRunnerCap, mergeExecutorCap));
 
         def.getGoals().addAll(List.of(prApproved, securityVerified, ciPassing));
 
@@ -139,7 +142,7 @@ final class PrReviewCaseDefinition {
                 ctx.get("performanceAnalysis") == null))
             .capability(perfAnalysisCap).build());
 
-        // Group 3: Human gate — threshold-based, fires once regardless of analysis
+        // Group 3: Human gate — threshold-based, HumanTaskTarget (not a capability)
         def.getBindings().add(Binding.builder().name("human-approval").on(trigger)
             .when(new LambdaExpressionEvaluator(ctx -> {
                 Object linesChanged = ctx.getPath("pr.linesChanged");
@@ -147,7 +150,13 @@ final class PrReviewCaseDefinition {
                     n.intValue() > humanApprovalThreshold &&
                     ctx.get("humanApproval") == null;
             }))
-            .capability(humanDecisionCap).build());
+            .humanTask(HumanTaskTarget.inline()
+                .title("PR approval required")
+                .candidateGroups(Set.of("pr-reviewers"))
+                .expiresIn(Duration.ofHours(24))
+                .outputMapping("{ humanApproval: . }")
+                .build())
+            .build());
 
         // Group 4: Merge — all checks must pass; human gate conditional on line count
         def.getBindings().add(Binding.builder().name("merge").on(trigger)
@@ -171,7 +180,7 @@ final class PrReviewCaseDefinition {
         return def;
     }
 
-    private static Capability cap(String name) {
-        return Capability.builder().name(name).inputSchema("{}").outputSchema("{}").build();
+    private static Capability cap(String name, String inputSchema, String outputSchema) {
+        return Capability.builder().name(name).inputSchema(inputSchema).outputSchema(outputSchema).build();
     }
 }

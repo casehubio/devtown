@@ -210,6 +210,7 @@ devtown-review/   — integration logic; casehub-engine-api, casehub-work-api de
   review/         PrReviewApplicationService port + DTOs (PrPayload, PrReviewOutcome)
                   Layer N implementations of the port (one per layer)
                   pr-review.yaml CasePlanModel in resources/devtown/
+                  PrReviewCaseDefinition — fluent DSL companion (lambda evaluators)
                   Binding condition unit tests (no Quarkus required)
 
 devtown-app/      — CDI wiring only; runtime assembly

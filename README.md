@@ -1,5 +1,7 @@
 # casehub-devtown
 
+[![Build](https://github.com/casehubio/devtown/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/casehubio/devtown/actions/workflows/ci.yml) [![Open PRs](https://img.shields.io/github/issues-pr/casehubio/devtown)](https://github.com/casehubio/devtown/pulls)
+
 AI-assisted software development application built on the [CaseHub](https://github.com/casehubio/parent) platform foundation.
 
 ## What This Is

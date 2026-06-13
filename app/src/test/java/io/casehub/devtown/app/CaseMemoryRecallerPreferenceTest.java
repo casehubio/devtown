@@ -119,6 +119,6 @@ class CaseMemoryRecallerPreferenceTest {
         }
 
         @Override
-        public void erase(final io.casehub.platform.api.memory.EraseRequest request) {}
+        public int erase(final io.casehub.platform.api.memory.EraseRequest request) { return 0; }
     }
 }

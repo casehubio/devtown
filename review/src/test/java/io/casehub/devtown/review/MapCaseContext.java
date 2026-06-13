@@ -212,4 +212,9 @@ class MapCaseContext implements CaseContext {
     throw new UnsupportedOperationException();
   }
 
+  @Override
+  public io.casehub.api.context.ReadablePanel panel(String panelName) {
+    throw new UnsupportedOperationException();
+  }
+
 }

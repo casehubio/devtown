@@ -63,7 +63,7 @@ class SlaBreachHandlerWiringTest {
                                     "PR approval", Set.of("pr-leads"));
         var ctx  = new SlaBreachContext(BreachType.CLAIM_EXPIRED, task,
                                         Path.root(), new MapPreferences(Map.of()));
-        breachEvents.fire(new SlaBreachEvent(ctx, new BreachDecision.Fail("sla-breach")));
+        breachEvents.fire(new SlaBreachEvent(ctx, new BreachDecision.Fail("sla-breach"), "default"));
 
         await().atMost(5, SECONDS).pollInterval(100, MILLISECONDS).untilAsserted(() -> {
             var instance = caseInstanceRepository.findByUuid(caseId)

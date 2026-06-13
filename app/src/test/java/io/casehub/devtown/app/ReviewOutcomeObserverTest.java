@@ -73,7 +73,7 @@ class ReviewOutcomeObserverTest {
         // when a worker finishes. Context signals don't go through PlanItemCompletionHandler,
         // so we fire the CDI event manually.
         planItemCompletedEvents.fireAsync(
-                new PlanItemCompletedEvent(caseId, "style-check", "style-bot"));
+                new PlanItemCompletedEvent(caseId, "style-check", "style-bot", "test-tenant"));
 
         // Wait for the ReviewCompletedEvent to be captured
         await().atMost(5, SECONDS).pollInterval(100, MILLISECONDS).untilAsserted(() ->
@@ -104,15 +104,15 @@ class ReviewOutcomeObserverTest {
 
         // "initial-analysis" is an infrastructure binding — not in the planItem-to-context map
         planItemCompletedEvents.fireAsync(
-                new PlanItemCompletedEvent(caseId, "initial-analysis", "analysis-bot"));
+                new PlanItemCompletedEvent(caseId, "initial-analysis", "analysis-bot", "test-tenant"));
 
         // "run-ci" is another infrastructure binding
         planItemCompletedEvents.fireAsync(
-                new PlanItemCompletedEvent(caseId, "run-ci", "ci-runner"));
+                new PlanItemCompletedEvent(caseId, "run-ci", "ci-runner", "test-tenant"));
 
         // "merge" is another infrastructure binding
         planItemCompletedEvents.fireAsync(
-                new PlanItemCompletedEvent(caseId, "merge", "merge-bot"));
+                new PlanItemCompletedEvent(caseId, "merge", "merge-bot", "test-tenant"));
 
         // Give enough time for any event to propagate
         Thread.sleep(500);
@@ -136,7 +136,7 @@ class ReviewOutcomeObserverTest {
         });
 
         planItemCompletedEvents.fireAsync(
-                new PlanItemCompletedEvent(caseId, "test-coverage", null));
+                new PlanItemCompletedEvent(caseId, "test-coverage", null, "test-tenant"));
 
         await().atMost(5, SECONDS).pollInterval(100, MILLISECONDS).untilAsserted(() ->
                 assertThat(capture.getEvents()).isNotEmpty());
@@ -160,7 +160,7 @@ class ReviewOutcomeObserverTest {
         });
 
         planItemCompletedEvents.fireAsync(
-                new PlanItemCompletedEvent(caseId, "human-approval", "reviewer-alice"));
+                new PlanItemCompletedEvent(caseId, "human-approval", "reviewer-alice", "test-tenant"));
 
         await().atMost(5, SECONDS).pollInterval(100, MILLISECONDS).untilAsserted(() ->
                 assertThat(capture.getEvents()).isNotEmpty());
@@ -176,7 +176,7 @@ class ReviewOutcomeObserverTest {
         // Non-existent caseId — observer should log WARN and not fire event
         UUID fakeCaseId = UUID.randomUUID();
         planItemCompletedEvents.fireAsync(
-                new PlanItemCompletedEvent(fakeCaseId, "style-check", "bot"));
+                new PlanItemCompletedEvent(fakeCaseId, "style-check", "bot", "test-tenant"));
 
         Thread.sleep(500);
 

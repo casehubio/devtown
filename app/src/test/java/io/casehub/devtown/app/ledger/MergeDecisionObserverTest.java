@@ -126,7 +126,7 @@ class MergeDecisionObserverTest {
      */
     private List<MergeDecisionLedgerEntry> findMergeDecisions(UUID caseId) {
         return QuarkusTransaction.requiringNew().call(() -> {
-            List<LedgerEntry> entries = ledgerRepo.findBySubjectId(caseId);
+            List<LedgerEntry> entries = ledgerRepo.findBySubjectId(caseId, "test-tenant");
             return entries.stream()
                     .filter(MergeDecisionLedgerEntry.class::isInstance)
                     .map(MergeDecisionLedgerEntry.class::cast)

@@ -94,7 +94,7 @@ class CaseMemoryIntegrationTest {
 
         // Phase 3: Fire PlanItemCompletedEvent directly via CDI (since context signals don't trigger it).
         // This simulates what the engine does when a worker completes.
-        planItemEvents.fireAsync(new PlanItemCompletedEvent(caseId, "style-check", "style-agent-1"));
+        planItemEvents.fireAsync(new PlanItemCompletedEvent(caseId, "style-check", "style-agent-1", TenancyConstants.DEFAULT_TENANT_ID));
 
         // Phase 3.5: Wait for ReviewCompletedEvent to be captured first
         await().atMost(10, SECONDS).pollInterval(200, MILLISECONDS).untilAsserted(() ->

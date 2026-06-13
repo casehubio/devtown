@@ -99,7 +99,7 @@ public class MergeDecisionObserver {
         // Best-effort causal link to the CaseLedgerEntry for the terminal transition.
         // Uses findLatestBySubjectId() (correct @LedgerPersistenceUnit) — NOT
         // findLatestByCaseId() which uses an unqualified EntityManager (engine#450).
-        ledgerRepo.findLatestBySubjectId(event.caseId())
+        ledgerRepo.findLatestBySubjectId(event.caseId(), event.tenancyId())
                 .filter(latest -> latest instanceof CaseLedgerEntry cle
                         && event.caseStatus().equals(cle.caseStatus))
                 .ifPresent(latest -> entry.causedByEntryId = latest.id);
@@ -110,7 +110,7 @@ public class MergeDecisionObserver {
         cs.contestationUri = "/api/reviews/" + prNumber + "/contest";
         entry.attach(cs);
 
-        ledgerRepo.save(entry);
+        ledgerRepo.save(entry, event.tenancyId());
         LOG.debugf("Merge decision written: caseId=%s decision=%s pr=%s#%d",
                 event.caseId(), decision, repo, prNumber);
     }

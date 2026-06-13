@@ -37,4 +37,27 @@ class ReviewDomainTest {
         assertThat(ReviewDomain.TEST_COVERAGE).isEqualTo("test-coverage");
         assertThat(ReviewDomain.PERFORMANCE_ANALYSIS).isEqualTo("performance-analysis");
     }
+
+    @Test
+    void reviewCapabilities_containsExactlySixAnalyticalCapabilities() {
+        assertThat(ReviewDomain.REVIEW_CAPABILITIES).containsExactlyInAnyOrder(
+            ReviewDomain.CODE_ANALYSIS,
+            ReviewDomain.SECURITY_REVIEW,
+            ReviewDomain.ARCHITECTURE_REVIEW,
+            ReviewDomain.STYLE_REVIEW,
+            ReviewDomain.TEST_COVERAGE,
+            ReviewDomain.PERFORMANCE_ANALYSIS
+        );
+    }
+
+    @Test
+    void reviewCapabilities_doesNotContainNonReviewCapabilities() {
+        assertThat(ReviewDomain.REVIEW_CAPABILITIES)
+            .doesNotContain(
+                AgentQualification.CI_RUNNER,
+                AgentQualification.MERGE_EXECUTOR,
+                HumanDecision.PR_APPROVAL,
+                HumanOversight.ROUTING_REVIEW
+            );
+    }
 }

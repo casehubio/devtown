@@ -56,11 +56,12 @@ public class CodeReviewComplianceService {
      * and mark the joining transaction as rollback-only on failure).
      *
      * @param caseId the case identifier (used as subjectId in the ledger)
+     * @param tenancyId the tenancy identifier for the case
      * @return evidence if any ledger entries exist, empty otherwise
      */
     @Transactional
-    public Optional<CodeReviewComplianceEvidence> findEvidence(UUID caseId) {
-        List<LedgerEntry> entries = ledgerRepo.findBySubjectId(caseId);
+    public Optional<CodeReviewComplianceEvidence> findEvidence(UUID caseId, String tenancyId) {
+        List<LedgerEntry> entries = ledgerRepo.findBySubjectId(caseId, tenancyId);
         if (entries.isEmpty()) {
             return Optional.empty();
         }
@@ -79,14 +80,14 @@ public class CodeReviewComplianceService {
 
         // Verification calls run in isolated transactions to avoid rollback
         // contamination when the Merkle frontier is absent or entries are missing.
-        boolean chainVerified = verifyChainIsolated(caseId);
-        String treeRoot = resolveTreeRootIsolated(caseId);
+        boolean chainVerified = verifyChainIsolated(caseId, tenancyId);
+        String treeRoot = resolveTreeRootIsolated(caseId, tenancyId);
 
         List<LedgerEventRecord> events = snapshots.stream()
                 .map(s -> new LedgerEventRecord(
                         s.id, s.eventType, s.actorId, s.actorRole,
                         s.occurredAt, s.causedByEntryId, s.digest,
-                        resolveInclusionProofIsolated(s.id)))
+                        resolveInclusionProofIsolated(s.id, tenancyId)))
                 .toList();
 
         RequirementStatus auditStatus;
@@ -187,30 +188,30 @@ public class CodeReviewComplianceService {
         return entry.entryType.name();
     }
 
-    private boolean verifyChainIsolated(UUID caseId) {
+    private boolean verifyChainIsolated(UUID caseId, String tenancyId) {
         try {
             return QuarkusTransaction.requiringNew().call(
-                    () -> verificationService.verify(caseId));
+                    () -> verificationService.verify(caseId, tenancyId));
         } catch (Exception e) {
             LOG.debugf("Chain verification failed for caseId=%s: %s", caseId, e.getMessage());
             return false;
         }
     }
 
-    private String resolveTreeRootIsolated(UUID caseId) {
+    private String resolveTreeRootIsolated(UUID caseId, String tenancyId) {
         try {
             return QuarkusTransaction.requiringNew().call(
-                    () -> verificationService.treeRoot(caseId));
+                    () -> verificationService.treeRoot(caseId, tenancyId));
         } catch (Exception e) {
             LOG.debugf("Cannot resolve tree root for caseId=%s: %s", caseId, e.getMessage());
             return null;
         }
     }
 
-    private InclusionProofRecord resolveInclusionProofIsolated(UUID entryId) {
+    private InclusionProofRecord resolveInclusionProofIsolated(UUID entryId, String tenancyId) {
         try {
             return QuarkusTransaction.requiringNew().call(() -> {
-                InclusionProof proof = verificationService.inclusionProof(entryId);
+                InclusionProof proof = verificationService.inclusionProof(entryId, tenancyId);
                 return new InclusionProofRecord(
                         proof.entryIndex(),
                         proof.treeSize(),

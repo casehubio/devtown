@@ -91,7 +91,7 @@ class CodeReviewComplianceServiceTest {
 
         // Query the compliance evidence
         Optional<CodeReviewComplianceEvidence> result =
-                QuarkusTransaction.requiringNew().call(() -> complianceService.findEvidence(caseId));
+                QuarkusTransaction.requiringNew().call(() -> complianceService.findEvidence(caseId, tenancyId));
 
         assertThat(result).isPresent();
         CodeReviewComplianceEvidence evidence = result.get();
@@ -128,7 +128,7 @@ class CodeReviewComplianceServiceTest {
         UUID unknownCaseId = UUID.randomUUID();
 
         Optional<CodeReviewComplianceEvidence> result =
-                QuarkusTransaction.requiringNew().call(() -> complianceService.findEvidence(unknownCaseId));
+                QuarkusTransaction.requiringNew().call(() -> complianceService.findEvidence(unknownCaseId, "test-tenant"));
 
         assertThat(result).isEmpty();
     }
@@ -155,6 +155,7 @@ class CodeReviewComplianceServiceTest {
         saveLedgerEntry(mde);
 
         given()
+            .queryParam("tenancyId", "test-tenant")
             .when()
                 .get("/api/compliance/code-review/" + caseId)
             .then()
@@ -175,7 +176,7 @@ class CodeReviewComplianceServiceTest {
 
     private <T extends LedgerEntry> T saveLedgerEntry(T entry) {
         return QuarkusTransaction.requiringNew().call(() -> {
-            ledgerRepo.save(entry);
+            ledgerRepo.save(entry, "test-tenant");
             return entry;
         });
     }

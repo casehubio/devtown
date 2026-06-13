@@ -28,18 +28,13 @@ class InMemoryLedgerEntryRepository implements ReactiveLedgerEntryRepository {
     private final List<LedgerAttestation> attestations = new CopyOnWriteArrayList<>();
 
     @Override
-    public Uni<LedgerEntry> save(LedgerEntry entry) {
+    public Uni<LedgerEntry> save(LedgerEntry entry, String tenancyId) {
         entries.add(entry);
         return Uni.createFrom().item(entry);
     }
 
     @Override
-    public Uni<List<LedgerEntry>> listAll() {
-        return Uni.createFrom().item(new ArrayList<>(entries));
-    }
-
-    @Override
-    public Uni<List<LedgerEntry>> findBySubjectId(UUID subjectId) {
+    public Uni<List<LedgerEntry>> findBySubjectId(UUID subjectId, String tenancyId) {
         return Uni.createFrom().item(
             entries.stream().filter(e -> subjectId.equals(e.subjectId)).toList());
     }
@@ -48,12 +43,12 @@ class InMemoryLedgerEntryRepository implements ReactiveLedgerEntryRepository {
     // Implement against the in-memory list if a test exercises these paths.
 
     @Override
-    public Uni<List<LedgerEntry>> findBySubjectIdAndTimeRange(UUID subjectId, Instant from, Instant to) {
+    public Uni<List<LedgerEntry>> findBySubjectIdAndTimeRange(UUID subjectId, Instant from, Instant to, String tenancyId) {
         return Uni.createFrom().item(List.of());
     }
 
     @Override
-    public Uni<Optional<LedgerEntry>> findLatestBySubjectId(UUID subjectId) {
+    public Uni<Optional<LedgerEntry>> findLatestBySubjectId(UUID subjectId, String tenancyId) {
         return Uni.createFrom().item(
             entries.stream()
                 .filter(e -> subjectId.equals(e.subjectId))
@@ -61,69 +56,53 @@ class InMemoryLedgerEntryRepository implements ReactiveLedgerEntryRepository {
     }
 
     @Override
-    public Uni<Optional<LedgerEntry>> findEntryById(UUID id) {
+    public Uni<Optional<LedgerEntry>> findEntryById(UUID id, String tenancyId) {
         return Uni.createFrom().item(
             entries.stream().filter(e -> id.equals(e.id)).findFirst());
     }
 
     @Override
-    public Uni<List<LedgerEntry>> findAllEvents() {
-        return listAll();
-    }
-
-    @Override
-    public Uni<List<LedgerEntry>> findEventsByActorId(final String actorId) {
+    public Uni<List<LedgerEntry>> findByActorId(String actorId, Instant from, Instant to, String tenancyId) {
         return Uni.createFrom().item(List.of());
     }
 
     @Override
-    public Uni<List<LedgerEntry>> findByActorId(String actorId, Instant from, Instant to) {
+    public Uni<List<LedgerEntry>> findByActorRole(String role, Instant from, Instant to, String tenancyId) {
         return Uni.createFrom().item(List.of());
     }
 
     @Override
-    public Uni<List<LedgerEntry>> findByActorRole(String role, Instant from, Instant to) {
+    public Uni<List<LedgerEntry>> findCausedBy(UUID causeId, String tenancyId) {
         return Uni.createFrom().item(List.of());
     }
 
-    @Override
-    public Uni<List<LedgerEntry>> findByTimeRange(Instant from, Instant to) {
-        return Uni.createFrom().item(List.of());
-    }
+    // findByTimeRange removed from interface
 
     @Override
-    public Uni<List<LedgerEntry>> findCausedBy(UUID causeId) {
-        return Uni.createFrom().item(List.of());
-    }
-
-    @Override
-    public Uni<LedgerAttestation> saveAttestation(LedgerAttestation attestation) {
+    public Uni<LedgerAttestation> saveAttestation(LedgerAttestation attestation, String tenancyId) {
         attestations.add(attestation);
         return Uni.createFrom().item(attestation);
     }
 
     @Override
-    public Uni<List<LedgerAttestation>> findAttestationsByEntryId(UUID entryId) {
+    public Uni<List<LedgerAttestation>> findAttestationsByEntryId(UUID entryId, String tenancyId) {
+        return Uni.createFrom().item(List.of());
+    }
+
+    // findAttestationsForEntries removed from interface
+
+    @Override
+    public Uni<List<LedgerAttestation>> findAttestationsByEntryIdAndCapabilityTag(UUID entryId, String tag, String tenancyId) {
         return Uni.createFrom().item(List.of());
     }
 
     @Override
-    public Uni<Map<UUID, List<LedgerAttestation>>> findAttestationsForEntries(Set<UUID> entryIds) {
-        return Uni.createFrom().item(Map.of());
-    }
-
-    @Override
-    public Uni<List<LedgerAttestation>> findAttestationsByEntryIdAndCapabilityTag(UUID entryId, String tag) {
+    public Uni<List<LedgerAttestation>> findAttestationsByEntryIdGlobal(UUID entryId, String tenancyId) {
         return Uni.createFrom().item(List.of());
     }
 
     @Override
-    public Uni<List<LedgerAttestation>> findAttestationsByEntryIdGlobal(UUID entryId) {
-        return Uni.createFrom().item(List.of());
-    }
-
-    @Override
-    public Uni<List<LedgerAttestation>> findAttestationsByAttestorIdAndCapabilityTag(String attestorId, String tag) {
+    public Uni<List<LedgerAttestation>> findAttestationsByAttestorIdAndCapabilityTag(String attestorId, String tag, String tenancyId) {
         return Uni.createFrom().item(List.of());
     }
 }

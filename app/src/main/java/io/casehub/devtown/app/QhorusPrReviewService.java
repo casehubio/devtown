@@ -40,24 +40,14 @@ public class QhorusPrReviewService implements PrReviewApplicationService {
 
     private static final String ORCHESTRATOR = "pr-orchestrator";
 
-    // Package-visible for test assertion; see PrReviewQhorusLifecycleTest#*_allowedTypes_*.
-    // EnumSet preserves enum declaration order — compile-safe: renamed constants fail at
-    // compile time, not at dispatch time. qhorus#247 tracks a Set<MessageType> overload on
-    // ChannelService.create() that would eliminate this joining step entirely.
     static final String WORK_ALLOWED_TYPES =
             EnumSet.of(COMMAND, STATUS, DONE, DECLINE, FAILURE)
                    .stream().map(Enum::name).collect(Collectors.joining(","));
 
-    // Package-visible for test assertion; see PrReviewQhorusLifecycleTest#*_allowedTypes_*.
     static final String OBSERVE_ALLOWED_TYPES =
             EnumSet.of(EVENT)
                    .stream().map(Enum::name).collect(Collectors.joining(","));
 
-    // Package-visible for test assertion; see PrReviewQhorusLifecycleTest#*_allowedTypes_*.
-    // STATUS excluded: human oversight is a terminal decision gate, not an async long-running op.
-    // FAILURE excluded: human decisions are DONE or DECLINE; FAILURE on oversight is a bug.
-    // HANDOFF excluded: specialist delegation is orchestrator-mediated (DECLINE → re-COMMAND),
-    //   not peer-to-peer. HANDOFF on oversight bypasses the orchestrator — wrong architecture.
     static final String OVERSIGHT_ALLOWED_TYPES =
             EnumSet.of(COMMAND, DONE, DECLINE)
                    .stream().map(Enum::name).collect(Collectors.joining(","));

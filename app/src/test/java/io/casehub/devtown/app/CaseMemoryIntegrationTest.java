@@ -5,7 +5,7 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
 
-import io.casehub.blackboard.event.PlanItemCompletedEvent;
+import io.casehub.engine.common.spi.event.PlanItemCompletedEvent;
 import io.casehub.devtown.domain.memory.DevtownMemoryDomain;
 import io.casehub.devtown.domain.memory.DevtownMemoryKeys;
 import io.casehub.devtown.review.MemoryContext;

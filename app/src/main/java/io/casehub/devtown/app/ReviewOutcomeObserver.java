@@ -1,7 +1,7 @@
 package io.casehub.devtown.app;
 
 import io.casehub.api.context.CaseContext;
-import io.casehub.blackboard.event.PlanItemCompletedEvent;
+import io.casehub.engine.common.spi.event.PlanItemCompletedEvent;
 import io.casehub.devtown.domain.memory.ReviewOutcome;
 import io.casehub.devtown.review.PrPayload;
 import io.casehub.devtown.review.ReviewCompletedEvent;

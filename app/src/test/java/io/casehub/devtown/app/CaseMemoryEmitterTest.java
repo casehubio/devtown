@@ -47,7 +47,6 @@ class CaseMemoryEmitterTest {
         var facts = (List<MemoryInput>) captor.getValue();
 
         assertThat(facts).hasSize(3); // contributor + reviewer + module
-        verify(storeInstance).destroy(store);
     }
 
     @Test
@@ -241,8 +240,6 @@ class CaseMemoryEmitterTest {
 
         assertThatCode(() -> emitter.onReviewCompleted(event))
             .doesNotThrowAnyException();
-
-        verify(storeInstance).destroy(store);
     }
 
     @Test
@@ -257,7 +254,6 @@ class CaseMemoryEmitterTest {
         emitter.onReviewCompleted(event);
 
         verify(store, never()).storeAll(anyList());
-        verify(unresolvableInstance, never()).destroy(any());
     }
 
     // --- Helpers ---

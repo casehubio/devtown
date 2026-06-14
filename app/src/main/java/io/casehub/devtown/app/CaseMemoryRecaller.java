@@ -55,8 +55,8 @@ public class CaseMemoryRecaller {
             return MemoryContext.EMPTY;
         }
 
-        var s = store.get();
         try {
+            var s = store.get();
             Preferences prefs = preferenceProvider.resolve(RECALL_SCOPE);
             int contributorLimit = prefs.getOrDefault(MemoryRecallKeys.CONTRIBUTOR_LIMIT).value();
             int codeAreaLimit = prefs.getOrDefault(MemoryRecallKeys.CODE_AREA_LIMIT).value();
@@ -77,10 +77,14 @@ public class CaseMemoryRecaller {
 
             var modules = ModulePathNormalizer.normalize(pr.changedPaths());
             List<String> moduleIds = modules.stream()
-                .map(m -> "module:" + pr.repo() + "/" + m)
+                .map(m -> DevtownMemoryDomain.MODULE_PREFIX + pr.repo() + "/" + m)
                 .limit(MemoryQuery.MAX_ENTITY_IDS)
                 .toList();
 
+            // No withQuestion() — entity IDs already scope to specific modules.
+            // Semantic search adds no value for structured module queries, and
+            // InMemoryMemoryStore uses substring matching that fails silently
+            // when the question text isn't a substring of the stored fact text.
             List<Memory> codeAreaHistory = moduleIds.isEmpty()
                 ? List.of()
                 : s.query(
@@ -90,10 +94,7 @@ public class CaseMemoryRecaller {
                         tenantId)
                     .withLimit(codeAreaLimit)
                     .withSince(since)
-                    .withOrder(MemoryOrder.RELEVANCE)
-                    .withQuestion("review history for "
-                        + String.join(", ", modules)
-                        + " in " + pr.repo())
+                    .withOrder(MemoryOrder.CHRONOLOGICAL)
                 );
 
             return new MemoryContext(contributorHistory, codeAreaHistory);
@@ -101,8 +102,6 @@ public class CaseMemoryRecaller {
             LOG.warnf(e, "Memory recall failed for contributor=%s — proceeding without memory",
                 pr.contributor());
             return MemoryContext.EMPTY;
-        } finally {
-            store.destroy(s);
         }
     }
 }

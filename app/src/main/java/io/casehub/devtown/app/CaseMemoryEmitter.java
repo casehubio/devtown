@@ -29,14 +29,11 @@ public class CaseMemoryEmitter {
     void onReviewCompleted(@ObservesAsync ReviewCompletedEvent event) {
         if (!store.isResolvable()) return;
 
-        var s = store.get();
         try {
-            s.storeAll(buildFacts(event));
+            store.get().storeAll(buildFacts(event));
         } catch (Exception e) {
             LOG.warnf(e, "Memory emission failed for case=%s capability=%s",
                 event.caseId(), event.capability());
-        } finally {
-            store.destroy(s);
         }
     }
 

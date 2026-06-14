@@ -783,10 +783,10 @@ Layer 3 shipped. Typed COMMAND dispatch to specialist agents; DECLINE as a forma
 
 **Participates in chapters:** C4, C5
 **Completed:** ✅ 2026-06-09
-**Issues:** casehubio/devtown#73 (ledger audit), casehubio/devtown#7 (compliance report)
+**Issues:** casehubio/devtown#73 (ledger audit), casehubio/devtown#7 (compliance report), casehubio/devtown#74 (GDPR erasure endpoint)
 **Blog:** `blog/2026-06-09-mdp01-the-hash-that-doesnt-hash.md`
 
-Layer 4 wires `casehub-ledger` into devtown. `MergeDecisionLedgerEntry` (JOINED, V2002) captures APPROVED/REJECTED terminal merge decisions. `MergeDecisionObserver` derives the decision from `CaseLifecycleEvent`. `CodeReviewComplianceResource` (`GET /api/compliance/code-review/{caseId}`) assembles evidence across audit chain, trust routing, SLA, and GDPR dimensions. `domainContentBytes()` override ensures subclass fields participate in Merkle leaf hash (ledger#128).
+Layer 4 wires `casehub-ledger` into devtown. `MergeDecisionLedgerEntry` (JOINED, V2002) captures APPROVED/REJECTED terminal merge decisions. `MergeDecisionObserver` derives the decision from `CaseLifecycleEvent`. `CodeReviewComplianceResource` (`GET /api/compliance/code-review/{caseId}`) assembles evidence across audit chain, trust routing, SLA, and GDPR dimensions. `domainContentBytes()` override ensures subclass fields participate in Merkle leaf hash (ledger#128). `ErasureReceiptLedgerEntry` (JOINED, V2004) records GDPR Art.17 erasure events with tamper-evident receipt; `GdprErasureService` orchestrates actor identity pseudonymisation + CaseMemoryStore cleanup; `GdprErasureResource` exposes `POST /api/actors/{actorId}/erasure`; compliance report detects erased actors via token-to-token matching (devtown#74).
 
 ---
 

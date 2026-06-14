@@ -124,7 +124,7 @@ CaseHub harness applications integrate foundation modules in a defined progressi
 |---|---|---|---|
 | Domain Baseline | *(none — pure Java)* | L1 | ✅ complete |
 | casehub-work | `casehub-work` | L2 | ✅ code complete |
-| casehub-qhorus | `casehub-qhorus` | L3 | 🔲 pending |
+| casehub-qhorus | `casehub-qhorus` | L3 | ✅ complete |
 | casehub-ledger | `casehub-ledger` | L4 | ✅ complete |
 | casehub-engine | `casehub-engine` | L5 | ✅ complete |
 | Trust routing | `casehub-ledger` (trust APIs) | L6 | 🔲 pending |
@@ -161,7 +161,7 @@ Each layer adds an `@ApplicationScoped` implementation in `devtown-review`. CDI 
 
 ### Layer Architecture View
 
-Current delivery state — Layers 1, 2, 5. Layers 3, 4, 6 added as Chapters C3, C4, C5 ship.
+Current delivery state — Layers 1, 2, 3, 4, 5. Layer 6 added as Chapter C5 ships.
 
 ```mermaid
 C4Container
@@ -304,7 +304,7 @@ GitHub Packages:
   CI authentication: server-id: github + GITHUB_TOKEN
 ```
 
-**Known gap:** `quarkus:build` (production packaging) fails without claudony + persistence modules present — foundation CDI SPIs are unsatisfied standalone. All 100+ tests pass. Tracked: devtown#31.
+~~**Known gap:** `quarkus:build` (production packaging) fails without claudony + persistence modules present — foundation CDI SPIs are unsatisfied standalone. All 100+ tests pass. Tracked: devtown#31.~~ devtown#31 ✅ CLOSED.
 
 ---
 
@@ -365,7 +365,7 @@ Failure is a fact on the blackboard. Binding conditions evaluate against failure
 
 | Journey | Description | Chapters | Status |
 |---|---|---|---|
-| PR Review Coordination | A submitted pull request is reviewed by specialist agents with formal accountability, human oversight with SLA, and a tamper-evident audit trail that traces any production incident back to the review decision that allowed it | 5 | In progress (C1, C2 complete) |
+| PR Review Coordination | A submitted pull request is reviewed by specialist agents with formal accountability, human oversight with SLA, and a tamper-evident audit trail that traces any production incident back to the review decision that allowed it | 5 | In progress (C1–C4 complete, C5 pending) |
 
 ### §9.2 Chapter Index
 
@@ -381,8 +381,8 @@ flowchart LR
 
   style C1 fill:#90EE90,color:#000
   style C2 fill:#90EE90,color:#000
-  style C3 fill:#D3D3D3,color:#000
-  style C4 fill:#D3D3D3,color:#000
+  style C3 fill:#90EE90,color:#000
+  style C4 fill:#90EE90,color:#000
   style C5 fill:#D3D3D3,color:#000
 ```
 
@@ -390,13 +390,13 @@ flowchart LR
 |---|---|---|---|---|---|
 | 1 | Case opens and routes | PR Review Coordination | L1, L5 | High, High | ✅ complete |
 | 2 | Human review with SLA | PR Review Coordination | + L2 | Medium | ✅ complete |
-| 3 | Formal agent obligation | PR Review Coordination | + L3 | Low | 🔲 pending |
-| 4 | Tamper-evident audit | PR Review Coordination | + L4 | Medium | 🔲 pending |
+| 3 | Formal agent obligation | PR Review Coordination | + L3 | Low | ✅ complete |
+| 4 | Tamper-evident audit | PR Review Coordination | + L4 | Medium | ✅ complete |
 | 5 | Trust-weighted selection | PR Review Coordination | + L6 | Medium | 🔲 pending |
 
 **Layer × Chapter matrix**
 
-| Layer | C1 ✅ | C2 ✅ | C3 🔲 | C4 🔲 | C5 🔲 |
+| Layer | C1 ✅ | C2 ✅ | C3 ✅ | C4 ✅ | C5 🔲 |
 |---|---|---|---|---|---|
 | L1 Domain Baseline | High | Low | — | — | — |
 | L2 casehub-work | — | Medium | Low | Low | Low |
@@ -410,8 +410,8 @@ L5 participates in every Chapter — it is the foundational orchestration layer.
 **Sequencing rationale:**
 - C1 before C2: L5 engine runtime established in C1; `casehub-work-adapter` depends on engine events at runtime
 - C2 before C3: SLA-bounded human gate must exist before formal per-agent obligation tracking is meaningful
-- C3 before C4: qhorus messaging generates the `MessageLedgerEntry` chain that makes C4's tamper-evident audit meaningful
-- C4 before C5: trust scoring reads `LedgerAttestation` records written by L4 — hard runtime dependency
+- C3 before C4: qhorus messaging generates the `MessageLedgerEntry` chain that makes C4's tamper-evident audit meaningful (both ✅ complete)
+- C4 before C5: trust scoring reads `LedgerAttestation` records written by L4 — hard runtime dependency (C4 ✅; C5 pending)
 - L5 built before L2–L4 in actual delivery sequence (engine was the architectural priority): Chapter ordering is the reading order, not build order
 
 ---
@@ -514,13 +514,11 @@ C4Component
 
 **Journey:** PR Review Coordination
 **Sequence:** 3 of 5
-**Status:** 🔲 pending (Layer 3 not yet started)
+**Status:** ✅ complete
 **Issues:** casehubio/devtown#52 (Layer 3 — qhorus messaging)
 **Navigation:** `git log --grep="#52" --oneline`
 
-🔲 Full Chapter entry at C3 close. Blocked on Layer 3 (casehub-qhorus) implementation.
-
-Known scope: typed `COMMAND` dispatched to each specialist agent; `DECLINE` is a formal scope boundary, not an error; commitment lifecycle (OPEN → ACKNOWLEDGED → FULFILLED/DECLINED/FAILED/EXPIRED) tracks each agent obligation.
+Layer 3 shipped. Typed `COMMAND` dispatched to each specialist agent; `DECLINE` is a formal scope boundary, not an error; commitment lifecycle (OPEN → ACKNOWLEDGED → FULFILLED/DECLINED/FAILED/EXPIRED) tracks each agent obligation. Full Chapter entry pending — content to be written from devtown#52 implementation.
 
 ---
 
@@ -528,11 +526,12 @@ Known scope: typed `COMMAND` dispatched to each specialist agent; `DECLINE` is a
 
 **Journey:** PR Review Coordination
 **Sequence:** 4 of 5
-**Status:** 🔲 pending (Layer 4 not yet started)
+**Status:** ✅ complete
+**Delivered:** 2026-06-09
+**Issues:** casehubio/devtown#73 (Layer 4 — ledger audit), casehubio/devtown#7 (compliance report)
+**Blog:** `blog/2026-06-09-mdp01-the-hash-that-doesnt-hash.md`
 
-🔲 Full Chapter entry at C4 close. Blocked on Layer 4 (casehub-ledger) implementation. Requires C3 first — ledger entries are meaningful only when qhorus commitment chain generates `MessageLedgerEntry` records.
-
-Known scope: `CaseLedgerEntry` per case state transition; production incident traceable to review decision via `causedByEntryId` chain; EU AI Act Art.12 compliance.
+Layer 4 shipped. `MergeDecisionLedgerEntry` (JOINED, V2002) captures APPROVED/REJECTED terminal merge decisions. `MergeDecisionObserver` derives the decision from `CaseLifecycleEvent`. `CodeReviewComplianceResource` (`GET /api/compliance/code-review/{caseId}`) assembles evidence across audit chain, trust routing, SLA, and GDPR dimensions. Full Chapter entry pending — content to be written from devtown#73 and devtown#7 implementation.
 
 ---
 
@@ -773,10 +772,10 @@ If any binding condition `context.x == null` evaluates to true on test start, `t
 ### Layer — casehub-qhorus
 
 **Participates in chapters:** C3, C4, C5
-**Completed:** 🔲 pending
+**Completed:** ✅ (devtown#52 closed)
 **Issues:** casehubio/devtown#52
 
-🔲 Full entry at C3 close. Will capture: typed COMMAND dispatch to specialist agents; DECLINE as a formal scope boundary (not an error); commitment lifecycle (OPEN → ACKNOWLEDGED → FULFILLED/DECLINED/FAILED/EXPIRED); `MessageLedgerEntry` chain that enables C4's tamper-evident audit.
+Layer 3 shipped. Typed COMMAND dispatch to specialist agents; DECLINE as a formal scope boundary (not an error); commitment lifecycle (OPEN → ACKNOWLEDGED → FULFILLED/DECLINED/FAILED/EXPIRED); `MessageLedgerEntry` chain that enables C4's tamper-evident audit. Full Layer entry pending — content to be written from devtown#52 implementation.
 
 ---
 
@@ -844,7 +843,7 @@ Not closed by Layer 5: no response SLA (Layer 2), no trust weighting (Layer 6).
 
 **`@DefaultBean` displacement.** `PrReviewCaseService @ApplicationScoped` (no `@DefaultBean`) displaces `PrReviewService @DefaultBean`. Both remain in the build; Layer 1 is never deleted.
 
-**Initial CaseContext.** `PrReviewCaseService.review(PrPayload)` builds `{ pr: {...}, policy: {...} }` from the payload and `@ConfigProperty`-injected policy values. The `policy` subtree will be replaced by `PreferenceProvider.resolve(scope).asMap()` when casehub-platform-api ships (parent#26).
+**Initial CaseContext.** `PrReviewCaseService.review(PrPayload)` builds `{ pr: {...}, policy: {...} }` from the payload and `@ConfigProperty`-injected policy values. ~~The `policy` subtree will be replaced by `PreferenceProvider.resolve(scope).asMap()` when casehub-platform-api ships (parent#26).~~ parent#26 ✅ CLOSED — `PreferenceProvider` shipped; migration to `resolve(scope).asMap()` can proceed.
 
 **`casehub-engine` runtime in `app/pom.xml`.** Required for `YamlCaseHub` CDI injection of `CaseHubRuntime`. Without it, Quarkus fails to satisfy the injection point at startup.
 
@@ -872,7 +871,7 @@ Not closed by Layer 5: no response SLA (Layer 2), no trust weighting (Layer 6).
   - Symptom: `@QuarkusTest` fails with `ClassSelector resolution failed` — looks like a class-loading problem, not a CDI error
   - Cause: `casehub-ledger` provides a Panache `ReactiveLedgerEntryRepository` requiring a real datasource; `casehub-engine-testing` provides engine repos but not ledger repos; CDI cannot satisfy the injection point
   - Fix: add `@ApplicationScoped InMemoryLedgerEntryRepository` stub to `{domain}-app/src/test/`. Tracked in garden: GE-20260519-e13b01.
-  - Note: this stub solves the **reactive** CDI injection (`ReactiveLedgerEntryRepository`). The **blocking** write chain (`CaseLedgerEntryRepository → JpaLedgerEntryRepository → LedgerSequenceAllocator`) requires `casehub.ledger.enabled=false` in addition — see step 8 above. Tracked in engine#436.
+  - Note: this stub solves the **reactive** CDI injection (`ReactiveLedgerEntryRepository`). The **blocking** write chain (`CaseLedgerEntryRepository → JpaLedgerEntryRepository → LedgerSequenceAllocator`) requires `casehub.ledger.enabled=false` in addition — see step 8 above. ~~Tracked in engine#436.~~ engine#436 ✅ CLOSED — `CaseLedgerEntryRepository` now uses composition over inheritance.
 
 - **Merge binding requires a `securitySensitive == false` short-circuit**
   - Symptom: non-security PRs never satisfy the merge condition — `securityReview` never appears in context, so `securityReview.outcome` predicate evaluates false or throws
@@ -953,7 +952,7 @@ Per the Arc42Stories spec: only decisions not captured inline elsewhere. Layer-s
 
 | Risk | Mitigation | Tracked |
 |---|---|---|
-| `quarkus:build` fails standalone without full dependency stack | Test suite passes; production packaging deferred until claudony + persistence modules present | devtown#31 |
+| ~~`quarkus:build` fails standalone without full dependency stack~~ | ~~Test suite passes; production packaging deferred until claudony + persistence modules present~~ | ~~devtown#31~~ ✅ CLOSED |
 | ~~`Path.root()` not yet on platform main~~ | platform#24 ✅ CLOSED; work#212 ✅ CLOSED — resolved | ~~platform#24~~ |
 | ~~engine#326 blocking Layer 2 documentation~~ | engine#326 ✅ CLOSED — narrative can now be written | ~~engine#326~~ |
 | Bootstrap routing is identical to Gastown | By design — Phase 0. Routing quality improves as attestations accumulate. DT-006 documents the four-phase maturity model. | DT-006 |
@@ -964,7 +963,7 @@ Per the Arc42Stories spec: only decisions not captured inline elsewhere. Layer-s
 |---|---|---|---|
 | ~~SLA breach from engine scope propagation~~ | engine#330 ✅ CLOSED — `HumanTaskTarget.scope` shipped | L2 | ~~engine#330~~ |
 | ~~`BreachDecision.Extend` not wired~~ | work#211 ✅ CLOSED — `WorkItemService.extend()` shipped | L2 | ~~work#211~~ |
-| Policy config via `@ConfigProperty` | Temporary until `PreferenceProvider.resolve(scope).asMap()` ships | L5 | parent#26 |
+| ~~Policy config via `@ConfigProperty`~~ | ~~Temporary until `PreferenceProvider.resolve(scope).asMap()` ships~~ | ~~L5~~ | ~~parent#26~~ ✅ CLOSED — migration can proceed |
 | Concurrency throttling not yet built | `SpawnThrottle` in `ClaudonyConfig` (P1.1) — significant gap at scale vs Gastown | L5+ | — |
 | Recovery on stuck reviewer not yet built | `RecoveryPolicy` SPI (P1.2) — detection only, no automated recovery | L5+ | — |
 | Merge queue (batch-then-bisect) not yet built | Gastown parity feature; CasePlanModel approach designed (naming deferred to Epics 4/5) | L5+ | devtown#11 |
@@ -1070,7 +1069,7 @@ Per the Arc42Stories spec: only decisions not captured inline elsewhere. Layer-s
 
 ### 5. Gaps — what's still missing for a complete ARC42STORIES.MD?
 
-**Gaps to fill when Layer 2 closes (engine#326):**
+**Gaps to fill for Layer 2 (engine#326 ✅ CLOSED — blocker resolved, content can be written):**
 - Full Key files list for casehub-work layer
 - Gotchas section for Layer 2 (breach event `Chained` wrapper fix; `BreachExecutionFailed` escape; `EscalateTo.deadline` COMPLETION_EXPIRED vs CLAIM_EXPIRED distinction)
 - Pattern to replicate for Layer 2 (7–10 domain-agnostic steps)
@@ -1082,9 +1081,14 @@ Per the Arc42Stories spec: only decisions not captured inline elsewhere. Layer-s
 - A YAML snippet in §9.4 Layer — casehub-engine showing the core binding structure (security routing + merge short-circuit) so an LLM replicating Layer 5 doesn't need to read `pr-review.yaml`
 - §3 C4Context diagram could reference the Gastown comparison more explicitly — the reader should understand that devtown is the CaseHub answer to Gastown before reading the layer entries
 
-**Gaps to fill as Chapters 3–5 close:**
-- Full Chapter and Layer entries for C3/L3 (qhorus), C4/L4 (ledger), C5/L6 (trust routing)
-- §10 expanded with cross-cutting decisions from those layers (e.g., `causedByEntryId` chain design, trust attestation schema)
+**Gaps to fill for completed but undocumented chapters (C3, C4):**
+- Full Chapter and Layer entries for C3/L3 (qhorus) — code complete, documentation pending
+- Full Chapter entry for C4/L4 (ledger) — code complete, Layer entry written (§9.4), Chapter entry needs expansion
+- §10 expanded with cross-cutting decisions from C3/C4 (e.g., `causedByEntryId` chain design)
+
+**Gaps to fill as Chapter 5 closes:**
+- Full Chapter and Layer entries for C5/L6 (trust routing)
+- §10 expanded with trust attestation schema decisions
 - §12 Technical debt section updated as items close
 
 **Structural gap in the spec itself (observed during this generation):**

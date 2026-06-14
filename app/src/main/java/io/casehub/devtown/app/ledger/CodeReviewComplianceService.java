@@ -12,12 +12,15 @@ import io.casehub.devtown.review.compliance.TrustRoutingRequirement;
 import io.casehub.ledger.model.CaseLedgerEntry;
 import io.casehub.ledger.model.WorkerDecisionEntry;
 import io.casehub.ledger.runtime.model.LedgerEntry;
+import io.casehub.ledger.runtime.persistence.LedgerPersistenceUnit;
 import io.casehub.ledger.runtime.repository.LedgerEntryRepository;
 import io.casehub.ledger.runtime.service.LedgerVerificationService;
 import io.casehub.ledger.runtime.service.model.InclusionProof;
 import io.quarkus.narayana.jta.QuarkusTransaction;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceException;
 import jakarta.transaction.Transactional;
 import java.time.Instant;
 import java.util.List;
@@ -45,6 +48,7 @@ public class CodeReviewComplianceService {
 
     @Inject LedgerEntryRepository ledgerRepo;
     @Inject LedgerVerificationService verificationService;
+    @Inject @LedgerPersistenceUnit EntityManager em;
 
     /**
      * Assembles compliance evidence for a case from its ledger entries.
@@ -112,7 +116,7 @@ public class CodeReviewComplianceService {
                 auditChain,
                 buildReviewSla(),
                 buildTrustRouting(snapshots),
-                buildGdpr()));
+                buildGdpr(snapshots, tenancyId)));
     }
 
     private ReviewSlaRequirement buildReviewSla() {
@@ -147,14 +151,37 @@ public class CodeReviewComplianceService {
                 decisions);
     }
 
-    private GdprRequirement buildGdpr() {
+    private GdprRequirement buildGdpr(List<EntrySnapshot> snapshots, String tenancyId) {
+        List<String> tokens = snapshots.stream()
+                .map(EntrySnapshot::actorId)
+                .filter(id -> id != null)
+                .distinct()
+                .toList();
+
+        List<UUID> receiptIds = List.of();
+        if (!tokens.isEmpty()) {
+            try {
+                receiptIds = QuarkusTransaction.requiringNew().call(() ->
+                        em.createNamedQuery("ErasureReceiptLedgerEntry.findByTokens", ErasureReceiptLedgerEntry.class)
+                                .setParameter("tokens", tokens)
+                                .getResultList()
+                                .stream()
+                                .map(e -> e.id)
+                                .toList());
+            } catch (PersistenceException e) {
+                LOG.warnf("Erasure receipt query failed for compliance report: %s", e.getMessage());
+            }
+        }
+
         return new GdprRequirement(
                 GdprRequirement.REQUIREMENT_ID,
                 GdprRequirement.CITATION,
                 GdprRequirement.MECHANISM,
                 RequirementStatus.CLOSED,
-                true,   // erasureCapabilityWired
-                true);  // pseudonymisationActive
+                true,
+                true,
+                !receiptIds.isEmpty(),
+                receiptIds);
     }
 
     /**

@@ -1,7 +1,9 @@
 package io.casehub.devtown.app;
 
+import io.casehub.devtown.domain.memory.DevtownMemoryDomain;
 import io.casehub.platform.api.identity.CurrentPrincipal;
 import io.casehub.platform.api.memory.CaseMemoryStore;
+import io.casehub.platform.api.memory.MemoryCapabilityException;
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.BadRequestException;
@@ -34,7 +36,7 @@ public class MemoryAdminResource {
         if (request.login() == null || request.login().isBlank()) {
             throw new BadRequestException("login is required");
         }
-        final String entityId = "contributor:" + request.login();
+        final String entityId = DevtownMemoryDomain.CONTRIBUTOR_PREFIX + request.login();
         LOG.infof("GDPR erasure requested — entityId=%s, requestedBy=%s, tenantId=%s",
                 entityId, principal.actorId(), principal.tenancyId());
         try {
@@ -42,7 +44,7 @@ public class MemoryAdminResource {
             LOG.infof("GDPR erasure completed — entityId=%s, requestedBy=%s, tenantId=%s",
                     entityId, principal.actorId(), principal.tenancyId());
             return Response.noContent().build();
-        } catch (UnsupportedOperationException e) {
+        } catch (MemoryCapabilityException e) {
             LOG.warnf("GDPR erasure not supported by active adapter — entityId=%s, requestedBy=%s",
                     entityId, principal.actorId());
             return Response.status(501).entity("eraseEntity not supported by the active CaseMemoryStore adapter").build();

@@ -67,7 +67,7 @@ public class CaseMemoryRecaller {
 
             List<Memory> contributorHistory = s.query(
                 MemoryQuery.forEntity(
-                    "contributor:" + pr.contributor(),
+                    DevtownMemoryDomain.CONTRIBUTOR_PREFIX + pr.contributor(),
                     DevtownMemoryDomain.SOFTWARE_REVIEW,
                     tenantId)
                 .withLimit(contributorLimit)

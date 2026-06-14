@@ -114,10 +114,12 @@ class CodeReviewComplianceServiceTest {
         assertThat(evidence.trustRouting().decisions().get(0).trustScoreAtRouting())
                 .isEqualTo(0.85);
 
-        // GDPR: static capability declaration — always CLOSED
+        // GDPR: capability wired, no erasure performed
         assertThat(evidence.gdpr().status()).isEqualTo(RequirementStatus.CLOSED);
         assertThat(evidence.gdpr().erasureCapabilityWired()).isTrue();
         assertThat(evidence.gdpr().pseudonymisationActive()).isTrue();
+        assertThat(evidence.gdpr().erasurePerformed()).isFalse();
+        assertThat(evidence.gdpr().erasureReceiptIds()).isEmpty();
 
         // Review SLA: GAP in Layer 4
         assertThat(evidence.reviewSla().status()).isEqualTo(RequirementStatus.GAP);

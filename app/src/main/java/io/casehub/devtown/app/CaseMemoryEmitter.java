@@ -60,7 +60,7 @@ public class CaseMemoryEmitter {
 
     private MemoryInput buildContributorFact(ReviewCompletedEvent event) {
         var pr = event.pr();
-        var entityId = "contributor:" + pr.contributor();
+        var entityId = DevtownMemoryDomain.CONTRIBUTOR_PREFIX + pr.contributor();
 
         var attributes = new HashMap<String, String>();
         attributes.put(MemoryAttributeKeys.ACTOR_ID, pr.contributor());
@@ -89,7 +89,7 @@ public class CaseMemoryEmitter {
 
     private MemoryInput buildReviewerFact(ReviewCompletedEvent event) {
         var pr = event.pr();
-        var entityId = "reviewer:" + event.reviewerId();
+        var entityId = DevtownMemoryDomain.REVIEWER_PREFIX + event.reviewerId();
 
         var attributes = new HashMap<String, String>();
         attributes.put(MemoryAttributeKeys.ACTOR_ID, event.reviewerId());
@@ -118,7 +118,7 @@ public class CaseMemoryEmitter {
 
     private MemoryInput buildCodeAreaFact(ReviewCompletedEvent event, String module) {
         var pr = event.pr();
-        var entityId = "module:" + pr.repo() + "/" + module;
+        var entityId = DevtownMemoryDomain.MODULE_PREFIX + pr.repo() + "/" + module;
 
         var attributes = new HashMap<String, String>();
         attributes.put(MemoryAttributeKeys.ACTOR_ID, event.reviewerId());

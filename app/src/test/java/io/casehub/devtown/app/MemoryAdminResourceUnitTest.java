@@ -2,6 +2,8 @@ package io.casehub.devtown.app;
 
 import io.casehub.platform.api.identity.CurrentPrincipal;
 import io.casehub.platform.api.memory.CaseMemoryStore;
+import io.casehub.platform.api.memory.MemoryCapability;
+import io.casehub.platform.api.memory.MemoryCapabilityException;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
@@ -18,7 +20,7 @@ class MemoryAdminResourceUnitTest {
     @Test
     void eraseContributor_logs_warn_when_adapter_unsupported() {
         var store = mock(CaseMemoryStore.class);
-        doThrow(UnsupportedOperationException.class).when(store).eraseEntity(any(), any());
+        doThrow(new MemoryCapabilityException(MemoryCapability.ERASE_ENTITY, CaseMemoryStore.class)).when(store).eraseEntity(any(), any());
         var principal = mock(CurrentPrincipal.class);
         when(principal.actorId()).thenReturn("admin-user");
         when(principal.tenancyId()).thenReturn("default");

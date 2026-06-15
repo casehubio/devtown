@@ -26,4 +26,26 @@ class HumanOversightTest {
             .doesNotStartWith("human-decision:")
             .isNotEqualTo(HumanDecision.PR_APPROVAL);
     }
+
+    @Test
+    void generalConstantNonBlank() {
+        assertThat(HumanOversight.GENERAL).isNotBlank();
+    }
+
+    @Test
+    void generalValueMatchesSpec() {
+        assertThat(HumanOversight.GENERAL).isEqualTo("human-oversight:general");
+    }
+
+    @Test
+    void generalPrefixedCorrectly() {
+        assertThat(HumanOversight.GENERAL).startsWith("human-oversight:");
+    }
+
+    @Test
+    void generalNoOverlapWithHumanDecision() {
+        assertThat(HumanOversight.GENERAL)
+            .doesNotStartWith("human-decision:")
+            .isNotEqualTo(HumanDecision.PR_APPROVAL);
+    }
 }

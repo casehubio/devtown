@@ -190,6 +190,14 @@ class DevtownActionRiskClassifierTest {
         }
 
         @Test
+        void issueCloseInvalid_nullContext_failSafe() {
+            RiskDecision result = classifier.classify(
+                    new PlannedAction("test-worker", null, "test", DevtownActionType.ISSUE_CLOSE_INVALID, null),
+                    defaultPrefs());
+            assertThat(result).isInstanceOf(RiskDecision.GateRequired.class);
+        }
+
+        @Test
         void dependencyRemoval_belowThreshold_autonomous() {
             RiskDecision result = classifier.classify(
                     action(DevtownActionType.DEPENDENCY_REMOVAL, Map.of("transitiveUsageCount", 2)),

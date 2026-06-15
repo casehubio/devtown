@@ -89,7 +89,7 @@ public class DevtownActionRiskClassifier {
             return failSafeForAction(action, prefs, true, List.of(HumanOversight.ROUTING_REVIEW));
         }
 
-        if (actual.ordinal() >= threshold.ordinal()) {
+        if (actual.confidence() >= threshold.confidence()) {
             return new RiskDecision.GateRequired(
                     "Security finding (" + actual + ") requires human confirmation",
                     true, List.of(HumanOversight.ROUTING_REVIEW),

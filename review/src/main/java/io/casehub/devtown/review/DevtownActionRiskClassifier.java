@@ -9,6 +9,7 @@ import io.casehub.devtown.domain.IncidentSeverity;
 import io.casehub.devtown.domain.preferences.IntPreference;
 import io.casehub.devtown.domain.preferences.RiskPreferenceKeys;
 import io.casehub.devtown.domain.sla.StringPreference;
+import io.casehub.platform.api.preferences.PreferenceKey;
 import io.casehub.platform.api.preferences.Preferences;
 import java.time.Duration;
 import java.util.List;
@@ -57,8 +58,8 @@ public class DevtownActionRiskClassifier {
     }
 
     private RiskDecision classifyMergeExecute(final PlannedAction action, final Preferences prefs) {
-        int minimum = prefs.getOrDefault(RiskPreferenceKeys.MERGE_MIN_APPROVED_REVIEWS).value();
-        Integer actual = extractInt(action.context(), "approvedReviewCount");
+        final int minimum = prefs.getOrDefault(RiskPreferenceKeys.MERGE_MIN_APPROVED_REVIEWS).value();
+        final Integer actual = extractInt(action.context(), "approvedReviewCount");
         if (actual == null || actual < minimum) {
             return new RiskDecision.GateRequired(
                     "Merge requires at least " + minimum + " approved review(s)",
@@ -69,7 +70,7 @@ public class DevtownActionRiskClassifier {
     }
 
     private RiskDecision classifySecurityEscalation(final PlannedAction action, final Preferences prefs) {
-        StringPreference thresholdPref = prefs.getOrDefault(RiskPreferenceKeys.SECURITY_SEVERITY_THRESHOLD);
+        final StringPreference thresholdPref = prefs.getOrDefault(RiskPreferenceKeys.SECURITY_SEVERITY_THRESHOLD);
         IncidentSeverity threshold;
         try {
             threshold = IncidentSeverity.valueOf(thresholdPref.value());
@@ -77,7 +78,7 @@ public class DevtownActionRiskClassifier {
             return failSafe(action);
         }
 
-        Object rawSeverity = action.context() != null ? action.context().get("severity") : null;
+        final Object rawSeverity = action.context() != null ? action.context().get("severity") : null;
         if (rawSeverity == null) {
             return failSafeForAction(action, prefs, true, List.of(HumanOversight.ROUTING_REVIEW));
         }
@@ -100,10 +101,10 @@ public class DevtownActionRiskClassifier {
 
     private RiskDecision classifyIntThreshold(final PlannedAction action, final Preferences prefs,
             final String contextKey,
-            final io.casehub.platform.api.preferences.PreferenceKey<IntPreference> thresholdKey,
+            final PreferenceKey<IntPreference> thresholdKey,
             final boolean reversible, final List<String> candidateGroups, final String reason) {
-        int threshold = prefs.getOrDefault(thresholdKey).value();
-        Integer actual = extractInt(action.context(), contextKey);
+        final int threshold = prefs.getOrDefault(thresholdKey).value();
+        final Integer actual = extractInt(action.context(), contextKey);
         if (actual == null || actual >= threshold) {
             return new RiskDecision.GateRequired(reason, reversible, candidateGroups,
                     expiresIn(prefs, reversible), action.actionType());
@@ -112,7 +113,7 @@ public class DevtownActionRiskClassifier {
     }
 
     private RiskDecision classifyReviewOverride(final PlannedAction action, final Preferences prefs) {
-        Object verdict = action.context() != null ? action.context().get("originalVerdict") : null;
+        final Object verdict = action.context() != null ? action.context().get("originalVerdict") : null;
         if ("REJECTED".equals(verdict)) {
             return new RiskDecision.GateRequired(
                     "Overriding a rejection requires human approval",

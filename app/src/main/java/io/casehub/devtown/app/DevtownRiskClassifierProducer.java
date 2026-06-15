@@ -26,7 +26,7 @@ public class DevtownRiskClassifierProducer implements ActionRiskClassifier {
 
     @Override
     public RiskDecision classify(final PlannedAction action) {
-        Preferences prefs = preferenceProvider.resolve(
+        final Preferences prefs = preferenceProvider.resolve(
                 SettingsScope.of("casehubio", "devtown", "risk", action.actionType()));
         return classifier.classify(action, prefs);
     }

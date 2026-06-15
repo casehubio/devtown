@@ -32,12 +32,12 @@ public class GdprErasureService {
     @Inject LedgerEntryRepository ledgerRepo;
 
     public ErasureReceipt erase(final String rawActorId, final String tenancyId, final String reason) {
-        String queryResult = actorIdentityProvider.tokeniseForQuery(rawActorId);
-        String erasedActorToken = queryResult.equals(rawActorId)
+        final String queryResult = actorIdentityProvider.tokeniseForQuery(rawActorId);
+        final String erasedActorToken = queryResult.equals(rawActorId)
                 ? HashUtils.sha256Hex("erasure:" + rawActorId)
                 : queryResult;
 
-        int memoryRecordsErased = eraseMemory(rawActorId, tenancyId);
+        final int memoryRecordsErased = eraseMemory(rawActorId, tenancyId);
 
         return QuarkusTransaction.requiringNew().call(() -> {
             var erasureResult = ledgerErasureService.erase(rawActorId);

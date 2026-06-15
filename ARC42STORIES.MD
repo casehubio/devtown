@@ -818,6 +818,10 @@ LAYER 1 GAP: no tamper-evident audit trail — cannot trace a production inciden
 ```
 Not closed by Layer 5: no response SLA (Layer 2), no trust weighting (Layer 6).
 
+#### Layer 5 extension: ActionRiskClassifier oversight gate (devtown#56)
+
+`DevtownActionRiskClassifier` implements the engine's `ActionRiskClassifier` SPI (engine#402) with devtown-specific risk rules for 8 consequential action types. Four classification categories: always-gate (`pr-force-merge`, `contributor-access-change`), minimum-requirement with inverted comparison (`pr-merge-execute` — zero approvals must never proceed), risk-threshold (`security-escalation` via `IncidentSeverity` ordinal, `issue-close-invalid`, `dependency-removal`, `production-deploy`), and conditional (`pr-review-override` — only gates when overriding a rejection). Unknown action types fail-safe to `GateRequired`. Thresholds driven by `PreferenceProvider` with scope `casehubio/devtown/risk/<actionType>`. CDI adapter: `DevtownRiskClassifierProducer @RiskClassifier @ApplicationScoped` in `app/`.
+
 #### Accountability gaps closed
 
 | Gap | What breaks | Closed by |
@@ -991,7 +995,8 @@ Per the Arc42Stories spec: only decisions not captured inline elsewhere. Layer-s
 | `DefaultSlaBreachPolicy` | devtown's SPI implementation of `SlaBreachPolicy`. Lives in `devtown-domain` (pure Java). Implements multi-tier escalation via `candidateGroups`. |
 | `DevtownTrustDimension` | Three quality dimensions for trust scoring in devtown: `review-thoroughness`, `false-positive-rate`, `scope-calibration`. |
 | `HumanDecision` | Formal PR accountability event constant (`human-decision:pr-approval`). WorkItem lifecycle type. |
-| `HumanOversight` | System-level routing review constant (`human-oversight:routing-review`). Triggered when routing confidence is low. |
+| `DevtownActionType` | Typed string constants for consequential agent actions: `pr-merge-execute`, `pr-force-merge`, `pr-review-override`, `security-escalation`, `issue-close-invalid`, `dependency-removal`, `contributor-access-change`, `production-deploy`. Used by `DevtownActionRiskClassifier` to classify risk per action type. |
+| `HumanOversight` | System-level oversight constants: `ROUTING_REVIEW` (`human-oversight:routing-review`, triggered by low routing confidence) and `GENERAL` (`human-oversight:general`, catch-all oversight group for action gates without a specific group). |
 | Layer | A horizontal architectural concern — a technical tier or foundation module. Layers are the implementation unit; Chapters are the delivery unit. |
 | `PrPayload` | Input record to `PrReviewApplicationService`: repo, prNumber, headSha, linesChanged. |
 | `PrReviewApplicationService` | Port interface for the PR review use case. Lives in `devtown-review`. CDI displacement boundary. |

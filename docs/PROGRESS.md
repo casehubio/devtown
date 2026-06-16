@@ -37,7 +37,7 @@ Each gate is a foundation capability devtown depends on. Status shown here; full
 |------|--------|------|---------------------|
 | P1.1 claudony — agent concurrency throttling (`SpawnThrottle`) | ⚠️ PENDING | — | Prevents Claude API rate exhaustion at 10+ concurrent cases; hard blocker for merge queue operation |
 | P1.2 casehub-engine — `RecoveryPolicy` SPI | ⚠️ PENDING | — | Automated recovery on stuck reviewer; moves from alert-only to self-healing |
-| P1.3 casehub-engine — `TrustWeightedSelectionStrategy` wired | ⚠️ PENDING | — | Routing thresholds (DT-004) enforced at assignment time; without this, routing ignores trust scores |
+| P1.3 casehub-engine — `AgentRoutingStrategy` injectable + `TrustWeightedAgentStrategy` wired | ✅ DONE | 2026-05-31 | Routing thresholds enforced at assignment time. Shipped differently than originally planned: `TrustWeightedAgentStrategy` lives in `casehub-engine-ledger` (foundation), not devtown. devtown provides `DevtownTrustRoutingPolicyProvider` for per-capability policies. engine#336, engine#337, qhorus#199 all closed. |
 | P1.4 casehub-engine — `CaseLedgerEntry` | ✅ DONE | 2026-04-26 | Every case lifecycle event is a tamper-evident ledger entry; merge decisions auditable |
 | P1.5 casehub-ledger — Doltgres backend | ⚠️ PENDING | — | Time-travel queries; `gt seance`-equivalent predecessor context access |
 
@@ -53,9 +53,7 @@ Each gate is a foundation capability devtown depends on. Status shown here; full
 
 Based on ✅ gates: case plan models, content-driven routing bindings (Layer 5 ✅), capability vocabulary, trust dimension tracking, parallel AI checks, cryptographic audit of case decisions, GitHub Issues sync for human review tasks, Layer 2 SLA-bounded human review gate with escalation (devtown#41 ✅), HITL end-to-end happy path (devtown#33, devtown#30 ✅), trust accumulation per persona across sessions (qhorus#124 ✅).
 
-**Blocked until P1.3 (engine#336 + engine#337 → TrustWeightedSelectionStrategy):** routing thresholds enforced at assignment. Note: qhorus#199 (`TrustGateService` never called at COMMAND creation) is an additional prerequisite — trust scores are computed but not checked when obligations open.
-**Blocked until engine#349 (`CaseSignalSink` SPI):** complete escalation-during-wait signal path (work#225).
-**Blocked until engine#326 (failure goal support):** SLA breach → case FAILED transition for Layer 2 complete path.
+All previously blocking foundation gates are resolved: P1.3 (trust routing wired — engine#336, engine#337, qhorus#199 closed), engine#349 (CaseSignalSink SPI — closed), engine#326 (failure goal support — closed), work#225 (escalation signal — closed).
 
 ---
 
@@ -68,7 +66,7 @@ Design decisions that produce capabilities Gastown structurally cannot match. Ea
 ### DT-001 — Typed vocabulary split: four types instead of a flat namespace
 
 **Status:** ✅ Implemented — Epic 2 (devtown#9)
-**Requires:** #68 ✅ (capability-scoped trust scoring); P1.3 ⚠️ (routing enforcement)
+**Requires:** #68 ✅ (capability-scoped trust scoring); P1.3 ✅ (routing enforcement — engine#336, engine#337 closed)
 
 | | devtown | Gastown |
 |---|---|---|
@@ -84,7 +82,7 @@ Design decisions that produce capabilities Gastown structurally cannot match. Ea
 ### DT-002 — Two distinct human involvement types: decision and oversight
 
 **Status:** ✅ Implemented — Epic 2 (devtown#9)
-**Requires:** casehub-work ✅; HITL wiring ✅ (happy path devtown#33); qhorus#124 ✅ claudony#107 (trust accumulates per persona); escalation-during-wait ⚠️ (work#225, engine#349)
+**Requires:** casehub-work ✅; HITL wiring ✅ (happy path devtown#33); qhorus#124 ✅ claudony#107 (trust accumulates per persona); escalation-during-wait ✅ (work#225 closed, engine#349 closed)
 
 | | devtown | Gastown |
 |---|---|---|
@@ -103,7 +101,7 @@ Design decisions that produce capabilities Gastown structurally cannot match. Ea
 
 | | devtown | Gastown |
 |---|---|---|
-| **Dimensions** | Three: `REVIEW_THOROUGHNESS` (recall — did the agent find issues that escaped?), `FALSE_POSITIVE_RATE` (precision — did the agent flag things that weren't problems?), `SCOPE_CALIBRATION` (did the agent correctly DECLINE work outside its capability?) | Stamps: quality, reliability, creativity — human-curated, not automated |
+| **Dimensions** | Three: `REVIEW_THOROUGHNESS` (recall — did the agent find issues that escaped?), `PRECISION` (precision — did the agent flag things that weren't problems?), `SCOPE_CALIBRATION` (did the agent correctly DECLINE work outside its capability?) | Stamps: quality, reliability, creativity — human-curated, not automated |
 | **Per-capability quality** | `LedgerAttestation` carries both `capabilityTag` and `trustDimension` — quality within a capability context expressed by combining fields, not a separate dimension | N/A |
 | **`SCOPE_CALIBRATION`** | Maps directly to normative DECLINED commitment — agent's "I cannot do this" is a positive signal automatically captured and scored | No equivalent — cannot distinguish DECLINED from silent failure |
 | **Auto-computation** | All three dimensions computed from attestation history by `TrustScoreJob` — no human curation | Stamps assigned manually |
@@ -115,7 +113,7 @@ Design decisions that produce capabilities Gastown structurally cannot match. Ea
 ### DT-004 — Routing thresholds as configurable policy, not hard-coded constants
 
 **Status:** ✅ Implemented — Epic 2 (devtown#9)
-**Requires:** P1.3 ⚠️ (engine#336 + engine#337 prerequisites open; qhorus#199 also blocks enforcement); P0.2 ✅
+**Requires:** P1.3 ✅ (engine#336 + engine#337 closed; qhorus#199 closed); P0.2 ✅
 
 | | devtown | Gastown |
 |---|---|---|
@@ -131,7 +129,7 @@ Design decisions that produce capabilities Gastown structurally cannot match. Ea
 ### DT-005 — `RoutingPolicy`: trust-aware routing with uncertainty handling and audit rationale
 
 **Status:** ✅ Implemented — Epic 2 (devtown#9)
-**Requires:** P0.2 ✅; P1.3 ⚠️ (enforcement at assignment); ledger#76 ✅ DONE 2026-05-15 — `CAPABILITY_DIMENSION` score type with `scope_key = "{capabilityTag}:{dimensionName}"`
+**Requires:** P0.2 ✅; P1.3 ✅ (enforcement at assignment — engine#336, engine#337 closed); ledger#76 ✅ DONE 2026-05-15 — `CAPABILITY_DIMENSION` score type with `scope_key = "{capabilityTag}:{dimensionName}"`
 
 | | devtown | Gastown |
 |---|---|---|
@@ -149,7 +147,7 @@ Design decisions that produce capabilities Gastown structurally cannot match. Ea
 ### DT-006 — Trust maturity model: four phases from bootstrap to adaptive routing
 
 **Status:** ✅ Implemented — Epic 2 (devtown#9)
-**Requires:** P0.2 ✅; P1.3 ⚠️ (enforcement at assignment); ledger#76 ✅ DONE 2026-05-15 (Phase 3 `CAPABILITY_DIMENSION` quality floors now available)
+**Requires:** P0.2 ✅; P1.3 ✅ (enforcement at assignment — engine#336, engine#337 closed); ledger#76 ✅ DONE 2026-05-15 (Phase 3 `CAPABILITY_DIMENSION` quality floors now available)
 
 | | devtown | Gastown |
 |---|---|---|
@@ -178,7 +176,7 @@ Design decisions that produce capabilities Gastown structurally cannot match. Ea
 ### DT-007 — Layer 2: SLA-bounded human review gate with two-tier escalation
 
 **Status:** ✅ Implemented — devtown#41 (code), devtown#42 (wiring test)
-**Requires:** casehub-work SlaBreachPolicy SPI ✅ (work#212–213); casehub-work-adapter HITL ✅ (devtown#33); engine#326 ⚠️ (failure goal — SLA breach → case FAILED transition pending)
+**Requires:** casehub-work SlaBreachPolicy SPI ✅ (work#212–213); casehub-work-adapter HITL ✅ (devtown#33); engine#326 ✅ (failure goal — SLA breach → case FAILED transition shipped)
 
 | | devtown | Gastown |
 |---|---|---|
@@ -239,3 +237,63 @@ Design decisions that produce capabilities Gastown structurally cannot match. Ea
 | **Cold start** | New agent: Beta(1,1) prior; with imported trust: Beta(α,β) seeded from external history — bootstraps immediately | No equivalent bootstrapping mechanism |
 
 **Why devtown can do this, Gastown cannot:** Gastown's Wasteland is more mature (production-ready, portable). CaseHub now has structural parity with `TrustExportService` + `TrustImportService` (P2.1 complete). The architectural difference: Gastown's stamps are human-curated — a trusted person assigns them. CaseHub's exported trust is automatically derived from cryptographically attested commitment outcomes. Imported trust carries the same mathematical provenance as locally-computed trust, making cross-deployment reputation structurally more reliable than stamp-based models.
+
+---
+
+### DT-011 — Layer 3: structured agent messaging (COMMAND/RESPONSE/DONE/DECLINE per reviewer)
+
+**Status:** ✅ Implemented — devtown#52
+**Requires:** P0.1 ✅; P0.2 ✅
+
+| | devtown | Gastown |
+|---|---|---|
+| **Agent interaction** | Typed speech acts per specialist reviewer — COMMAND dispatches work, DONE/DECLINE/FAILURE carry structured outcomes with formal commitment lifecycle | Bead assigned to agent; completion is a status flip with no normative semantics |
+| **Per-reviewer channels** | Each PR review case creates typed Qhorus channels (work, observe, oversight) with enforced `allowedTypes` | No per-assignment channel — communication is informal |
+| **Commitment tracking** | Every COMMAND creates a 7-state Commitment (OPEN→ACKNOWLEDGED→FULFILLED/DECLINED/FAILED/DELEGATED/EXPIRED) | No commitment concept |
+
+**Why devtown can do this, Gastown cannot:** Gastown's communication model is two types (nudge, sling) with no formal semantics. The commitment lifecycle — distinguishing "agent accepted work" from "agent completed work" from "agent refused work" — requires a normative layer that Gastown does not have and cannot bolt on without rebuilding its coordination model.
+
+---
+
+### DT-012 — Layer 4: tamper-evident merge decision audit trail
+
+**Status:** ✅ Implemented — devtown#73, devtown#7
+**Requires:** P1.4 ✅ (CaseLedgerEntry)
+
+| | devtown | Gastown |
+|---|---|---|
+| **Merge decision record** | `MergeDecisionLedgerEntry` — JPA JOINED inheritance from `CaseLedgerEntry`, captures structured PR merge decision with `ComplianceSupplement` carrying EU AI Act Art.12 fields | Dolt git history — admin-rewritable, no structured compliance fields |
+| **Compliance report** | `CodeReviewComplianceService` assembles per-case evidence across four regulatory dimensions via REST endpoint | No compliance surface |
+| **Tamper evidence** | Merkle inclusion proof independently verifiable without server access | Dolt `fsck` detects tampering but requires server access |
+
+**Why devtown can do this, Gastown cannot:** Gastown's audit trail is Dolt's git-level history — admin-trusted, not cryptographically verifiable. Adding structured compliance fields to a merge decision requires a typed ledger entry model, which requires a Merkle-based audit infrastructure, which Gastown does not have.
+
+---
+
+### DT-013 — GDPR Art.17 erasure endpoint with tamper-evident receipt
+
+**Status:** ✅ Implemented — devtown#74, devtown#77
+**Requires:** casehub-ledger ✅
+
+| | devtown | Gastown |
+|---|---|---|
+| **Erasure** | REST endpoint erases actor PII from ledger entries; writes tamper-evident erasure receipt to Merkle chain | No erasure capability |
+| **Provability** | Can prove data was erased, prove when, prove chain integrity preserved | N/A |
+| **PII handling** | Response bodies scrubbed of PII echo; `sha256()` utility for consistent hashing | N/A |
+
+**Why devtown can do this, Gastown cannot:** GDPR Art.17 erasure requires erasing PII while preserving audit chain integrity. Gastown's Dolt history is immutable at the git level — erasing PII requires rewriting git history, breaking content-addressed integrity. CaseHub's Merkle MMR supports tombstone erasure with chain-preserving receipts by design.
+
+---
+
+### DT-014 — ActionRiskClassifier oversight gate for consequential agent actions
+
+**Status:** ✅ Implemented — devtown#56, engine#402
+**Requires:** casehub-engine ActionRiskClassifier SPI ✅; casehub-work-adapter ✅
+
+| | devtown | Gastown |
+|---|---|---|
+| **Action classification** | `DevtownActionRiskClassifier` — 8 `DevtownActionType` constants, 4 categories (ROUTINE/ELEVATED/HIGH/CRITICAL), PreferenceProvider-driven thresholds | No action classification |
+| **Human gate** | HIGH and CRITICAL actions gated via WorkItem before case advances — human approval required for consequential operations | Agents execute autonomously within formula step |
+| **Configurability** | Thresholds at scope `casehubio/devtown/risk/<actionType>` via `BooleanPreference` | N/A |
+
+**Why devtown can do this, Gastown cannot:** Gastown has no platform-level intercept between "agent decided to act" and "action executed." The ActionRiskClassifier requires three things Gastown lacks: a typed `WorkerResult` carrying `PlannedAction`, a WorkItem lifecycle for human approval, and a case engine that can gate on the approval outcome before advancing. All three are CaseHub foundation capabilities.

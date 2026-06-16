@@ -127,7 +127,7 @@ CaseHub harness applications integrate foundation modules in a defined progressi
 | casehub-qhorus | `casehub-qhorus` | L3 | ✅ complete |
 | casehub-ledger | `casehub-ledger` | L4 | ✅ complete |
 | casehub-engine | `casehub-engine` | L5 | ✅ complete |
-| Trust routing | `casehub-ledger` (trust APIs) | L6 | 🔲 pending |
+| Trust routing | `casehub-ledger` (trust APIs) | L6 | ✅ complete |
 
 **Note on teaching order vs build order:** Layer 5 (casehub-engine) was built before Layers 2–4 because the CasePlanModel adaptive routing was the architectural priority. The layer ordering above is the *reading* order — the sequence a developer follows to understand how the system was assembled. LAYER-LOG.md entries follow reading order; build order is reflected in the blog entries.
 
@@ -392,7 +392,7 @@ flowchart LR
 | 2 | Human review with SLA | PR Review Coordination | + L2 | Medium | ✅ complete |
 | 3 | Formal agent obligation | PR Review Coordination | + L3 | Low | ✅ complete |
 | 4 | Tamper-evident audit | PR Review Coordination | + L4 | Medium | ✅ complete |
-| 5 | Trust-weighted selection | PR Review Coordination | + L6 | Medium | 🔲 pending |
+| 5 | Trust-weighted selection | PR Review Coordination | + L6 | Medium | ✅ complete |
 
 **Layer × Chapter matrix**
 
@@ -539,9 +539,9 @@ Layer 4 shipped. `MergeDecisionLedgerEntry` (JOINED, V2002) captures APPROVED/RE
 
 **Journey:** PR Review Coordination
 **Sequence:** 5 of 5
-**Status:** 🔲 pending (Layer 6 not yet started)
+**Status:** ✅ complete (Layer 6 shipped — devtown#57)
 
-🔲 Full Chapter entry at C5 close. Blocked on Layer 6 (Trust routing) implementation. Requires C4 first — trust scoring reads `LedgerAttestation` records written by the ledger layer.
+Full Chapter entry pending — content to be written from devtown#57 (Layer 6 trust routing) implementation. Layer 6 wires `TrustWeightedAgentStrategy` from `casehub-engine-ledger` with `DevtownTrustRoutingPolicyProvider` supplying per-capability routing policies.
 
 Known scope: `TrustWeightedSelectionStrategy` replaces availability routing; post-merge outcome attestations feed trust model; routing quality improves automatically as attestations accumulate.
 
@@ -908,9 +908,9 @@ Not closed by Layer 5: no response SLA (Layer 2), no trust weighting (Layer 6).
 ### Layer — Trust Routing
 
 **Participates in chapters:** C5
-**Completed:** 🔲 pending
+**Completed:** ✅ shipped (devtown#57)
 
-🔲 Full entry at C5 close. Will capture: `TrustWeightedSelectionStrategy` replacing availability routing; `LedgerAttestation` reading from Layer 4 outcomes; `RoutingPolicy` thresholds (defined at Layer 1, activated at this layer); four-phase trust maturity model (DT-006). Requires Layer 4 — trust scoring reads attestation data written by the ledger.
+Full Layer entry pending — content to be written. Layer 6 wires `TrustWeightedAgentStrategy` (from `casehub-engine-ledger`) replacing availability routing; reads `LedgerAttestation` from Layer 4 outcomes via `TrustScoreCache`; `DevtownTrustRoutingPolicyProvider` supplies per-capability thresholds from `DevtownCapabilityRegistry` + YAML config; four-phase trust maturity model (DT-006) operational. See LAYER-LOG.md §Layer 6 for full documentation.
 
 ---
 
@@ -1033,7 +1033,7 @@ Per the Arc42Stories spec: only decisions not captured inline elsewhere. Layer-s
 - The four-phase trust maturity model (DT-006 in `docs/PROGRESS.md`) — referenced but not described. A reader cannot understand *why* bootstrap mode routing is correct without this.
 - The HITL wiring test details (devtown#30, `HumanApprovalLifecycleTest`) — mentioned as "resolved" but not shown as a specific gotcha entry under Layer 5. It should be a Gotcha with Symptom → Cause → Fix.
 - The Layer 2 `EscalateTo.deadline` distinction (controls COMPLETION_EXPIRED only, not CLAIM_EXPIRED) — in DESIGN.md review findings but not in §9.4 Layer casehub-work.
-- The five specific DESIGN.md review findings (six bullet items, e.g. `Path.of()` zero-arg throws → `Path.root()` needed) — these are at the right level of detail for a Gotchas section in Layer casehub-work, but Layer 2 is a skeleton pending engine#326.
+- The five specific DESIGN.md review findings (six bullet items, e.g. `Path.of()` zero-arg throws → `Path.root()` needed) — these are at the right level of detail for a Gotchas section in Layer casehub-work, but Layer 2 is a skeleton (engine#326 now ✅ CLOSED — skeleton can be fleshed out).
 
 ### 2. Navigability — easier or harder than the old documents?
 

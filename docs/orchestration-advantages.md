@@ -354,19 +354,13 @@ Each decision is recorded on the blackboard. The trust model scores the planning
 
 ---
 
-## Current Status: The One Remaining Gap
+## Current Status: What's Operational
 
-CaseHub provides all the advanced orchestration and choreography described above. There is one gap that must be closed before CaseHub also matches Gastown's most basic capability — **assign the right agent to the right work and know whether it completed**.
+All seven advantages above are now live in `casehub-devtown`, not theoretical. The foundation gap described in earlier versions of this document ([engine#186](https://github.com/casehubio/engine/issues/186) — COMMAND dispatch after worker scheduling) shipped 2026-05-01. The normative layer is wired end-to-end.
 
-### Two levels of completion tracking
+### What shipped since this document was written
 
-**Case-level tracking — works today.**
-When a binding fires and a worker completes, it writes results to the blackboard. The binding conditions re-evaluate. If the goal is satisfied, the case progresses. This is functional and correct for the goal-level question: *did the outcome we needed get produced?*
-
-The gap: if the agent silently fails before doing anything — provisioned but never picks up the work, crashes before acknowledging — the case simply stalls. You can detect this via `list_stalled_obligations` on the Qhorus side, but the two are not connected. The case engine does not automatically know the agent went silent.
-
-**Normative tracking — needs [engine#186](https://github.com/casehubio/engine/issues/186).**
-When work is assigned, a Qhorus COMMAND is sent. A Commitment is created. The lifecycle is:
+**Normative tracking is live.** When work is assigned, a Qhorus COMMAND is sent. A Commitment is created. The full lifecycle runs:
 
 ```
 COMMAND sent → Commitment OPEN
@@ -376,15 +370,22 @@ Agent refuses → DECLINED      (re-route immediately, agent is healthy)
 Agent crashes → EXPIRED       (stall detection fires, case knows to investigate)
 ```
 
-The case engine knows exactly what happened and why. Trust scoring fires automatically from the outcome. The distinction between DECLINED (wrong agent, find another) and FAILED/EXPIRED (agent problem, investigate) is structurally captured — not inferred from free text or timeouts.
+**Trust routing is live.** `TrustWeightedAgentStrategy` (casehub-engine-ledger, `@Alternative @Priority(1)`) drives reviewer selection using capability-scoped trust scores. `DevtownTrustRoutingPolicyProvider` supplies per-capability routing policies (threshold, minimumObservations, borderlineMargin, blendFactor, quality floors). The closed feedback loop — prescriptive→normative→evaluative→prescriptive — operates without human intervention.
 
-### Why this matters
+**Human-in-the-loop is wired end-to-end.** WorkItem lifecycle (SLA, escalation, delegation) signals the case engine on completion and on SLA breach. Human approval and CI checks run in parallel (§2 above).
 
-This is not a normative-layer nicety. This is what closes the gap between CaseHub and Gastown's most fundamental guarantee: *if work is on your hook, you process it — and the system knows whether you did.*
+**Action oversight gates are live.** `ActionRiskClassifier` (engine#402) intercepts consequential agent actions — a human WorkItem gates HIGH/CRITICAL actions before the case advances.
 
-Until engine#186 ships, CaseHub's advanced orchestration and choreography runs on a foundation that cannot distinguish "agent acknowledged and is working" from "agent never picked up the work." Everything else in this document is more valuable once that baseline is solid.
+### Remaining gaps
 
-**engine#186 is the current P0 priority item.** See [casehubio/engine#186](https://github.com/casehubio/engine/issues/186).
+The advantages in §1–§7 are operational. Two infrastructure gaps remain before CaseHub can run at scale:
+
+- **Agent concurrency control** — no throttle on concurrent worker sessions (hard failure at 10+ cases)
+- **Hierarchical recovery** — detection exists but no automated recovery action (manual recovery unsustainable at 20+ agents)
+
+These are operational gaps, not architectural ones. The orchestration and choreography model is complete.
+
+Full architectural comparison: [`docs/gastown-casehub-analysis-v3.md`](gastown-casehub-analysis-v3.md)
 
 ---
 

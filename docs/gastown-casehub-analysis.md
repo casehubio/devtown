@@ -1,6 +1,7 @@
 # CaseHub vs Gastown: Comprehensive Analysis
 
-> **Status:** Working document — not committed. Do not push.
+> **ARCHIVED — Superseded by [v3](gastown-casehub-analysis-v3.md).** This document uses obsolete naming (`quarkus-ledger`, `quarkus-qhorus`, `casehub-refinery`) and is preserved for historical reference only. Do not update — all current analysis is in v3.
+
 > **Date:** 2026-04-27
 > **Purpose:** Gap analysis, differentiation, and strategic positioning between the CaseHub ecosystem and Gastown.
 

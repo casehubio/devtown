@@ -51,7 +51,7 @@ Each gate is a foundation capability devtown depends on. Status shown here; full
 
 ### What devtown can build today
 
-Based on ✅ gates: case plan models, content-driven routing bindings (Layer 5 ✅), capability vocabulary, trust dimension tracking, parallel AI checks, cryptographic audit of case decisions, GitHub Issues sync for human review tasks, Layer 2 SLA-bounded human review gate with escalation (devtown#41 ✅), HITL end-to-end happy path (devtown#33, devtown#30 ✅), trust accumulation per persona across sessions (qhorus#124 ✅).
+Based on ✅ gates: case plan models, content-driven routing bindings (Layer 5 ✅), capability vocabulary, trust dimension tracking, parallel AI checks, cryptographic audit of case decisions, GitHub Issues sync for human review tasks, Layer 2 SLA-bounded human review gate with escalation (devtown#41 ✅), HITL end-to-end happy path (devtown#33, devtown#30 ✅), trust accumulation per persona across sessions (qhorus#124 ✅), observability and operational MCP tooling (devtown#17 ✅).
 
 All previously blocking foundation gates are resolved: P1.3 (trust routing wired — engine#336, engine#337, qhorus#199 closed), engine#349 (CaseSignalSink SPI — closed), engine#326 (failure goal support — closed), work#225 (escalation signal — closed).
 
@@ -297,3 +297,26 @@ Design decisions that produce capabilities Gastown structurally cannot match. Ea
 | **Configurability** | Thresholds at scope `casehubio/devtown/risk/<actionType>` via `BooleanPreference` | N/A |
 
 **Why devtown can do this, Gastown cannot:** Gastown has no platform-level intercept between "agent decided to act" and "action executed." The ActionRiskClassifier requires three things Gastown lacks: a typed `WorkerResult` carrying `PlannedAction`, a WorkItem lifecycle for human approval, and a case engine that can gate on the approval outcome before advancing. All three are CaseHub foundation capabilities.
+
+---
+
+### DT-015 — Operational observability: 11 MCP tools + W3C PROV-DM + event-sourced read model
+
+**Status:** ✅ Implemented — devtown#17 (Epic 10)
+**Requires:** casehub-engine ✅; casehub-qhorus ✅; casehub-ledger ✅
+
+| | devtown | Gastown |
+|---|---|---|
+| **Interface** | 11 MCP tools (8 read + 3 write) — AI agents and humans query the same API surface | `gt` CLI (6 commands) — human-only, shell-invoked |
+| **Event model** | `PrReviewCaseTracker` — event-sourced read model with ring buffer; `CaseLifecycleEvent` observer populates in real time | Bead history queries from Dolt |
+| **Queue status** | `get_queue_status` — active reviews with status breakdown, repo, contributor, lines changed | `gt feed` — live event stream |
+| **Problem detection** | `list_problems` — stalled cases, expired commitments, failed workers with configurable threshold | `gt problems` — agent issue surface |
+| **System health** | `get_system_health` — fleet size, avg trust by capability, open commitments | `gt doctor` — system health diagnostic |
+| **Case inspection** | `inspect_review` — full timeline from EventLog + per-capability status reconstruction | `gt peek` — bead inspection |
+| **Prior decisions** | `get_prior_decisions` — CaseMemoryStore recall by repo + file path | `gt seance` — predecessor session decisions (partial parity — full requires Doltgres time-travel) |
+| **Reviewer health** | `get_reviewer_health` — open commitments, per-capability trust scores, per-dimension trust, decision count, recent outcomes | No equivalent |
+| **Provenance export** | `export_prov` — W3C PROV-DM (PROV-JSON-LD) per case via `LedgerProvExportService` | No equivalent |
+| **Operator intervention** | `retry_reviewer` (signal retry), `reroute_review` (cancel + restart), `force_complete_check` (operator override with reason) | No equivalent — recovery is automated (Witness/Deacon) but not operator-initiated |
+| **AI-native** | MCP protocol — AI agents can operate the harness directly, same tools used by human operators | CLI only — agents cannot operate Gastown's tooling |
+
+**Why devtown can do this, Gastown cannot:** Gastown's `gt` CLI is 6 shell commands built for human operators. It has no concept of AI agents operating the coordination system itself — agents are workers, not operators. devtown's MCP tools are protocol-native: an AI agent monitoring a review queue, detecting a stalled reviewer, and triggering a retry is structurally identical to a human doing the same thing. The operator intervention tools (`retry_reviewer`, `reroute_review`, `force_complete_check`) have no Gastown equivalent — Gastown's recovery is automated (Witness/Deacon hierarchy) but provides no operator-initiated intervention surface. The W3C PROV-DM export makes case provenance interoperable with external audit and compliance tooling — Gastown has no provenance export.

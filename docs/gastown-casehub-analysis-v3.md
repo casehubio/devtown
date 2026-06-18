@@ -1,19 +1,21 @@
 # CaseHub vs Gastown: Architectural Analysis v3
 
-> **Date:** 2026-06-16
+> **Date:** 2026-06-18
 > **Previous versions:** [v2](gastown-casehub-analysis-v2.md) (2026-05-25), [v1](gastown-casehub-analysis.md) (2026-04-27, archived — uses obsolete naming)
 
 ---
 
 ## 1. Executive Summary
 
-Six foundation layers have shipped in `casehub-devtown`. The closed feedback loop — where trust scores derived from cryptographically attested commitment outcomes drive future routing without human intervention — is live. CaseHub surpasses Gastown on model quality, compliance, trust, and governance. Gastown leads on operational maturity, recovery automation, and tooling.
+Six foundation layers plus operational tooling have shipped in `casehub-devtown`. The closed feedback loop — where trust scores derived from cryptographically attested commitment outcomes drive future routing without human intervention — is live. CaseHub surpasses Gastown on model quality, compliance, trust, governance, and AI-native operations. Gastown leads on operational maturity and recovery automation.
 
 The central architectural difference remains **layering**. CaseHub is a domain-agnostic coordination foundation with domain applications on top. Gastown is a software engineering coordination application with no separable foundation. This is now proven, not theoretical: six application repos (devtown, aml, clinical, life, drafthouse, quarkmind) share the same foundation, each adding domain logic without modifying the foundation.
 
 The second difference is **orchestration breadth**. Gastown drives agents through formula steps — workflow. CaseHub declares goals and discovers paths — Adaptive Case Management. For AI agent coordination where outputs determine next steps, ACM is the correct paradigm.
 
-What changed since v2: the competitive picture narrowed. Most foundation gates that were blocking CaseHub's architectural advantages (P0 fully, P1.3, P1.4) have shipped. The remaining Gastown advantages are purely operational — not structural. Everything CaseHub lacks can be built on its existing foundation. What Gastown lacks requires a rewrite.
+The third difference — new since v2 — is **AI-native operations**. CaseHub's 11 MCP tools make the harness operable by AI agents via protocol, not just humans via shell. An AI agent can monitor the queue, detect a stalled reviewer, check trust scores, and trigger a retry through the same protocol it receives work on. Gastown's `gt` CLI is shell-only; agents are workers, never operators.
+
+What changed since v2: the competitive picture narrowed further. Most foundation gates (P0 fully, P1.3, P1.4) and operational tooling (#17) have shipped. The remaining Gastown advantages are recovery automation and production maturity — operational, not structural. Everything CaseHub lacks can be built on its existing foundation. What Gastown lacks requires a rewrite.
 
 ---
 
@@ -39,6 +41,7 @@ What changed since v2: the competitive picture narrowed. Most foundation gates t
 | Compliance report | devtown#7 | Per-case evidence across four EU AI Act Art.12 dimensions |
 | Post-merge trust feedback | devtown#5 | FLAGGED attestation on incident-linked review — trust score degrades for missed findings |
 | HITL end-to-end (happy path + escalation) | devtown#33, #30 | WorkItem COMPLETED signals case; SLA escalation signals case (engine#349, work#225 both shipped) |
+| Observability + operational MCP tools | devtown#17 | 11 MCP tools (8 read + 3 write) + W3C PROV-DM export + event-sourced PrReviewCaseTracker; full Gastown CLI parity with AI-native additions |
 
 ### The Closed Feedback Loop
 
@@ -176,9 +179,9 @@ Pre-production. Six layers shipped, actively building.
 | HITL end-to-end (happy + escalation) | casehub-work-adapter + CaseSignalSink | ✅ devtown#33 |
 | Cross-deployment reputation | TrustExportService + TrustImportService | ✅ Inherited |
 | Human + CI parallel execution | WAITING state — total time = max, not sum | ✅ Layer 5 |
+| Observability + operational tooling | 11 MCP tools (8 read + 3 write) + W3C PROV-DM + event-sourced tracker | ✅ devtown#17 |
 | Merge queue | CasePlanModel — batch-then-bisect | Not started |
 | GitHub integration | Webhook receiver, CI status, merge execution | Not started |
-| Operational tooling | MCP tools for queue status, reviewer health | Not started |
 
 ### 4.3 Gastown Feature Parity Checklist
 
@@ -188,8 +191,8 @@ Pre-production. Six layers shipped, actively building.
 | AI coding agent workers | Claudony WorkerProvisioner | Foundation ready |
 | Human workspaces (Crew) | Human review WorkItem via casehub-work | ✅ Layer 2 |
 | Cross-rig agent routing | Sub-case orchestration | Foundation ready |
-| CLI tooling | MCP tools + claudony dashboard extensions | Not started |
-| Predecessor session context | WorkerContextProvider + ledger history queries | Partial |
+| CLI tooling | 11 MCP tools (8 read + 3 write) — AI-native, protocol-native | ✅ devtown#17 |
+| Predecessor session context | `get_prior_decisions` MCP tool + CaseMemoryStore | ✅ Partial (full requires Doltgres P1.5) |
 | Federated reputation (Wasteland) | TrustExportService + TrustImportService | ✅ Shipped |
 | Sandboxed execution | gt-proxy-server equivalent | Not planned |
 | Agent concurrency control | SpawnThrottle in ClaudonyConfig | Not started |
@@ -229,6 +232,10 @@ Security review fires because code analysis found cryptographic code — not bec
 
 Six application repos (devtown, aml, clinical, life, drafthouse, quarkmind) share the same foundation. Each adds domain logic without modifying the foundation. The strategic moat is demonstrated, not theoretical. Gastown can only ever be one application.
 
+### 5.8 AI-Native Operational Tooling
+
+11 MCP tools provide the operational surface via protocol — not shell commands. An AI agent can monitor the review queue (`get_queue_status`), detect a stalled reviewer (`list_problems`), check trust scores (`get_reviewer_health`), trigger a retry (`retry_reviewer`), and export the provenance chain (`export_prov`) — all through the same MCP protocol it uses for its own work. Gastown's `gt` CLI is shell-only: agents are workers in Gastown, never operators. CaseHub's MCP surface means agents can self-monitor the system they participate in, closing the loop between coordination and observability. The three write tools (`retry_reviewer`, `reroute_review`, `force_complete_check`) provide operator intervention capabilities Gastown does not have in any form — Gastown's recovery is fully automated (Witness/Deacon) with no human or agent intervention surface.
+
 ---
 
 ## 6. Where Gastown Still Leads
@@ -247,13 +254,29 @@ Witness monitors per-rig polecats. Deacon monitors cross-rig. Boot validates Dea
 
 Gastown's Scheduler prevents Claude API rate limit exhaustion at the session level. CaseHub's WorkerProvisioner spawns sessions without throttle. At 10+ concurrent cases this becomes a hard failure, not a degradation.
 
-### 6.4 Operational Tooling
+### 6.4 Operational Tooling — Narrowed
 
-`gt feed` (live event stream), `gt problems` (agent issue surface), `gt doctor` (system health), `gt seance` (predecessor session decisions), `gt stale` (stale artifact detection), `gt peek` (bead inspection). CaseHub has a basic claudony dashboard and MCP tools. There is no equivalent debugging surface for multi-agent operation.
+Gastown's `gt` CLI provides 6 commands: `gt feed`, `gt problems`, `gt doctor`, `gt seance`, `gt stale`, `gt peek`. CaseHub now provides 11 MCP tools (devtown#17) that cover the same operational surface plus capabilities Gastown lacks:
+
+| Gastown command | CaseHub MCP tool | Parity |
+|----------------|-----------------|--------|
+| `gt feed` | `get_recent_events` (ring buffer, since filter) | ✅ Parity |
+| `gt problems` | `list_problems` (stalled, expired, failed — configurable threshold) | ✅ Parity |
+| `gt doctor` | `get_system_health` (fleet size, avg trust, open commitments) | ✅ Parity |
+| `gt seance` | `get_prior_decisions` (CaseMemoryStore recall by repo + file path) | ⚠️ Partial — full requires Doltgres time-travel (P1.5) |
+| `gt stale` | `list_problems` (stalled case detection included) | ✅ Parity |
+| `gt peek` | `inspect_review` (full EventLog timeline + per-capability status) | ✅ Parity |
+| — | `get_reviewer_health` (trust scores, dimensions, decision count) | **CaseHub only** |
+| — | `export_prov` (W3C PROV-DM per case) | **CaseHub only** |
+| — | `retry_reviewer`, `reroute_review`, `force_complete_check` | **CaseHub only** — operator intervention tools |
+
+The remaining gap is **AI-native vs human-only**: CaseHub's MCP tools are protocol-native — AI agents can operate the harness directly. Gastown's CLI is shell-only. An agent monitoring a review queue, detecting a stalled reviewer, and triggering a retry is structurally possible in CaseHub and structurally impossible in Gastown.
 
 ### 6.5 The Pattern
 
 Every area where Gastown leads is **operational** — things needed to run at scale. Every area where CaseHub leads is **structural** — things that cannot be bolted on after the fact. Gastown's advantages can be built on CaseHub's foundation. CaseHub's advantages require Gastown to rebuild its foundation.
+
+With Epic 10 shipped, the operational tooling gap has narrowed significantly. The remaining Gastown advantages are: production maturity (§6.1), hierarchical recovery automation (§6.2), and concurrency control (§6.3). Tooling is now at functional parity with CaseHub-only additions.
 
 ---
 
@@ -277,17 +300,17 @@ Every area where Gastown leads is **operational** — things needed to run at sc
 | #14 Failure handling | DECLINED vs FAILED declarative routing | XL | P0 ✅ |
 | #15 GitHub integration | Webhooks, CI status, merge execution | XL | None |
 | #16 Notification wiring | casehub-connectors integration | XL | parent#5 ✅ |
-| #17 Operational tooling | MCP tools: queue status, reviewer health, merge audit | XL | None |
+| ~~#17 Operational tooling~~ | ~~MCP tools: queue status, reviewer health, merge audit~~ | ~~XL~~ | ✅ Shipped |
 
 ### 7.3 Where the Roadmap Leaves Us
 
-**After P1.1 + P1.2:** CaseHub can run at agent scale. Gastown's two strongest operational advantages close. The remaining gap is tooling (gt CLI equivalents).
+**#17 (operational tooling) is shipped.** 11 MCP tools + W3C PROV-DM + event-sourced read model. The `gt` CLI gap is closed at functional parity with CaseHub-only additions (see §6.4).
+
+**After P1.1 + P1.2:** CaseHub can run at agent scale. Gastown's two remaining operational advantages close.
 
 **After #11 (merge queue):** CaseHub matches Gastown's core application feature. The merge strategy is binding conditions in a CasePlanModel — changeable without deployment. Different repos can use different strategies.
 
 **After #15 (GitHub integration):** CaseHub connects to real PR events. Cases are triggered by webhooks, not REST calls. CI status flows in. Merges execute via GitHub API.
-
-**After #17 (operational tooling):** The `gt` CLI gap closes. MCP tools provide queue status, reviewer health, merge audit, and causal chain queries.
 
 At that point, CaseHub has Gastown parity on application features plus structural advantages Gastown cannot match. The remaining gap is operational maturity — which only comes from running in production.
 
@@ -295,24 +318,33 @@ At that point, CaseHub has Gastown parity on application features plus structura
 
 ## 8. Critical Path to Demo
 
-Two demo targets — architectural depth for engineers, governance value for managers. The infrastructure for both is shipped. What's missing is a thin demo harness: mock workers and a scenario script that drives the existing capabilities end-to-end.
+Three demo paths — architectural depth for engineers, governance value for managers, AI-native operations for both. The infrastructure is shipped. What's missing is a thin demo harness: mock workers and a scenario script that drives the existing capabilities end-to-end.
 
 ### What exists today
 
 All of the following are shipped, tested, and wired:
 
+**Layers 1–6 (core coordination):**
 - CasePlanModel with JQ binding conditions (Layer 5)
 - Content-driven routing — bindings fire on code analysis results (Layer 5)
 - TrustWeightedAgentStrategy driving agent selection (Layer 6)
 - Qhorus COMMAND/DONE commitment lifecycle (Layer 3)
 - LedgerAttestation from commitment outcomes → TrustScoreJob (P0.2)
 - WorkItem human review gate with SLA + two-tier escalation (Layer 2)
-- ActionRiskClassifier oversight gate (devtown#56)
 - MergeDecisionLedgerEntry + ComplianceSupplement (Layer 4)
-- Compliance report endpoint (devtown#7)
-- GDPR erasure endpoint with tamper-evident receipt (devtown#74)
 - HITL end-to-end — happy path and escalation (devtown#33)
 - PR review REST resource for case creation
+
+**Cross-cutting capabilities:**
+- ActionRiskClassifier oversight gate — 8 action types, 4 categories (devtown#56)
+- Compliance report endpoint — 4 regulatory dimensions (devtown#7)
+- GDPR erasure endpoint with tamper-evident receipt (devtown#74)
+- Post-merge trust feedback — FLAGGED attestation on incident-linked review (devtown#5)
+
+**Observability and operations (Epic 10, devtown#17):**
+- 11 MCP tools — 8 read (`get_queue_status`, `get_recent_events`, `get_system_health`, `list_problems`, `inspect_review`, `get_reviewer_health`, `get_prior_decisions`, `export_prov`) + 3 write (`retry_reviewer`, `reroute_review`, `force_complete_check`)
+- `PrReviewCaseTracker` — event-sourced read model with ring buffer
+- W3C PROV-DM export via `LedgerProvExportService`
 
 ### What needs to be built
 
@@ -324,25 +356,22 @@ Three CDI `@ApplicationScoped` lambda workers that write to the case blackboard:
 - `MockSecurityReviewWorker` — writes `{securityCheck: {passed: true, findings: [...]}}` after a short delay
 - `MockCiRunnerWorker` — writes `{ci: {status: "passing"}}` after a delay
 
-These are not real implementations — they simulate the worker output shape so the binding conditions fire correctly. Each is ~20 lines.
+These simulate the worker output shape so binding conditions fire correctly. Each is ~20 lines.
 
 **Step 2: Trust score seeding** — XS · Low
 
 A `DemoDataSeeder @Startup` bean (activated via a `demo` Quarkus profile) that:
 
-- Registers 2-3 mock agents with `ActorTrustScore` rows at different capability-scoped scores
-- Sets agent A above the security-review threshold (0.82), agent B below (0.61)
+- Registers 3 mock agents with `ActorTrustScore` rows at different capability-scoped scores
+- Sets agent A above the security-review threshold (0.82), agent B below but close (0.61), agent C with no observations (Phase 0 bootstrap)
 - Gives agent B enough history to cross the threshold after one more positive outcome
+- Seeds CaseMemoryStore with prior review decisions for `src/auth/` path (makes `get_prior_decisions` demo self-contained)
 
-This makes the trust routing demo self-contained — no manual DB setup.
+This makes the trust routing and memory recall demos self-contained — no manual DB setup.
 
 **Step 3: Demo scenario script** — S · Low
 
-A shell script (or REST call sequence in a `.http` file) that drives both demo paths:
-
-*Path A (engineers):* create PR case → observe code-analysis binding fire → observe security-review binding fire on content → verify trust-weighted selection chose agent A → complete review → verify trust score update → create second PR → verify routing shift
-
-*Path B (managers):* create PR case → observe WorkItem created for human gate → fast-forward SLA timer → observe escalation → trigger ActionRiskClassifier gate → approve action → query compliance report → call erasure endpoint
+An `.http` file (IntelliJ HTTP Client format) with annotated sections for each demo path. Each section includes the REST call followed by the MCP tool query that reveals what happened underneath — the demo is driven by REST and observed via MCP.
 
 ### Delivery order and dependencies
 
@@ -351,18 +380,80 @@ Step 1 (mock workers) ─── no dependencies ──────────�
 Step 2 (trust seeding) ── no dependencies ──────────────────────┤
                                                                  ├─→ Step 3 (demo script)
                                                                  │
-PR review REST resource ── already exists (PrReviewResource) ───┘
+PrReviewResource ── already exists ────────────────────────────┤
+DevtownMcpTools ── already exists (11 tools) ──────────────────┘
 ```
 
 Steps 1 and 2 are independent — can be built in parallel. Step 3 depends on both.
 
 **Total estimate:** S-scale, Low complexity. The architectural work is done. This is glue code and a scenario script.
 
-### What the demos show
+### Demo paths
 
-**Path A (platform engineers):** The closed feedback loop. Submit a PR → code analysis fires → security review triggers on code content, not labels → trust-weighted agent selection → COMMAND/DONE commitment lifecycle → trust score updates → second PR routes differently. No configuration change. No human intervention. The routing improved by operating.
+**Path A — The Closed Feedback Loop** (platform engineers)
 
-**Path B (engineering managers):** Compliance and governance. PR triggers case → human approval gate with SLA → SLA breach escalation → ActionRiskClassifier gates consequential action → Merkle audit trail queryable → GDPR erasure with tamper-evident receipt. Every decision traceable. Every obligation tracked. Every erasure provable.
+The architectural headline. Shows trust-weighted routing improving from operation alone.
+
+| Step | Action | Observe via |
+|------|--------|------------|
+| 1 | Submit PR for `src/auth/TokenValidator.java` via REST | `get_queue_status` — case appears, status RUNNING |
+| 2 | MockCodeAnalysisWorker fires, writes `securitySensitive: true` | `get_recent_events` — CONTEXT_CHANGED event in ring buffer |
+| 3 | Security-review binding fires on content | `inspect_review` — security-review capability shows SCHEDULED |
+| 4 | TrustWeightedAgentStrategy selects agent A (score 0.82 > 0.70 threshold) | `get_reviewer_health` for agent A — shows open commitment |
+| 5 | COMMAND dispatched, agent A completes with DONE | `inspect_review` — security-review shows COMPLETED |
+| 6 | LedgerAttestation (SOUND) → TrustScoreJob runs | `get_reviewer_health` for agent B — score now crosses threshold |
+| 7 | Submit second PR for `src/auth/SessionManager.java` | `get_queue_status` — second case appears |
+| 8 | Trust-weighted routing now selects agent B | `get_reviewer_health` for agent B — open commitment appears |
+| 9 | Export provenance chain | `export_prov` — W3C PROV-DM shows full causal chain |
+
+**What this proves:** No configuration change. No human intervention. The routing improved by operating. Agent B earned its way from Phase 0 to Phase 1 through demonstrated competence.
+
+**Path B — Compliance and Governance** (engineering managers)
+
+Shows every decision is tracked, every obligation enforced, every erasure provable.
+
+| Step | Action | Observe via |
+|------|--------|------------|
+| 1 | Submit PR via REST | `get_queue_status` — case appears |
+| 2 | WorkItem created for human gate | Direct REST query — WorkItem with SLA timer |
+| 3 | Fast-forward SLA timer (test API) | `list_problems` — expired commitment appears |
+| 4 | Escalation fires — WorkItem reassigned to `pr-leads` | `get_recent_events` — escalation event in buffer |
+| 5 | Complete human review | `inspect_review` — human-decision shows COMPLETED |
+| 6 | Agent proposes force-push (HIGH action type) | ActionRiskClassifier gate fires — WorkItem for approval |
+| 7 | Approve action | `inspect_review` — case advances past gate |
+| 8 | Query compliance report | REST `/compliance/{caseId}` — four regulatory dimensions |
+| 9 | Call GDPR erasure | REST `/erasure` — tamper-evident receipt returned |
+
+**What this proves:** Every assignment carries an SLA. Every SLA breach triggers escalation. Every consequential action is gated. Every decision has a Merkle audit trail. Every erasure is provable. Gastown has none of this.
+
+**Path C — AI-as-Operator** (both audiences)
+
+The capability Gastown structurally cannot have. An AI agent operates the coordination system via MCP.
+
+| Step | Action | What it shows |
+|------|--------|--------------|
+| 1 | Agent calls `get_queue_status` | AI monitoring the review queue — not a human running shell commands |
+| 2 | Agent calls `list_problems` — finds stalled reviewer | AI detecting operational issues in real time |
+| 3 | Agent calls `get_reviewer_health` — reviews trust scores | AI reasoning about agent capability before intervention |
+| 4 | Agent calls `retry_reviewer` — triggers retry | AI taking corrective action through the same protocol it receives work on |
+| 5 | Agent calls `get_prior_decisions` for the stalled file path | AI using institutional memory to understand why this area is problematic |
+| 6 | Agent calls `export_prov` — exports causal chain | AI producing audit artifacts for human review |
+
+**What this proves:** The harness is not just coordinating AI agents — it can be operated by AI agents. Workers and operators share the same protocol. Gastown's `gt` CLI is shell-only; an AI agent cannot operate Gastown's tooling.
+
+### Demo extras — additional elements that elevate the demo
+
+These are already built and require no new code. Each can be added to any path.
+
+| Element | How to show it | Why it's compelling |
+|---------|---------------|-------------------|
+| **Trust score before/after** | Call `get_reviewer_health` before and after a review completes | Audience sees the Bayesian Beta model update in real time — not a diagram, a live number change |
+| **Phase 0 → Phase 1 transition** | Agent C starts with no observations, completes one review, `get_reviewer_health` shows transition | Cold-start handling is live, not theoretical |
+| **Memory recall across cases** | Submit two PRs touching `src/auth/`, call `get_prior_decisions` after second | System remembers what it learned — contextual routing from institutional memory |
+| **W3C PROV-DM as audit artifact** | `export_prov` produces PROV-JSON-LD, render in any PROV viewer | Standards-compliant provenance — interoperable with external audit tooling |
+| **Operator override with audit** | `force_complete_check` with reason string, then query compliance report | Override is a first-class audited event, not a hack — the reason is in the Merkle chain |
+| **Reroute as a recovery primitive** | Stall a reviewer, `reroute_review` — cancel and restart with same payload | One-step recovery that preserves the PR context — new case, new routing, same payload |
+| **Fleet health dashboard** | `get_system_health` — fleet size, avg trust by capability, open commitments | System-level view: is the fleet healthy? Are trust scores trending up or down? |
 
 ### What's not in the demo
 
@@ -370,9 +461,8 @@ Steps 1 and 2 are independent — can be built in parallel. Step 3 depends on bo
 |-----------|---------|------|
 | Merge queue | Epic #11 not started — not needed to show architectural advantages | Post-demo |
 | GitHub webhooks | Epic #15 — demo uses REST; real webhooks are an integration concern | Post-demo |
-| `gt` CLI equivalents | Epic #17 — operational tooling, not architectural | Post-demo |
-| Real AI agent review | Claudony + Claude CLI required — mock workers demonstrate the same routing and commitment semantics | Can be added later |
-| Doltgres time-travel | P1.5 — not needed for either demo path | Not planned for demo |
+| Real AI agent review | Claudony + Claude CLI required — mock workers demonstrate the same routing and commitment semantics | Can layer in later |
+| Doltgres time-travel | P1.5 — `get_prior_decisions` works via CaseMemoryStore without Doltgres | Not planned for demo |
 
 ---
 

@@ -23,25 +23,30 @@ import io.casehub.api.model.Goal;
 import io.casehub.api.model.GoalExpression;
 import io.casehub.api.model.GoalKind;
 import io.casehub.api.model.HumanTaskTarget;
+import io.casehub.api.model.OutcomeAction;
+import io.casehub.api.model.OutcomePolicy;
+import io.casehub.api.context.CaseContext;
 import io.casehub.api.model.evaluator.LambdaExpressionEvaluator;
 import io.casehub.devtown.domain.AgentQualification;
+import io.casehub.devtown.domain.FailurePolicy;
 import io.casehub.devtown.domain.ReviewDomain;
 import java.time.Duration;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.function.Predicate;
+import java.util.stream.Stream;
 
-/**
- * Fluent DSL companion for the PR review case definition ({@code devtown/pr-review.yaml}).
- *
- * <p>Produces the same logical structure as the YAML but uses
- * {@link LambdaExpressionEvaluator} for binding conditions and goal predicates —
- * enabling pure unit tests without YAML parsing or a Quarkus context.
- *
- * <p>Protocol: {@code case-definition-layers} — every YAML case definition must have
- * a companion fluent Java DSL class. All YAML definitions ⊂ fluent DSL; reverse is
- * not true (DSL supports lambdas, subcases with M-of-N — not expressible in YAML).
- */
 public final class PrReviewCaseDefinition {
+
+    static final List<String> CAPABILITY_CONTEXT_KEYS = List.of(
+        "securityReview", "architectureReview", "styleCheck",
+        "testCoverage", "performanceAnalysis");
+
+    private static final OutcomePolicy REROUTE_POLICY =
+            new OutcomePolicy(OutcomeAction.REROUTE, OutcomeAction.REROUTE, OutcomeAction.REROUTE, 2);
+
+    private static final String DEEP_MERGE = "DEEP_MERGE";
 
     private PrReviewCaseDefinition() {}
 
@@ -55,9 +60,10 @@ public final class PrReviewCaseDefinition {
         var ciRunnerCap       = cap(AgentQualification.CI_RUNNER, "{ pr: .pr }", "{ ci: { status: . } }");
         var mergeExecutorCap  = cap(AgentQualification.MERGE_EXECUTOR, "{ pr: .pr }", "{}");
 
+        // ── Goals ──
+
         var prApproved = Goal.builder()
-            .name("pr-approved")
-            .kind(GoalKind.SUCCESS)
+            .name("pr-approved").kind(GoalKind.SUCCESS)
             .condition(ctx ->
                 (Boolean.FALSE.equals(ctx.getPath("codeAnalysis.securitySensitive")) ||
                     "APPROVED".equals(ctx.getPath("securityReview.outcome"))) &&
@@ -69,26 +75,46 @@ public final class PrReviewCaseDefinition {
             .build();
 
         var securityVerified = Goal.builder()
-            .name("security-verified")
-            .kind(GoalKind.SUCCESS)
+            .name("security-verified").kind(GoalKind.SUCCESS)
             .condition(ctx ->
                 Boolean.FALSE.equals(ctx.getPath("codeAnalysis.securitySensitive")) ||
                 "APPROVED".equals(ctx.getPath("securityReview.outcome")))
             .build();
 
         var ciPassing = Goal.builder()
-            .name("ci-passing")
-            .kind(GoalKind.SUCCESS)
+            .name("ci-passing").kind(GoalKind.SUCCESS)
             .condition(ctx -> "passing".equals(ctx.getPath("ci.status")))
+            .build();
+
+        var reviewBlocked = Goal.builder()
+            .name("review-blocked").kind(GoalKind.FAILURE)
+            .condition(ctx ->
+                Stream.concat(CAPABILITY_CONTEXT_KEYS.stream(), Stream.of("humanApproval"))
+                    .anyMatch(key -> "BLOCKED".equals(ctx.getPathAsString(key + ".outcome"))))
+            .build();
+
+        var reviewRejected = Goal.builder()
+            .name("review-rejected").kind(GoalKind.FAILURE)
+            .condition(ctx ->
+                Stream.concat(CAPABILITY_CONTEXT_KEYS.stream(), Stream.of("humanApproval"))
+                    .anyMatch(key -> "REJECTED".equals(ctx.getPathAsString(key + ".outcome"))))
+            .build();
+
+        var reviewAbandoned = Goal.builder()
+            .name("review-abandoned").kind(GoalKind.FAILURE)
+            .condition(ctx -> {
+                String status = ctx.getPathAsString("pr.status");
+                return "closed".equals(status) || "superseded".equals(status);
+            })
             .build();
 
         var trigger = new ContextChangeTrigger((io.casehub.api.model.evaluator.ExpressionEvaluator) null);
 
         CaseDefinition def = CaseDefinition.builder()
-            .namespace("devtown")
-            .name("pr-review")
-            .version("1.0.0")
-            .completion(GoalExpression.allOf(prApproved, securityVerified, ciPassing))
+            .namespace("devtown").name("pr-review").version("1.0.0")
+            .completion(
+                GoalExpression.allOf(prApproved, securityVerified, ciPassing),
+                GoalExpression.anyOf(reviewBlocked, reviewRejected, reviewAbandoned))
             .build();
 
         def.getCapabilities().addAll(List.of(
@@ -96,53 +122,48 @@ public final class PrReviewCaseDefinition {
             styleReviewCap, testCoverageCap, perfAnalysisCap,
             ciRunnerCap, mergeExecutorCap));
 
-        def.getGoals().addAll(List.of(prApproved, securityVerified, ciPassing));
+        def.getGoals().addAll(List.of(prApproved, securityVerified, ciPassing,
+            reviewBlocked, reviewRejected, reviewAbandoned));
 
-        // Group 1: Entry — fire immediately on PR arrival
-        def.getBindings().add(Binding.builder().name("initial-analysis").on(trigger)
-            .when(new LambdaExpressionEvaluator(
-                ctx -> ctx.get("pr") != null && ctx.get("codeAnalysis") == null))
-            .capability(codeAnalysisCap).build());
+        // ── Tier 1-2: Capability dispatch with OutcomePolicy reroute loop ──
 
-        def.getBindings().add(Binding.builder().name("run-ci").on(trigger)
-            .when(new LambdaExpressionEvaluator(
-                ctx -> ctx.get("pr") != null && ctx.get("ci") == null))
-            .capability(ciRunnerCap).build());
+        def.getBindings().add(capBinding("initial-analysis", trigger,
+            ctx -> ctx.get("pr") != null && ctx.get("codeAnalysis") == null,
+            codeAnalysisCap));
 
-        // Group 2: Content-driven — fire once analysis results arrive
-        def.getBindings().add(Binding.builder().name("security-review").on(trigger)
-            .when(new LambdaExpressionEvaluator(ctx ->
-                Boolean.TRUE.equals(ctx.getPath("codeAnalysis.complete")) &&
-                Boolean.TRUE.equals(ctx.getPath("codeAnalysis.securitySensitive")) &&
-                ctx.get("securityReview") == null))
-            .capability(securityReviewCap).build());
+        def.getBindings().add(capBinding("run-ci", trigger,
+            ctx -> ctx.get("pr") != null && ctx.get("ci") == null,
+            ciRunnerCap));
 
-        def.getBindings().add(Binding.builder().name("architecture-review").on(trigger)
-            .when(new LambdaExpressionEvaluator(ctx ->
-                Boolean.TRUE.equals(ctx.getPath("codeAnalysis.complete")) &&
-                Boolean.TRUE.equals(ctx.getPath("codeAnalysis.architectureCrossing")) &&
-                ctx.get("architectureReview") == null))
-            .capability(archReviewCap).build());
+        def.getBindings().add(capBinding("security-review", trigger,
+            ctx -> Boolean.TRUE.equals(ctx.getPath("codeAnalysis.complete")) &&
+                   Boolean.TRUE.equals(ctx.getPath("codeAnalysis.securitySensitive")) &&
+                   ctx.get("securityReview") == null,
+            securityReviewCap));
 
-        def.getBindings().add(Binding.builder().name("style-check").on(trigger)
-            .when(new LambdaExpressionEvaluator(ctx ->
-                Boolean.TRUE.equals(ctx.getPath("codeAnalysis.complete")) &&
-                ctx.get("styleCheck") == null))
-            .capability(styleReviewCap).build());
+        def.getBindings().add(capBinding("architecture-review", trigger,
+            ctx -> Boolean.TRUE.equals(ctx.getPath("codeAnalysis.complete")) &&
+                   Boolean.TRUE.equals(ctx.getPath("codeAnalysis.architectureCrossing")) &&
+                   ctx.get("architectureReview") == null,
+            archReviewCap));
 
-        def.getBindings().add(Binding.builder().name("test-coverage").on(trigger)
-            .when(new LambdaExpressionEvaluator(ctx ->
-                Boolean.TRUE.equals(ctx.getPath("codeAnalysis.complete")) &&
-                ctx.get("testCoverage") == null))
-            .capability(testCoverageCap).build());
+        def.getBindings().add(capBinding("style-check", trigger,
+            ctx -> Boolean.TRUE.equals(ctx.getPath("codeAnalysis.complete")) &&
+                   ctx.get("styleCheck") == null,
+            styleReviewCap));
 
-        def.getBindings().add(Binding.builder().name("performance-analysis").on(trigger)
-            .when(new LambdaExpressionEvaluator(ctx ->
-                Boolean.TRUE.equals(ctx.getPath("codeAnalysis.complete")) &&
-                ctx.get("performanceAnalysis") == null))
-            .capability(perfAnalysisCap).build());
+        def.getBindings().add(capBinding("test-coverage", trigger,
+            ctx -> Boolean.TRUE.equals(ctx.getPath("codeAnalysis.complete")) &&
+                   ctx.get("testCoverage") == null,
+            testCoverageCap));
 
-        // Group 3: Human gate — threshold-based, HumanTaskTarget (not a capability)
+        def.getBindings().add(capBinding("performance-analysis", trigger,
+            ctx -> Boolean.TRUE.equals(ctx.getPath("codeAnalysis.complete")) &&
+                   ctx.get("performanceAnalysis") == null,
+            perfAnalysisCap));
+
+        // ── Human gate ──
+
         def.getBindings().add(Binding.builder().name("human-approval").on(trigger)
             .when(new LambdaExpressionEvaluator(ctx -> {
                 Object linesChanged = ctx.getPath("pr.linesChanged");
@@ -150,6 +171,7 @@ public final class PrReviewCaseDefinition {
                     n.intValue() > humanApprovalThreshold &&
                     ctx.get("humanApproval") == null;
             }))
+            .conflictResolverStrategy(DEEP_MERGE)
             .humanTask(HumanTaskTarget.inline()
                 .title("PR approval required")
                 .candidateGroups(Set.of("pr-reviewers"))
@@ -158,13 +180,77 @@ public final class PrReviewCaseDefinition {
                 .build())
             .build());
 
-        // Group 4: Merge — all checks must pass; human gate conditional on line count
+        // ── Tier 3: Scope reduction ──
+
+        FailurePolicy secPolicy = PrReviewCaseDescriptor.FAILURE_POLICIES.get(ReviewDomain.SECURITY_REVIEW);
+        def.getBindings().add(Binding.builder().name("security-review-reduced-scope").on(trigger)
+            .when(new LambdaExpressionEvaluator(ctx ->
+                "REROUTES_EXHAUSTED".equals(ctx.getPathAsString("securityReview.status")) &&
+                ctx.getPath("securityReview.reducedScope") == null))
+            .contextWrite(Map.of("securityReview", Map.of("status", "PENDING", "reducedScope", true, "excludedAgents", List.of())))
+            .capability(securityReviewCap)
+            .inputSchemaOverride(secPolicy.reducedInputSchema())
+            .conflictResolverStrategy(DEEP_MERGE)
+            .outcomePolicy(REROUTE_POLICY)
+            .build());
+
+        FailurePolicy archPolicy = PrReviewCaseDescriptor.FAILURE_POLICIES.get(ReviewDomain.ARCHITECTURE_REVIEW);
+        def.getBindings().add(Binding.builder().name("architecture-review-reduced-scope").on(trigger)
+            .when(new LambdaExpressionEvaluator(ctx ->
+                "REROUTES_EXHAUSTED".equals(ctx.getPathAsString("architectureReview.status")) &&
+                ctx.getPath("architectureReview.reducedScope") == null))
+            .contextWrite(Map.of("architectureReview", Map.of("status", "PENDING", "reducedScope", true, "excludedAgents", List.of())))
+            .capability(archReviewCap)
+            .inputSchemaOverride(archPolicy.reducedInputSchema())
+            .conflictResolverStrategy(DEEP_MERGE)
+            .outcomePolicy(REROUTE_POLICY)
+            .build());
+
+        // ── Tier 4: Human escalation (one per capability) ──
+
+        addEscalation(def, trigger, "security-review-human-escalation",
+            "Security review escalation — all automated reviewers exhausted",
+            "securityReview", true, "security-reviewers",
+            PrReviewCaseDescriptor.FAILURE_POLICIES.get(ReviewDomain.SECURITY_REVIEW));
+
+        addEscalation(def, trigger, "architecture-review-human-escalation",
+            "Architecture review escalation — all automated reviewers exhausted",
+            "architectureReview", true, "architecture-reviewers",
+            PrReviewCaseDescriptor.FAILURE_POLICIES.get(ReviewDomain.ARCHITECTURE_REVIEW));
+
+        addEscalation(def, trigger, "style-check-human-escalation",
+            "Style review escalation",
+            "styleCheck", false, "pr-reviewers",
+            PrReviewCaseDescriptor.FAILURE_POLICIES.get(ReviewDomain.STYLE_REVIEW));
+
+        addEscalation(def, trigger, "test-coverage-human-escalation",
+            "Test coverage escalation",
+            "testCoverage", false, "pr-reviewers",
+            PrReviewCaseDescriptor.FAILURE_POLICIES.get(ReviewDomain.TEST_COVERAGE));
+
+        addEscalation(def, trigger, "performance-analysis-human-escalation",
+            "Performance analysis escalation",
+            "performanceAnalysis", false, "pr-reviewers",
+            PrReviewCaseDescriptor.FAILURE_POLICIES.get(ReviewDomain.PERFORMANCE_ANALYSIS));
+
+        addEscalation(def, trigger, "code-analysis-human-escalation",
+            "Code analysis escalation",
+            "codeAnalysis", false, "pr-reviewers",
+            PrReviewCaseDescriptor.FAILURE_POLICIES.get(ReviewDomain.CODE_ANALYSIS));
+
+        addEscalation(def, trigger, "ci-runner-human-escalation",
+            "CI escalation — automated CI failed",
+            "ci", false, "pr-reviewers",
+            PrReviewCaseDescriptor.FAILURE_POLICIES.get(AgentQualification.CI_RUNNER));
+
+        // ── Merge ──
+
         def.getBindings().add(Binding.builder().name("merge").on(trigger)
             .when(new LambdaExpressionEvaluator(ctx -> {
                 Object linesChanged = ctx.getPath("pr.linesChanged");
                 boolean humanOk =
                     (linesChanged instanceof Number l && l.intValue() <= humanApprovalThreshold) ||
-                    "approved".equals(ctx.getPath("humanApproval.status"));
+                    "APPROVED".equals(ctx.getPath("humanApproval.outcome"));
                 return (Boolean.FALSE.equals(ctx.getPath("codeAnalysis.securitySensitive")) ||
                             "APPROVED".equals(ctx.getPath("securityReview.outcome"))) &&
                     (Boolean.FALSE.equals(ctx.getPath("codeAnalysis.architectureCrossing")) ||
@@ -178,6 +264,38 @@ public final class PrReviewCaseDefinition {
             .capability(mergeExecutorCap).build());
 
         return def;
+    }
+
+    private static Binding capBinding(String name, ContextChangeTrigger trigger,
+            Predicate<CaseContext> condition, Capability capability) {
+        return Binding.builder().name(name).on(trigger)
+            .when(new LambdaExpressionEvaluator(condition))
+            .capability(capability)
+            .conflictResolverStrategy(DEEP_MERGE)
+            .outcomePolicy(REROUTE_POLICY)
+            .build();
+    }
+
+    private static void addEscalation(CaseDefinition def, ContextChangeTrigger trigger,
+            String name, String title, String contextKey, boolean hasScopeReduction,
+            String candidateGroup, FailurePolicy policy) {
+        def.getBindings().add(Binding.builder().name(name).on(trigger)
+            .when(new LambdaExpressionEvaluator(ctx -> {
+                String status = ctx.getPathAsString(contextKey + ".status");
+                if (!"REROUTES_EXHAUSTED".equals(status)) return false;
+                if (hasScopeReduction) {
+                    return Boolean.TRUE.equals(ctx.getPath(contextKey + ".reducedScope"));
+                }
+                return true;
+            }))
+            .conflictResolverStrategy(DEEP_MERGE)
+            .humanTask(HumanTaskTarget.inline()
+                .title(title)
+                .candidateGroups(Set.of(candidateGroup))
+                .expiresIn(policy.humanEscalationSla())
+                .outputMapping("{ " + contextKey + ": { outcome: . } }")
+                .build())
+            .build());
     }
 
     private static Capability cap(String name, String inputSchema, String outputSchema) {

@@ -11,6 +11,7 @@ class DevtownTrustDimensionTest {
         assertThat(DevtownTrustDimension.REVIEW_THOROUGHNESS).isNotBlank();
         assertThat(DevtownTrustDimension.PRECISION).isNotBlank();
         assertThat(DevtownTrustDimension.SCOPE_CALIBRATION).isNotBlank();
+        assertThat(DevtownTrustDimension.RESPONSIVENESS).isNotBlank();
     }
 
     @Test
@@ -18,8 +19,9 @@ class DevtownTrustDimensionTest {
         assertThat(Set.of(
             DevtownTrustDimension.REVIEW_THOROUGHNESS,
             DevtownTrustDimension.PRECISION,
-            DevtownTrustDimension.SCOPE_CALIBRATION
-        )).hasSize(3);
+            DevtownTrustDimension.SCOPE_CALIBRATION,
+            DevtownTrustDimension.RESPONSIVENESS
+        )).hasSize(4);
     }
 
     @Test
@@ -27,5 +29,6 @@ class DevtownTrustDimensionTest {
         assertThat(DevtownTrustDimension.REVIEW_THOROUGHNESS).isEqualTo("review-thoroughness");
         assertThat(DevtownTrustDimension.PRECISION).isEqualTo("precision");
         assertThat(DevtownTrustDimension.SCOPE_CALIBRATION).isEqualTo("scope-calibration");
+        assertThat(DevtownTrustDimension.RESPONSIVENESS).isEqualTo("responsiveness");
     }
 }

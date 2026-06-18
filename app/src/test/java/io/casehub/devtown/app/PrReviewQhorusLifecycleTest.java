@@ -63,12 +63,13 @@ class PrReviewQhorusLifecycleTest {
                 .filter(m -> m.messageType == MessageType.COMMAND)
                 .toList();
 
-        assertThat(commands).hasSize(3);
+        assertThat(commands).hasSize(4);
         assertThat(commands).extracting(m -> m.target)
                 .containsExactlyInAnyOrder(
                         ReviewDomain.SECURITY_REVIEW,
                         ReviewDomain.ARCHITECTURE_REVIEW,
-                        ReviewDomain.TEST_COVERAGE);
+                        ReviewDomain.TEST_COVERAGE,
+                        ReviewDomain.PERFORMANCE_ANALYSIS);
     }
 
     @Test
@@ -121,6 +122,48 @@ class PrReviewQhorusLifecycleTest {
 
         assertThat(decline.content)
                 .isEqualTo("distributed transaction outside scope");
+    }
+
+    @Test
+    void failureRecorded() {
+        var pr = new PrPayload("casehubio/devtown", 206, "sha206", "main", 100, "test-contributor", List.of());
+
+        service.review(pr);
+
+        var work = channelService.findByName("pr-review-206/work").orElseThrow();
+        List<Message> failures = messageService.pollAfter(work.id, 0L, 100).stream()
+                .filter(m -> m.messageType == MessageType.FAILURE)
+                .toList();
+
+        assertThat(failures).as("exactly one FAILURE from PerformanceAnalysisAgent").hasSize(1);
+    }
+
+    @Test
+    void failureContentRecorded() {
+        var pr = new PrPayload("casehubio/devtown", 207, "sha207", "main", 100, "test-contributor", List.of());
+
+        service.review(pr);
+
+        var work = channelService.findByName("pr-review-207/work").orElseThrow();
+        Message failure = messageService.pollAfter(work.id, 0L, 100).stream()
+                .filter(m -> m.messageType == MessageType.FAILURE)
+                .findFirst()
+                .orElseThrow(() -> new AssertionError("No FAILURE message found on /work"));
+
+        assertThat(failure.content)
+                .isEqualTo("analysis timed out on large diff");
+    }
+
+    @Test
+    void failureClosesCommitment() {
+        var pr = new PrPayload("casehubio/devtown", 208, "sha208", "main", 100, "test-contributor", List.of());
+
+        service.review(pr);
+
+        var work = channelService.findByName("pr-review-208/work").orElseThrow();
+        assertThat(commitmentStore.findOpenByObligor(ReviewDomain.PERFORMANCE_ANALYSIS, work.id))
+                .as("performance-analysis commitment should be closed after FAILURE")
+                .isEmpty();
     }
 
     // --- allowedTypes enforcement (devtown#54) ---

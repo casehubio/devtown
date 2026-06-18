@@ -111,6 +111,16 @@ public class QhorusPrReviewService implements PrReviewApplicationService {
                             .inReplyTo(commandResult.messageId())
                             .actorType(ActorType.SYSTEM)
                             .build());
+                case ReviewerOutcome.Failed failed ->
+                    messageService.dispatch(MessageDispatch.builder()
+                            .channelId(work.id)
+                            .sender(ORCHESTRATOR)
+                            .type(MessageType.FAILURE)
+                            .content(failed.reason())
+                            .correlationId(correlationId)
+                            .inReplyTo(commandResult.messageId())
+                            .actorType(ActorType.SYSTEM)
+                            .build());
             }
         }
 

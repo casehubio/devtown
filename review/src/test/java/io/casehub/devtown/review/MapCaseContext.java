@@ -134,7 +134,8 @@ class MapCaseContext implements CaseContext {
 
   @Override
   public String getPathAsString(String path) {
-    throw new UnsupportedOperationException();
+    Object val = getPath(path);
+    return val != null ? val.toString() : null;
   }
 
   @Override

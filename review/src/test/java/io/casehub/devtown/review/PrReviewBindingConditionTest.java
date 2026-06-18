@@ -224,7 +224,7 @@ class PrReviewBindingConditionTest {
         @Test void fires_whenHumanRequiredAndApproved() {
             var data = new java.util.HashMap<>(allApproved());
             data.put("pr", pr(THRESHOLD + 1));
-            data.put("humanApproval", Map.of("status", "approved"));
+            data.put("humanApproval", Map.of("outcome", "APPROVED"));
             assertThat(condition("merge").test(ctx(data))).isTrue();
         }
         @Test void fires_whenNotSecuritySensitiveAndNoSecurityReview() {

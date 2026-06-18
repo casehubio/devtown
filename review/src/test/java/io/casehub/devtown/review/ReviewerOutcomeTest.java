@@ -19,20 +19,35 @@ class ReviewerOutcomeTest {
     }
 
     @Test
+    void failed_holdsReason() {
+        var outcome = new ReviewerOutcome.Failed("agent process crashed");
+        assertThat(outcome.reason()).isEqualTo("agent process crashed");
+    }
+
+    @Test
     void patternMatch_coversAllPermits() {
         ReviewerOutcome completed = new ReviewerOutcome.Completed(List.of("f1"));
         ReviewerOutcome declined  = new ReviewerOutcome.Declined("reason");
+        ReviewerOutcome failed    = new ReviewerOutcome.Failed("crash");
 
         String c = switch (completed) {
             case ReviewerOutcome.Completed x -> "completed:" + x.findings().size();
             case ReviewerOutcome.Declined x  -> "declined";
+            case ReviewerOutcome.Failed x    -> "failed";
         };
         String d = switch (declined) {
             case ReviewerOutcome.Completed x -> "completed";
             case ReviewerOutcome.Declined x  -> "declined:" + x.reason();
+            case ReviewerOutcome.Failed x    -> "failed";
+        };
+        String f = switch (failed) {
+            case ReviewerOutcome.Completed x -> "completed";
+            case ReviewerOutcome.Declined x  -> "declined";
+            case ReviewerOutcome.Failed x    -> "failed:" + x.reason();
         };
 
         assertThat(c).isEqualTo("completed:1");
         assertThat(d).isEqualTo("declined:reason");
+        assertThat(f).isEqualTo("failed:crash");
     }
 }

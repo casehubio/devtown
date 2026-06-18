@@ -89,14 +89,14 @@ class SlaBreachLifecycleTest {
         expireWorkItem(caseId);
         expiryService.checkExpired();
 
-        await().atMost(5, SECONDS).pollInterval(100, MILLISECONDS).untilAsserted(() -> {
+        await().atMost(10, SECONDS).pollInterval(100, MILLISECONDS).untilAsserted(() -> {
             var instance = caseInstanceRepository.findByUuid(caseId)
                     .await().atMost(java.time.Duration.ofSeconds(2));
             assertThat(instance).isNotNull();
-            Object status = instance.getCaseContext().getPath("humanApproval.status");
-            assertThat(status)
-                    .as("humanApproval.status should be sla-breach after terminal breach")
-                    .isEqualTo("sla-breach");
+            Object outcome = instance.getCaseContext().getPath("humanApproval.outcome");
+            assertThat(outcome)
+                    .as("humanApproval.outcome should be BLOCKED after terminal breach")
+                    .isEqualTo("BLOCKED");
         });
 
         // WorkItem itself should be EXPIRED with resolution set

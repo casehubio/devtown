@@ -104,4 +104,60 @@ class PrReviewGoalConditionTest {
                 "ci", Map.of("status", "failing"))))).isFalse();
         }
     }
+
+    @Nested class ReviewBlocked {
+        @Test void satisfied_whenSecurityReviewBlocked() {
+            assertThat(goalCondition("review-blocked").test(ctx(Map.of(
+                "securityReview", Map.of("outcome", "BLOCKED"))))).isTrue();
+        }
+        @Test void satisfied_whenStyleCheckBlocked() {
+            assertThat(goalCondition("review-blocked").test(ctx(Map.of(
+                "styleCheck", Map.of("outcome", "BLOCKED"))))).isTrue();
+        }
+        @Test void notSatisfied_whenNoCapabilityBlocked() {
+            assertThat(goalCondition("review-blocked").test(ctx(Map.of(
+                "securityReview", Map.of("outcome", "APPROVED"))))).isFalse();
+        }
+        @Test void notSatisfied_whenEmptyContext() {
+            assertThat(goalCondition("review-blocked").test(ctx(Map.of()))).isFalse();
+        }
+        @Test void satisfied_whenHumanApprovalBlocked() {
+            assertThat(goalCondition("review-blocked").test(ctx(Map.of(
+                "humanApproval", Map.of("outcome", "BLOCKED"))))).isTrue();
+        }
+    }
+
+    @Nested class ReviewRejected {
+        @Test void satisfied_whenSecurityReviewRejected() {
+            assertThat(goalCondition("review-rejected").test(ctx(Map.of(
+                "securityReview", Map.of("outcome", "REJECTED"))))).isTrue();
+        }
+        @Test void satisfied_whenHumanApprovalRejected() {
+            assertThat(goalCondition("review-rejected").test(ctx(Map.of(
+                "humanApproval", Map.of("outcome", "REJECTED"))))).isTrue();
+        }
+        @Test void notSatisfied_whenApproved() {
+            assertThat(goalCondition("review-rejected").test(ctx(Map.of(
+                "securityReview", Map.of("outcome", "APPROVED"))))).isFalse();
+        }
+    }
+
+    @Nested class ReviewAbandoned {
+        @Test void satisfied_whenPrClosed() {
+            assertThat(goalCondition("review-abandoned").test(ctx(Map.of(
+                "pr", Map.of("status", "closed"))))).isTrue();
+        }
+        @Test void satisfied_whenPrSuperseded() {
+            assertThat(goalCondition("review-abandoned").test(ctx(Map.of(
+                "pr", Map.of("status", "superseded"))))).isTrue();
+        }
+        @Test void notSatisfied_whenPrOpen() {
+            assertThat(goalCondition("review-abandoned").test(ctx(Map.of(
+                "pr", Map.of("status", "open"))))).isFalse();
+        }
+        @Test void notSatisfied_whenNoPrStatus() {
+            assertThat(goalCondition("review-abandoned").test(ctx(Map.of(
+                "pr", Map.of("id", "123"))))).isFalse();
+        }
+    }
 }

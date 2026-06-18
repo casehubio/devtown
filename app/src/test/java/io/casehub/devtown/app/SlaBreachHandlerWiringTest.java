@@ -5,7 +5,9 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
 
+import io.casehub.engine.common.internal.model.PlanItemRecord;
 import io.casehub.engine.common.spi.CrossTenantCaseInstanceRepository;
+import io.casehub.engine.common.spi.PlanItemStore;
 import io.casehub.platform.api.path.Path;
 import io.casehub.platform.api.preferences.MapPreferences;
 import io.casehub.work.api.BreachDecision;
@@ -31,12 +33,10 @@ class SlaBreachHandlerWiringTest {
     @Inject PrReviewCaseHub        caseHub;
     @Inject Event<SlaBreachEvent>  breachEvents;
     @Inject CrossTenantCaseInstanceRepository caseInstanceRepository;
+    @Inject PlanItemStore          planItemStore;
 
-    // linesChanged=100 < humanApprovalThreshold=500 — human-approval binding does not fire.
-    // All other bindings suppressed by pre-seeding (PP-20260521-134c38).
-    // Case stays active: pr-approved goal requires styleCheck.outcome==APPROVED but it is PENDING.
     private static final Map<String, Object> MINIMAL_CTX = Map.of(
-            "pr",                  Map.of("id", "wt1", "repo", "r", "linesChanged", 100,
+            "pr",                  Map.of("id", "wt1", "repo", "r", "linesChanged", 600,
                                            "baseRef", "main", "headSha", "abc"),
             "policy",              Map.of("humanApprovalThreshold", 500,
                                           "securityReviewRequired", false,
@@ -54,11 +54,20 @@ class SlaBreachHandlerWiringTest {
     }
 
     @Test
-    void slaBreachHandler_onFail_signalsCaseContext() throws Exception {
+    void slaBreachHandler_onFail_resolvesOutputKeyFromBinding() throws Exception {
         UUID caseId = caseHub.startCase(MINIMAL_CTX).toCompletableFuture().get(5, SECONDS);
         assertThat(caseId).isNotNull();
 
-        String callerRef = PlanItemCallerRef.encode(caseId, "human-approval");
+        String planItemId = await().atMost(5, SECONDS).pollInterval(100, MILLISECONDS).until(() -> {
+            var records = planItemStore.findDelegated(caseId);
+            return records.stream()
+                    .filter(r -> "human-approval".equals(r.bindingName()))
+                    .map(PlanItemRecord::planItemId)
+                    .findFirst()
+                    .orElse(null);
+        }, pid -> pid != null);
+
+        String callerRef = PlanItemCallerRef.encode(caseId, planItemId);
         var task = new BreachedTask(UUID.randomUUID(), callerRef,
                                     "PR approval", Set.of("pr-leads"));
         var ctx  = new SlaBreachContext(BreachType.CLAIM_EXPIRED, task,
@@ -68,8 +77,8 @@ class SlaBreachHandlerWiringTest {
         await().atMost(5, SECONDS).pollInterval(100, MILLISECONDS).untilAsserted(() -> {
             var instance = caseInstanceRepository.findByUuid(caseId)
                     .await().atMost(Duration.ofSeconds(2));
-            assertThat(instance.getCaseContext().getPath("humanApproval.status"))
-                    .isEqualTo("sla-breach");
+            assertThat(instance.getCaseContext().getPath("humanApproval.outcome"))
+                    .isEqualTo("BLOCKED");
         });
     }
 }

@@ -4,7 +4,8 @@ import io.casehub.devtown.domain.HashUtils;
 import io.casehub.devtown.domain.memory.DevtownMemoryDomain;
 import io.casehub.devtown.review.compliance.ErasureReceipt;
 import io.casehub.ledger.api.model.LedgerEntryType;
-import io.casehub.ledger.runtime.privacy.ActorIdentityProvider;
+import io.casehub.ledger.api.model.ErasureReason;
+import io.casehub.ledger.api.spi.ActorIdentityProvider;
 import io.casehub.ledger.runtime.privacy.LedgerErasureService;
 import io.casehub.ledger.runtime.repository.LedgerEntryRepository;
 import io.casehub.platform.api.identity.ActorType;
@@ -32,15 +33,13 @@ public class GdprErasureService {
     @Inject LedgerEntryRepository ledgerRepo;
 
     public ErasureReceipt erase(final String rawActorId, final String tenancyId, final String reason) {
-        final String queryResult = actorIdentityProvider.tokeniseForQuery(rawActorId);
-        final String erasedActorToken = queryResult.equals(rawActorId)
-                ? HashUtils.sha256Hex("erasure:" + rawActorId)
-                : queryResult;
+        final String erasedActorToken = actorIdentityProvider.tokeniseForQuery(rawActorId)
+                .orElseGet(() -> HashUtils.sha256Hex("erasure:" + rawActorId));
 
         final int memoryRecordsErased = eraseMemory(rawActorId, tenancyId);
 
         return QuarkusTransaction.requiringNew().call(() -> {
-            var erasureResult = ledgerErasureService.erase(rawActorId);
+            var erasureResult = ledgerErasureService.erase(rawActorId, ErasureReason.GDPR_ART_17_REQUEST);
 
             var receipt = new ErasureReceiptLedgerEntry();
             receipt.erasedActorToken = erasedActorToken;

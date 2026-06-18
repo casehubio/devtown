@@ -5,7 +5,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import io.casehub.ledger.api.model.LedgerEntryType;
 import io.casehub.ledger.model.CaseLedgerEntry;
-import io.casehub.ledger.runtime.privacy.ActorIdentityProvider;
+import io.casehub.ledger.api.spi.ActorIdentityProvider;
 import io.casehub.ledger.runtime.repository.LedgerEntryRepository;
 import io.casehub.platform.api.identity.ActorType;
 import io.casehub.platform.api.identity.CurrentPrincipal;
@@ -35,7 +35,7 @@ class GdprErasureResourceTest {
         seedHumanEntry(rawActorId, caseId, tenancyId);
 
         String token = QuarkusTransaction.requiringNew().call(
-                () -> actorIdentityProvider.tokeniseForQuery(rawActorId));
+                () -> actorIdentityProvider.tokeniseForQuery(rawActorId).orElse(rawActorId));
         assertThat(token).isNotEqualTo(rawActorId);
 
         var response = given()
@@ -55,7 +55,7 @@ class GdprErasureResourceTest {
 
         var resolved = QuarkusTransaction.requiringNew().call(
                 () -> actorIdentityProvider.resolve(token));
-        assertThat(resolved).isEmpty();
+        assertThat(resolved).isNotPresent();
     }
 
     @Test
@@ -67,7 +67,7 @@ class GdprErasureResourceTest {
         seedHumanEntry(rawActorId, caseId, tenancyId);
 
         String token = QuarkusTransaction.requiringNew().call(
-                () -> actorIdentityProvider.tokeniseForQuery(rawActorId));
+                () -> actorIdentityProvider.tokeniseForQuery(rawActorId).orElse(rawActorId));
 
         var response = given()
             .contentType("application/json")

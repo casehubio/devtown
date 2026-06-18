@@ -162,7 +162,7 @@ public class CodeReviewComplianceService {
         if (!tokens.isEmpty()) {
             try {
                 receiptIds = QuarkusTransaction.requiringNew().call(() ->
-                        em.createNamedQuery("ErasureReceiptLedgerEntry.findByTokens", ErasureReceiptLedgerEntry.class)
+                        em.createNamedQuery("DevtownErasureReceiptLedgerEntry.findByTokens", ErasureReceiptLedgerEntry.class)
                                 .setParameter("tokens", tokens)
                                 .getResultList()
                                 .stream()

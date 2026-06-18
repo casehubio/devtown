@@ -26,6 +26,10 @@
     <module>app</module>
   </modules>
 
+  <properties>
+    <quarkus-mcp-server.version>1.11.1</quarkus-mcp-server.version>
+  </properties>
+
   <dependencyManagement>
     <dependencies>
       <!-- casehub-engine-api — not in casehub-parent BOM -->
@@ -143,6 +147,13 @@
         <artifactId>casehub-platform-memory-inmem</artifactId>
         <version>${casehub.version}</version>
         <scope>test</scope>
+      </dependency>
+
+      <!-- Quarkus MCP Server HTTP -->
+      <dependency>
+        <groupId>io.quarkiverse.mcp</groupId>
+        <artifactId>quarkus-mcp-server-http</artifactId>
+        <version>${quarkus-mcp-server.version}</version>
       </dependency>
     </dependencies>
   </dependencyManagement>

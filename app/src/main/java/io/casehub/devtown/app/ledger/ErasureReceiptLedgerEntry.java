@@ -9,14 +9,14 @@ import jakarta.persistence.NamedQuery;
 import jakarta.persistence.Table;
 import java.nio.charset.StandardCharsets;
 
-@Entity
-@Table(name = "erasure_receipt_ledger_entry", indexes = {
-    @Index(name = "idx_erasure_receipt_actor_token", columnList = "erased_actor_token")
+@Entity(name = "DevtownErasureReceiptLedgerEntry")
+@Table(name = "devtown_erasure_receipt_ledger_entry", indexes = {
+    @Index(name = "idx_devtown_erasure_receipt_actor_token", columnList = "erased_actor_token")
 })
-@DiscriminatorValue("ERASURE_RECEIPT")
+@DiscriminatorValue("DEVTOWN_ERASURE_RECEIPT")
 @NamedQuery(
-    name = "ErasureReceiptLedgerEntry.findByTokens",
-    query = "SELECT e FROM ErasureReceiptLedgerEntry e WHERE e.erasedActorToken IN :tokens"
+    name = "DevtownErasureReceiptLedgerEntry.findByTokens",
+    query = "SELECT e FROM DevtownErasureReceiptLedgerEntry e WHERE e.erasedActorToken IN :tokens"
 )
 public class ErasureReceiptLedgerEntry extends LedgerEntry {
 

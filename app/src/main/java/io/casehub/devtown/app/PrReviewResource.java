@@ -20,6 +20,6 @@ public class PrReviewResource {
 
     @POST
     public PrReviewOutcome review(PrPayload pr) {
-        return service.review(pr);
+        return service.startReview(pr);
     }
 }

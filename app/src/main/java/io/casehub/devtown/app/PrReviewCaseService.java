@@ -1,6 +1,7 @@
 package io.casehub.devtown.app;
 
 import io.casehub.devtown.app.mcp.PrReviewCaseTracker;
+import io.casehub.devtown.review.LifecycleResult;
 import io.casehub.devtown.review.PrPayload;
 import io.casehub.devtown.review.PrReviewApplicationService;
 import io.casehub.devtown.review.PrReviewOutcome;
@@ -10,8 +11,10 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.inject.Alternative;
 import jakarta.inject.Inject;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 @ApplicationScoped
@@ -43,7 +46,13 @@ public class PrReviewCaseService implements PrReviewApplicationService {
     boolean requireSeniorApproval;
 
     @Override
-    public PrReviewOutcome review(PrPayload pr) {
+    public PrReviewOutcome startReview(PrPayload pr) {
+        var existing = caseTracker.findActiveCaseByPr(pr.repo(), pr.prNumber());
+        if (existing.isPresent()) {
+            revisePr(pr.repo(), pr.prNumber(), pr.headSha(), pr.linesChanged());
+            return new PrReviewOutcome(VERDICT_CASE_OPENED, List.of());
+        }
+
         var memoryContext = memoryRecaller.recall(pr);
 
         // TODO(parent#26): replace @ConfigProperty injection with PreferenceProvider.resolve(scope).asMap()
@@ -52,7 +61,7 @@ public class PrReviewCaseService implements PrReviewApplicationService {
             "securityReviewRequired", securityReviewRequired,
             "requireSeniorApproval", requireSeniorApproval
         );
-        var prContext = Map.<String, Object>of(
+        var prContext = new LinkedHashMap<String, Object>(Map.of(
             "id", String.valueOf(pr.prNumber()),
             "repo", pr.repo(),
             "linesChanged", pr.linesChanged(),
@@ -60,7 +69,7 @@ public class PrReviewCaseService implements PrReviewApplicationService {
             "headSha", pr.headSha(),
             "contributor", pr.contributor(),
             "changedPaths", pr.changedPaths()
-        );
+        ));
         var initialContext = new HashMap<String, Object>();
         initialContext.put("pr", prContext);
         initialContext.put("policy", policy);
@@ -70,5 +79,40 @@ public class PrReviewCaseService implements PrReviewApplicationService {
         var caseId = caseHub.startCase(initialContext);
         caseId.thenAccept(id -> caseTracker.register(id, principal.tenancyId(), pr));
         return new PrReviewOutcome(VERDICT_CASE_OPENED, List.of());
+    }
+
+    @Override
+    public LifecycleResult revisePr(String repo, int prNumber, String newHeadSha, int linesChanged) {
+        var active = caseTracker.findActiveCaseByPr(repo, prNumber);
+        if (active.isEmpty()) return LifecycleResult.NO_ACTIVE_CASE;
+
+        UUID caseId = active.get().caseId();
+
+        // Signal ordering contract: metadata BEFORE invalidation.
+        // initial-analysis binding fires on .codeAnalysis == null and reads pr.headSha as input.
+        caseHub.signal(caseId, "pr.headSha", newHeadSha);
+        caseHub.signal(caseId, "pr.linesChanged", linesChanged);
+
+        // Invalidate stale analysis — triggers binding re-evaluation.
+        // Human approvals are preserved (explicit policy — see spec §14).
+        caseHub.signal(caseId, "codeAnalysis", null);
+        caseHub.signal(caseId, "securityReview", null);
+        caseHub.signal(caseId, "architectureReview", null);
+        caseHub.signal(caseId, "styleCheck", null);
+        caseHub.signal(caseId, "testCoverage", null);
+        caseHub.signal(caseId, "performanceAnalysis", null);
+
+        return LifecycleResult.UPDATED;
+    }
+
+    @Override
+    public LifecycleResult closePr(String repo, int prNumber, boolean merged) {
+        var active = caseTracker.findActiveCaseByPr(repo, prNumber);
+        if (active.isEmpty()) return LifecycleResult.NO_ACTIVE_CASE;
+
+        UUID caseId = active.get().caseId();
+        caseHub.signal(caseId, "pr.status", merged ? "merged" : "closed");
+
+        return LifecycleResult.UPDATED;
     }
 }

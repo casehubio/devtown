@@ -16,9 +16,9 @@ class TrackerRegistrationTest {
     @Inject PrReviewCaseTracker tracker;
 
     @Test
-    void review_registersCaseInTracker() {
+    void startReview_registersCaseInTracker() {
         var pr = new PrPayload("casehubio/devtown", 99, "sha123", "main", 50, "bob", List.of("src/Foo.java"));
-        reviewService.review(pr);
+        reviewService.startReview(pr);
 
         var active = tracker.activeCases();
         assertThat(active).anyMatch(c ->

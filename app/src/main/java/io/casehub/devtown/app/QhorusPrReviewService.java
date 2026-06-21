@@ -1,5 +1,6 @@
 package io.casehub.devtown.app;
 
+import io.casehub.devtown.review.LifecycleResult;
 import io.casehub.devtown.review.PrPayload;
 import io.casehub.devtown.review.PrReviewApplicationService;
 import io.casehub.devtown.review.PrReviewOutcome;
@@ -65,7 +66,7 @@ public class QhorusPrReviewService implements PrReviewApplicationService {
     Instance<ReviewerAgent> agents;
 
     @Override
-    public PrReviewOutcome review(PrPayload pr) {
+    public PrReviewOutcome startReview(PrPayload pr) {
         final String prefix = "pr-review-" + pr.prNumber();
         final Channel work = findOrCreateWorkChannel(prefix);
         findOrCreateObserveChannel(prefix);
@@ -125,6 +126,16 @@ public class QhorusPrReviewService implements PrReviewApplicationService {
         }
 
         return new PrReviewOutcome("qhorus-reviewed", allFindings);
+    }
+
+    @Override
+    public LifecycleResult revisePr(String repo, int prNumber, String newHeadSha, int linesChanged) {
+        return LifecycleResult.NO_ACTIVE_CASE;
+    }
+
+    @Override
+    public LifecycleResult closePr(String repo, int prNumber, boolean merged) {
+        return LifecycleResult.NO_ACTIVE_CASE;
     }
 
     private Channel findOrCreateWorkChannel(final String prefix) {

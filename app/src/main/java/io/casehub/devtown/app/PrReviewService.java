@@ -1,5 +1,6 @@
 package io.casehub.devtown.app;
 
+import io.casehub.devtown.review.LifecycleResult;
 import io.casehub.devtown.review.PrPayload;
 import io.casehub.devtown.review.PrReviewApplicationService;
 import io.casehub.devtown.review.PrReviewOutcome;
@@ -14,12 +15,22 @@ import java.util.List;
 public class PrReviewService implements PrReviewApplicationService {
 
     @Override
-    public PrReviewOutcome review(PrPayload pr) {
+    public PrReviewOutcome startReview(PrPayload pr) {
         var securityFindings = analyzeSecurityDirectly(pr);
         var architectureFindings = reviewArchitectureDirectly(pr);
         var allFindings = new ArrayList<String>(securityFindings);
         allFindings.addAll(architectureFindings);
         return new PrReviewOutcome("reviewed", allFindings);
+    }
+
+    @Override
+    public LifecycleResult revisePr(String repo, int prNumber, String newHeadSha, int linesChanged) {
+        return LifecycleResult.NO_ACTIVE_CASE;
+    }
+
+    @Override
+    public LifecycleResult closePr(String repo, int prNumber, boolean merged) {
+        return LifecycleResult.NO_ACTIVE_CASE;
     }
 
     private List<String> analyzeSecurityDirectly(PrPayload pr) {

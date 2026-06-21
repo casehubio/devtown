@@ -8,6 +8,7 @@ import java.time.Instant;
 import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import org.jboss.logging.Logger;
@@ -19,6 +20,7 @@ public class PrReviewCaseTracker {
     private static final int DEFAULT_BUFFER_SIZE = 200;
 
     private final ConcurrentHashMap<UUID, CaseInfo> cases = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<String, UUID> prIndex = new ConcurrentHashMap<>();
     private final Deque<TrackedEvent> eventBuffer;
     private final int maxBufferSize;
 
@@ -34,11 +36,20 @@ public class PrReviewCaseTracker {
     public void register(UUID caseId, String tenancyId, PrPayload payload) {
         Instant now = Instant.now();
         cases.put(caseId, new CaseInfo(caseId, tenancyId, payload, now, now, CaseTrackingStatus.RUNNING));
+        prIndex.put(payload.repo() + "#" + payload.prNumber(), caseId);
         LOG.infof("Tracking PR review case=%s repo=%s pr=#%d", caseId, payload.repo(), payload.prNumber());
     }
 
     public CaseInfo getCase(UUID caseId) {
         return cases.get(caseId);
+    }
+
+    public Optional<CaseInfo> findActiveCaseByPr(String repo, int prNumber) {
+        UUID caseId = prIndex.get(repo + "#" + prNumber);
+        if (caseId == null) return Optional.empty();
+        CaseInfo info = cases.get(caseId);
+        if (info == null || info.status().isTerminal()) return Optional.empty();
+        return Optional.of(info);
     }
 
     public List<CaseInfo> activeCases() {
@@ -85,6 +96,13 @@ public class PrReviewCaseTracker {
 
     void onCaseLifecycle(@ObservesAsync CaseLifecycleEvent event) {
         updateStatus(event.caseId(), event.caseStatus(), Instant.now());
+
+        if (CaseTrackingStatus.fromCaseStatus(event.caseStatus()).isTerminal()) {
+            CaseInfo terminated = cases.get(event.caseId());
+            if (terminated != null) {
+                prIndex.remove(terminated.payload().repo() + "#" + terminated.payload().prNumber(), event.caseId());
+            }
+        }
 
         CaseInfo info = cases.get(event.caseId());
         String repo = info != null ? info.payload().repo() : "unknown";

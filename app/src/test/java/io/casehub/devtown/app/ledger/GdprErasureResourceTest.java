@@ -6,6 +6,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import io.casehub.ledger.api.model.LedgerEntryType;
 import io.casehub.ledger.model.CaseLedgerEntry;
 import io.casehub.ledger.api.spi.ActorIdentityProvider;
+import io.casehub.ledger.runtime.model.ErasureReceiptLedgerEntry;
 import io.casehub.ledger.runtime.repository.LedgerEntryRepository;
 import io.casehub.platform.api.identity.ActorType;
 import io.casehub.platform.api.identity.CurrentPrincipal;
@@ -59,15 +60,12 @@ class GdprErasureResourceTest {
     }
 
     @Test
-    void erasure_receiptPersistedWithTokenNotRawId() {
+    void erasure_receiptPersistedByFoundationLedger() {
         final String rawActorId = "human-reviewer-receipt-" + UUID.randomUUID();
         final UUID caseId = UUID.randomUUID();
         final String tenancyId = principal.tenancyId();
 
         seedHumanEntry(rawActorId, caseId, tenancyId);
-
-        String token = QuarkusTransaction.requiringNew().call(
-                () -> actorIdentityProvider.tokeniseForQuery(rawActorId).orElse(rawActorId));
 
         var response = given()
             .contentType("application/json")
@@ -87,10 +85,9 @@ class GdprErasureResourceTest {
         assertThat(receipt.get()).isInstanceOf(ErasureReceiptLedgerEntry.class);
 
         var erasureReceipt = (ErasureReceiptLedgerEntry) receipt.get();
-        assertThat(erasureReceipt.erasedActorToken).isEqualTo(token);
-        assertThat(erasureReceipt.erasedActorToken).isNotEqualTo(rawActorId);
+        assertThat(erasureReceipt.erasedActorId).isEqualTo(rawActorId);
         assertThat(erasureReceipt.actorType).isEqualTo(ActorType.SYSTEM);
-        assertThat(erasureReceipt.actorRole).isEqualTo("GDPR_COMPLIANCE");
+        assertThat(erasureReceipt.actorRole).isEqualTo("ErasureService");
     }
 
     @Test

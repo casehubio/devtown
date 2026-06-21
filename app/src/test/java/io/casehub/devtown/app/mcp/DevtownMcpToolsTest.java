@@ -61,6 +61,9 @@ class DevtownMcpToolsTest {
     Instance<CaseMemoryStore> memoryStoreInstance;
 
     @Mock
+    Instance<io.casehub.work.runtime.repository.WorkItemStore> workItemStoreInstance;
+
+    @Mock
     PrReviewCaseHub caseHub;
 
     @InjectMocks

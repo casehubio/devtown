@@ -75,9 +75,8 @@ public class PrReviewCaseService implements PrReviewApplicationService {
         initialContext.put("policy", policy);
         initialContext.put("memory", memoryContext.toContextMap());
 
-        // CompletionStage<UUID> case ID — not surfaced in PrReviewOutcome until Layer 6 adds case tracking (devtown#10)
-        var caseId = caseHub.startCase(initialContext);
-        caseId.thenAccept(id -> caseTracker.register(id, principal.tenancyId(), pr));
+        UUID caseId = caseHub.startCase(initialContext).toCompletableFuture().join();
+        caseTracker.register(caseId, principal.tenancyId(), pr);
         return new PrReviewOutcome(VERDICT_CASE_OPENED, List.of());
     }
 

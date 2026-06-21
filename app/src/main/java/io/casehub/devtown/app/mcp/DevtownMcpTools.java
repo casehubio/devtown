@@ -16,12 +16,16 @@ import io.casehub.devtown.domain.memory.DevtownMemoryDomain;
 import io.casehub.devtown.domain.memory.ModulePathNormalizer;
 import io.casehub.qhorus.runtime.message.Commitment;
 import io.casehub.qhorus.runtime.store.CommitmentStore;
+import io.casehub.work.runtime.model.WorkItemStatus;
+import io.casehub.work.runtime.repository.WorkItemQuery;
+import io.casehub.work.runtime.repository.WorkItemStore;
 import io.quarkiverse.mcp.server.Tool;
 import io.quarkiverse.mcp.server.ToolArg;
 import io.quarkiverse.mcp.server.WrapBusinessError;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.inject.Instance;
 import jakarta.inject.Inject;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -65,7 +69,19 @@ public class DevtownMcpTools {
     Instance<CaseMemoryStore> memoryStoreInstance;
 
     @Inject
+    Instance<WorkItemStore> workItemStoreInstance;
+
+    @Inject
     PrReviewCaseHub caseHub;
+
+    @ConfigProperty(name = "devtown.policy.human-approval-threshold", defaultValue = "500")
+    int humanApprovalThreshold;
+
+    @ConfigProperty(name = "devtown.policy.security-review-required", defaultValue = "true")
+    boolean securityReviewRequired;
+
+    @ConfigProperty(name = "devtown.policy.require-senior-approval", defaultValue = "false")
+    boolean requireSeniorApproval;
 
     // ==================== Response Records ====================
 
@@ -209,8 +225,11 @@ public class DevtownMcpTools {
             }
         }
 
-        // Work items not directly accessible without WorkItemStore — placeholder
         int pendingWorkItems = 0;
+        if (workItemStoreInstance.isResolvable()) {
+            pendingWorkItems = workItemStoreInstance.get()
+                .scan(WorkItemQuery.builder().status(WorkItemStatus.PENDING).build()).size();
+        }
 
         return new SystemHealth(
             active.size(),
@@ -501,8 +520,14 @@ public class DevtownMcpTools {
             "contributor", caseInfo.payload().contributor(),
             "changedPaths", caseInfo.payload().changedPaths()
         );
+        var policy = Map.<String, Object>of(
+            "humanApprovalThreshold", humanApprovalThreshold,
+            "securityReviewRequired", securityReviewRequired,
+            "requireSeniorApproval", requireSeniorApproval
+        );
         var initialContext = new HashMap<String, Object>();
         initialContext.put("pr", prContext);
+        initialContext.put("policy", policy);
 
         UUID newCaseId = caseHub.startCase(initialContext).toCompletableFuture().join();
 

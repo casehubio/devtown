@@ -152,22 +152,15 @@ public class CodeReviewComplianceService {
     }
 
     private GdprRequirement buildGdpr(List<EntrySnapshot> snapshots, String tenancyId) {
-        List<String> tokens = snapshots.stream()
-                .map(EntrySnapshot::actorId)
-                .filter(id -> id != null)
-                .distinct()
-                .toList();
-
         List<UUID> receiptIds = List.of();
-        if (!tokens.isEmpty()) {
+        if (!snapshots.isEmpty()) {
             try {
                 receiptIds = QuarkusTransaction.requiringNew().call(() ->
-                        em.createNamedQuery("DevtownErasureReceiptLedgerEntry.findByTokens", ErasureReceiptLedgerEntry.class)
-                                .setParameter("tokens", tokens)
-                                .getResultList()
-                                .stream()
-                                .map(e -> e.id)
-                                .toList());
+                        em.createQuery(
+                                "SELECT e.id FROM ErasureReceiptLedgerEntry e WHERE e.tenancyId = :tenancyId",
+                                UUID.class)
+                            .setParameter("tenancyId", tenancyId)
+                            .getResultList());
             } catch (PersistenceException e) {
                 LOG.warnf("Erasure receipt query failed for compliance report: %s", e.getMessage());
             }

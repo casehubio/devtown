@@ -273,33 +273,30 @@ class PrReviewQhorusLifecycleTest {
     }
 
     @Test
-    void observeChannel_rejectsSpeechActDispatch() {
+    void observeChannel_advisoryOnSpeechActDispatch() {
         service.startReview(new PrPayload("casehubio/devtown", 221, "sha221", "main", 100, "test-contributor", List.of()));
         var observe = channelService.findByName("pr-review-221/observe").orElseThrow();
-        // /observe is EVENT-only; any speech-act type must be rejected
-        assertThatThrownBy(() ->
-                messageService.dispatch(MessageDispatch.builder()
-                        .channelId(observe.id)
-                        .sender("pr-orchestrator")
-                        .type(STATUS)
-                        .content("progress note")
-                        .actorType(ActorType.SYSTEM)
-                        .build()))
-                .isInstanceOf(MessageTypeViolationException.class);
+        var result = messageService.dispatch(MessageDispatch.builder()
+                .channelId(observe.id)
+                .sender("pr-orchestrator")
+                .type(STATUS)
+                .content("progress note")
+                .actorType(ActorType.SYSTEM)
+                .build());
+        assertThat(result.advisories()).isNotEmpty();
     }
 
     @Test
-    void workChannel_rejectsEventDispatch() {
+    void workChannel_advisoryOnEventDispatch() {
         service.startReview(new PrPayload("casehubio/devtown", 217, "sha217", "main", 100, "test-contributor", List.of()));
         var work = channelService.findByName("pr-review-217/work").orElseThrow();
-        assertThatThrownBy(() ->
-                messageService.dispatch(MessageDispatch.builder()
-                        .channelId(work.id)
-                        .sender("telemetry")
-                        .type(EVENT)
-                        .actorType(ActorType.SYSTEM)
-                        .build()))
-                .isInstanceOf(MessageTypeViolationException.class);
+        var result = messageService.dispatch(MessageDispatch.builder()
+                .channelId(work.id)
+                .sender("telemetry")
+                .type(EVENT)
+                .actorType(ActorType.SYSTEM)
+                .build());
+        assertThat(result.advisories()).isNotEmpty();
     }
 
     @Test
@@ -319,10 +316,9 @@ class PrReviewQhorusLifecycleTest {
     }
 
     @Test
-    void oversightChannel_rejectsFailureDispatch() {
+    void oversightChannel_advisoryOnFailureDispatch() {
         service.startReview(new PrPayload("casehubio/devtown", 219, "sha219", "main", 100, "test-contributor", List.of()));
         var oversight = channelService.findByName("pr-review-219/oversight").orElseThrow();
-        // Must provide inReplyTo to pass builder validation; type enforcement fires after
         final String corrId = UUID.randomUUID().toString();
         final var commandResult = messageService.dispatch(MessageDispatch.builder()
                 .channelId(oversight.id)
@@ -332,31 +328,29 @@ class PrReviewQhorusLifecycleTest {
                 .correlationId(corrId)
                 .actorType(ActorType.SYSTEM)
                 .build());
-        assertThatThrownBy(() ->
-                messageService.dispatch(MessageDispatch.builder()
-                        .channelId(oversight.id)
-                        .sender(ORCHESTRATOR)
-                        .type(FAILURE)
-                        .content("crashed")
-                        .correlationId(corrId)
-                        .inReplyTo(commandResult.messageId())
-                        .actorType(ActorType.SYSTEM)
-                        .build()))
-                .isInstanceOf(MessageTypeViolationException.class);
+        var result = messageService.dispatch(MessageDispatch.builder()
+                .channelId(oversight.id)
+                .sender(ORCHESTRATOR)
+                .type(FAILURE)
+                .content("crashed")
+                .correlationId(corrId)
+                .inReplyTo(commandResult.messageId())
+                .actorType(ActorType.SYSTEM)
+                .build());
+        assertThat(result.advisories()).isNotEmpty();
     }
 
     @Test
-    void oversightChannel_rejectsEventDispatch() {
+    void oversightChannel_advisoryOnEventDispatch() {
         service.startReview(new PrPayload("casehubio/devtown", 220, "sha220", "main", 100, "test-contributor", List.of()));
         var oversight = channelService.findByName("pr-review-220/oversight").orElseThrow();
-        assertThatThrownBy(() ->
-                messageService.dispatch(MessageDispatch.builder()
-                        .channelId(oversight.id)
-                        .sender("telemetry")
-                        .type(EVENT)
-                        .actorType(ActorType.SYSTEM)
-                        .build()))
-                .isInstanceOf(MessageTypeViolationException.class);
+        var result = messageService.dispatch(MessageDispatch.builder()
+                .channelId(oversight.id)
+                .sender("telemetry")
+                .type(EVENT)
+                .actorType(ActorType.SYSTEM)
+                .build());
+        assertThat(result.advisories()).isNotEmpty();
     }
 
     @Test

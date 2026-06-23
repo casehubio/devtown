@@ -365,7 +365,7 @@ Failure is a fact on the blackboard. Binding conditions evaluate against failure
 
 | Journey | Description | Chapters | Status |
 |---|---|---|---|
-| PR Review Coordination | A submitted pull request is reviewed by specialist agents with formal accountability, human oversight with SLA, and a tamper-evident audit trail that traces any production incident back to the review decision that allowed it | 5 | In progress (C1–C4 complete, C5 pending) |
+| PR Review Coordination | A submitted pull request is reviewed by specialist agents with formal accountability, human oversight with SLA, and a tamper-evident audit trail that traces any production incident back to the review decision that allowed it | 5 | ✅ complete (all 5 chapters delivered) |
 
 ### §9.2 Chapter Index
 
@@ -396,7 +396,7 @@ flowchart LR
 
 **Layer × Chapter matrix**
 
-| Layer | C1 ✅ | C2 ✅ | C3 ✅ | C4 ✅ | C5 🔲 |
+| Layer | C1 ✅ | C2 ✅ | C3 ✅ | C4 ✅ | C5 ✅ |
 |---|---|---|---|---|---|
 | L1 Domain Baseline | High | Low | — | — | — |
 | L2 casehub-work | — | Medium | Low | Low | Low |
@@ -411,7 +411,7 @@ L5 participates in every Chapter — it is the foundational orchestration layer.
 - C1 before C2: L5 engine runtime established in C1; `casehub-work-adapter` depends on engine events at runtime
 - C2 before C3: SLA-bounded human gate must exist before formal per-agent obligation tracking is meaningful
 - C3 before C4: qhorus messaging generates the `MessageLedgerEntry` chain that makes C4's tamper-evident audit meaningful (both ✅ complete)
-- C4 before C5: trust scoring reads `LedgerAttestation` records written by L4 — hard runtime dependency (C4 ✅; C5 pending)
+- C4 before C5: trust scoring reads `LedgerAttestation` records written by L4 — hard runtime dependency (both ✅ complete)
 - L5 built before L2–L4 in actual delivery sequence (engine was the architectural priority): Chapter ordering is the reading order, not build order
 
 ---
@@ -896,7 +896,7 @@ Not closed by Layer 5: no response SLA (Layer 2), no trust weighting (Layer 6).
 2. Declare goals (what the system must achieve), not steps (how). Use JQ conditions over the accumulated CaseContext.
 3. Extend `YamlCaseHub` in `{domain}-app/` with `@ApplicationScoped` — pass the classpath resource path to `super()`
 4. Create `@ApplicationScoped` (no `@DefaultBean`) service implementing the port interface in `{domain}-app/` — inject the CaseHub bean, build initial CaseContext from the domain payload + policy config, call `caseHub.startCase(initialContext)`
-5. Define scoped policy values via `@ConfigProperty` for now — replace with `PreferenceProvider.resolve(scope).asMap()` when casehub-platform-api ships (parent#26)
+5. Define scoped policy values via `PreferenceProvider.resolve(scope).asMap()` (parent#26 ✅ shipped) or `@ConfigProperty` as a temporary fallback
 6. Add `casehub-engine` (runtime) and `casehub-engine-testing` (test scope) to `{domain}-app/pom.xml`
 7. Add `InMemoryLedgerEntryRepository` stub to `{domain}-app/src/test/` if `casehub-ledger` runtime is on the classpath (see GE-20260519-e13b01)
 8. Set `casehub.ledger.enabled=false` in test `application.properties` if `casehub-engine-ledger` is on the classpath — without this, `CaseLedgerEventCapture` calls `JpaLedgerEntryRepository.save()` → `LedgerSequenceAllocator.nextSequenceNumber()` → `MERGE INTO ledger_subject_sequence`, which fails in H2 `drop-and-create` mode (the table is created by Flyway, not Hibernate). The `InMemoryLedgerEntryRepository` stub (step 7) solves reactive CDI resolution; `casehub.ledger.enabled=false` solves the blocking write chain — both are needed.

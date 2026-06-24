@@ -299,7 +299,7 @@ Layer 2: + casehub-work — SLA-bounded human review gate with escalation ✅ (d
 Layer 3: + casehub-qhorus — typed COMMAND/RESPONSE/DONE/DECLINE per reviewer agent interaction ✅ (devtown#52)
 Layer 4: + casehub-ledger — tamper-evident merge decision audit trail ✅ (devtown#73, devtown#7)
 Layer 5: + casehub-engine — adaptive paths, CasePlanModel, content-driven PR routing ✅ (devtown#10)
-Layer 6: trust routing — trust-weighted reviewer assignment from outcome attestations
+Layer 6: trust routing — trust-weighted reviewer assignment from outcome attestations ✅ (devtown#13)
 Layer 7: comparison vs Gastown (Refinery/Deacon/Witness architecture)
 ```
 
@@ -319,7 +319,7 @@ Features Gastown's Refinery provides that devtown must match or exceed:
 | AI coding agent workers | Claudony WorkerProvisioner (already integrated via claudony-casehub) | Foundation ready |
 | Human workspaces (Crew) | Human review WorkItem via casehub-work | Foundation ready |
 | Cross-rig agent routing | Sub-case orchestration | Foundation ready |
-| CLI tooling (`gt feed`, `gt problems`, etc.) | DevtownMcpTools — 8 read + 3 write + PROV-DM export (`app/mcp/`) | ✅ devtown#17 |
+| CLI tooling (`gt feed`, `gt problems`, etc.) | DevtownMcpTools — 8 read + 4 write + PROV-DM export (`app/mcp/`) | ✅ devtown#17 |
 | Predecessor session context (`gt seance`) | WorkerContextProvider + Doltgres AS OF (P1.5) | Partial |
 | Federated reputation (Wasteland) | TrustExport/ImportService (P2.1) | Not started |
 | Sandboxed execution | gt-proxy-server equivalent | Not planned |

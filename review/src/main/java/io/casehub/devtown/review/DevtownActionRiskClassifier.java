@@ -1,6 +1,6 @@
 package io.casehub.devtown.review;
 
-import io.casehub.api.spi.PlannedAction;
+import io.casehub.worker.api.PlannedAction;
 import io.casehub.api.spi.RiskDecision;
 import io.casehub.devtown.domain.DevtownActionType;
 import io.casehub.devtown.domain.HumanDecision;
@@ -59,7 +59,7 @@ public class DevtownActionRiskClassifier {
 
     private RiskDecision classifyMergeExecute(final PlannedAction action, final Preferences prefs) {
         final int minimum = prefs.getOrDefault(RiskPreferenceKeys.MERGE_MIN_APPROVED_REVIEWS).value();
-        final Integer actual = extractInt(action.context(), "approvedReviewCount");
+        final Integer actual = extractInt(action.parameters(), "approvedReviewCount");
         if (actual == null || actual < minimum) {
             return new RiskDecision.GateRequired(
                     "Merge requires at least " + minimum + " approved review(s)",
@@ -78,7 +78,7 @@ public class DevtownActionRiskClassifier {
             return failSafe(action);
         }
 
-        final Object rawSeverity = action.context() != null ? action.context().get("severity") : null;
+        final Object rawSeverity = action.parameters() != null ? action.parameters().get("severity") : null;
         if (rawSeverity == null) {
             return failSafeForAction(action, prefs, true, List.of(HumanOversight.ROUTING_REVIEW));
         }
@@ -104,7 +104,7 @@ public class DevtownActionRiskClassifier {
             final PreferenceKey<IntPreference> thresholdKey,
             final boolean reversible, final List<String> candidateGroups, final String reason) {
         final int threshold = prefs.getOrDefault(thresholdKey).value();
-        final Integer actual = extractInt(action.context(), contextKey);
+        final Integer actual = extractInt(action.parameters(), contextKey);
         if (actual == null || actual >= threshold) {
             return new RiskDecision.GateRequired(reason, reversible, candidateGroups,
                     expiresIn(prefs, reversible), action.actionType());
@@ -113,7 +113,7 @@ public class DevtownActionRiskClassifier {
     }
 
     private RiskDecision classifyReviewOverride(final PlannedAction action, final Preferences prefs) {
-        final Object verdict = action.context() != null ? action.context().get("originalVerdict") : null;
+        final Object verdict = action.parameters() != null ? action.parameters().get("originalVerdict") : null;
         if ("REJECTED".equals(verdict)) {
             return new RiskDecision.GateRequired(
                     "Overriding a rejection requires human approval",

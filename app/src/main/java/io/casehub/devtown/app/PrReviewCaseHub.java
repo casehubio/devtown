@@ -2,8 +2,8 @@ package io.casehub.devtown.app;
 
 import io.casehub.api.engine.YamlCaseHub;
 import io.casehub.api.model.CaseDefinition;
-import io.casehub.api.model.Worker;
-import io.casehub.api.model.WorkerResult;
+import io.casehub.worker.api.Worker;
+import io.casehub.worker.api.WorkerResult;
 import io.casehub.devtown.domain.MergeClient;
 import io.casehub.devtown.domain.MergeOutcome;
 import jakarta.annotation.PostConstruct;
@@ -25,7 +25,7 @@ public class PrReviewCaseHub extends YamlCaseHub {
     void registerWorkers() {
         CaseDefinition def = super.getDefinition();
         var mergeCap = def.getCapabilities().stream()
-            .filter(c -> "merge-executor".equals(c.getName()))
+            .filter(c -> "merge-executor".equals(c.name()))
             .findFirst().orElseThrow();
         def.getWorkers().add(Worker.builder()
             .name("merge-executor")

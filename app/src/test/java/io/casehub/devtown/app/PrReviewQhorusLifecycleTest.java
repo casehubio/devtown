@@ -357,7 +357,10 @@ class PrReviewQhorusLifecycleTest {
     void existingPermissiveWorkChannel_throwsOnAllowedTypesMismatch() {
         // Simulate a pre-fix channel created without allowedTypes (null).
         // requireAllowedTypes must fail fast rather than silently operate with weaker enforcement.
-        channelService.create("pr-review-299/work", null, ChannelSemantic.APPEND, ORCHESTRATOR);
+        channelService.create(io.casehub.qhorus.runtime.channel.ChannelCreateRequest.builder("pr-review-299/work")
+                .semantic(ChannelSemantic.APPEND)
+                .adminInstances(ORCHESTRATOR)
+                .build());
 
         assertThatThrownBy(() ->
                 service.startReview(new PrPayload("casehubio/devtown", 299, "sha299", "main", 100, "test-contributor", List.of())))

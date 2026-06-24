@@ -16,7 +16,7 @@
 package io.casehub.devtown.review;
 
 import io.casehub.api.model.Binding;
-import io.casehub.api.model.Capability;
+import io.casehub.worker.api.Capability;
 import io.casehub.api.model.CaseDefinition;
 import io.casehub.api.model.ContextChangeTrigger;
 import io.casehub.api.model.Goal;
@@ -58,7 +58,7 @@ public final class PrReviewCaseDefinition {
         var testCoverageCap   = cap(ReviewDomain.TEST_COVERAGE, "{ pr: .pr }", "{ testCoverage: { outcome: . } }");
         var perfAnalysisCap   = cap(ReviewDomain.PERFORMANCE_ANALYSIS, "{ pr: .pr }", "{ performanceAnalysis: { outcome: . } }");
         var ciRunnerCap       = cap(AgentQualification.CI_RUNNER, "{ pr: .pr }", "{ ci: { status: . } }");
-        var mergeExecutorCap  = cap(AgentQualification.MERGE_EXECUTOR, "{ pr: .pr }", "{}");
+        var mergeExecutorCap  = cap(AgentQualification.MERGE_EXECUTOR, "{ pr: .pr }", ".");
 
         // ── Goals ──
 
@@ -108,12 +108,17 @@ public final class PrReviewCaseDefinition {
             })
             .build();
 
+        var mergeCompleted = Goal.builder()
+            .name("merge-completed").kind(GoalKind.SUCCESS)
+            .condition(ctx -> "merged".equals(ctx.getPath("pr.status")) || ctx.get("merge_sha") != null)
+            .build();
+
         var trigger = new ContextChangeTrigger((io.casehub.api.model.evaluator.ExpressionEvaluator) null);
 
         CaseDefinition def = CaseDefinition.builder()
             .namespace("devtown").name("pr-review").version("1.0.0")
             .completion(
-                GoalExpression.allOf(prApproved, securityVerified, ciPassing),
+                GoalExpression.allOf(prApproved, securityVerified, ciPassing, mergeCompleted),
                 GoalExpression.anyOf(reviewBlocked, reviewRejected, reviewAbandoned))
             .build();
 
@@ -123,7 +128,7 @@ public final class PrReviewCaseDefinition {
             ciRunnerCap, mergeExecutorCap));
 
         def.getGoals().addAll(List.of(prApproved, securityVerified, ciPassing,
-            reviewBlocked, reviewRejected, reviewAbandoned));
+            reviewBlocked, reviewRejected, reviewAbandoned, mergeCompleted));
 
         // ── Tier 1-2: Capability dispatch with OutcomePolicy reroute loop ──
 
@@ -299,6 +304,6 @@ public final class PrReviewCaseDefinition {
     }
 
     private static Capability cap(String name, String inputSchema, String outputSchema) {
-        return Capability.builder().name(name).inputSchema(inputSchema).outputSchema(outputSchema).build();
+        return Capability.of(name, inputSchema, outputSchema);
     }
 }

@@ -1,7 +1,7 @@
 package io.casehub.devtown.app;
 
-import io.casehub.api.model.WorkerResult;
-import io.casehub.api.model.WorkerOutcome;
+import io.casehub.worker.api.WorkerResult;
+import io.casehub.worker.api.WorkerOutcome;
 import io.casehub.devtown.domain.MergeClient;
 import io.casehub.devtown.domain.MergeOutcome;
 import org.junit.jupiter.api.BeforeEach;

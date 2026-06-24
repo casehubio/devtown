@@ -36,6 +36,10 @@
     <!-- foundation runtime -->
     <dependency>
       <groupId>io.casehub</groupId>
+      <artifactId>casehub-worker-api</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>io.casehub</groupId>
       <artifactId>casehub-qhorus</artifactId>
     </dependency>
     <dependency>

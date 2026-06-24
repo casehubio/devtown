@@ -2,7 +2,7 @@ package io.casehub.devtown.review;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import io.casehub.api.spi.PlannedAction;
+import io.casehub.worker.api.PlannedAction;
 import io.casehub.api.spi.RiskDecision;
 import io.casehub.devtown.domain.DevtownActionType;
 import io.casehub.devtown.domain.HumanDecision;
@@ -22,8 +22,8 @@ class DevtownActionRiskClassifierTest {
 
     private final DevtownActionRiskClassifier classifier = new DevtownActionRiskClassifier();
 
-    private static PlannedAction action(final String actionType, final Map<String, Object> context) {
-        return new PlannedAction("test-worker", null, "test action", actionType, context);
+    private static PlannedAction action(final String actionType, final Map<String, Object> parameters) {
+        return new PlannedAction("test action", actionType, parameters);
     }
 
     private static PlannedAction action(final String actionType) {
@@ -192,7 +192,7 @@ class DevtownActionRiskClassifierTest {
         @Test
         void issueCloseInvalid_nullContext_failSafe() {
             RiskDecision result = classifier.classify(
-                    new PlannedAction("test-worker", null, "test", DevtownActionType.ISSUE_CLOSE_INVALID, null),
+                    new PlannedAction("test", DevtownActionType.ISSUE_CLOSE_INVALID, null),
                     defaultPrefs());
             assertThat(result).isInstanceOf(RiskDecision.GateRequired.class);
         }

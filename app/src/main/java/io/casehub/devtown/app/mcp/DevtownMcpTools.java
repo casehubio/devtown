@@ -4,6 +4,10 @@ import io.casehub.api.engine.CaseHubRuntime;
 import io.casehub.api.model.event.CaseEventLogRecord;
 import io.casehub.api.model.event.CaseHubEventType;
 import io.casehub.devtown.app.PrReviewCaseHub;
+import io.casehub.devtown.app.ledger.IncidentFeedbackService;
+import io.casehub.devtown.domain.IncidentFeedback;
+import io.casehub.devtown.domain.IncidentFeedbackResult;
+import io.casehub.devtown.domain.IncidentSeverity;
 import io.casehub.devtown.review.PrPayload;
 import io.casehub.ledger.runtime.service.LedgerProvExportService;
 import io.casehub.ledger.runtime.service.TrustGateService;
@@ -76,6 +80,9 @@ public class DevtownMcpTools {
 
     @Inject
     CurrentPrincipal principal;
+
+    @Inject
+    IncidentFeedbackService incidentFeedbackService;
 
     @ConfigProperty(name = "devtown.policy.human-approval-threshold", defaultValue = "500")
     int humanApprovalThreshold;
@@ -560,5 +567,25 @@ public class DevtownMcpTools {
         caseHubRuntime.signal(caseId, contextKey, syntheticResult);
 
         return new ForceCompleteResult(caseId, capability, outcome, "FORCE_COMPLETED");
+    }
+
+    @Tool(
+        name = "report_incident",
+        description = "Report a production incident against a merged PR — writes FLAGGED attestation against the reviewer's trust score"
+    )
+    public IncidentFeedbackResult reportIncident(
+        @ToolArg(name = "repository", description = "GitHub repo slug (e.g. casehubio/devtown)") String repository,
+        @ToolArg(name = "prNumber", description = "PR number") int prNumber,
+        @ToolArg(name = "incidentId", description = "External incident tracker ID") String incidentId,
+        @ToolArg(name = "severity", description = "LOW, MEDIUM, HIGH, or CRITICAL") String severity,
+        @ToolArg(name = "description", description = "What went wrong") String description,
+        @ToolArg(name = "reviewCapability", description = "Which capability missed the issue (e.g. security-review)") String reviewCapability,
+        @ToolArg(name = "caseId", description = "Optional — disambiguate when multiple cases exist for the same PR", required = false) String caseId
+    ) {
+        IncidentSeverity sev = IncidentSeverity.valueOf(severity.toUpperCase());
+        UUID parsedCaseId = caseId != null ? UUID.fromString(caseId) : null;
+        IncidentFeedback feedback = new IncidentFeedback(
+                repository, prNumber, incidentId, sev, description, reviewCapability, parsedCaseId);
+        return incidentFeedbackService.recordFeedback(feedback);
     }
 }

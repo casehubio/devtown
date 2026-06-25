@@ -910,7 +910,15 @@ Not closed by Layer 5: no response SLA (Layer 2), no trust weighting (Layer 6).
 **Participates in chapters:** C5
 **Completed:** ✅ shipped (devtown#57)
 
-Full Layer entry pending — content to be written. Layer 6 wires `TrustWeightedAgentStrategy` (from `casehub-engine-ledger`) replacing availability routing; reads `LedgerAttestation` from Layer 4 outcomes via `TrustScoreCache`; `DevtownTrustRoutingPolicyProvider` supplies per-capability thresholds from `DevtownCapabilityRegistry` + YAML config; four-phase trust maturity model (DT-006) operational. See LAYER-LOG.md §Layer 6 for full documentation.
+Layer 6 wires `TrustWeightedAgentStrategy` (from `casehub-engine-ledger`) replacing availability routing; reads `LedgerAttestation` from Layer 4 outcomes via `TrustScoreCache`; `DevtownTrustRoutingPolicyProvider` supplies per-capability thresholds from `DevtownCapabilityRegistry` + YAML config; four-phase trust maturity model (DT-006) operational.
+
+**Scope reduction — everything but the test was already shipped.** The spec started as two-repo upstream-first architecture (TrustGatedAttestationPolicy in qhorus, RetroactiveAttestationService). Three review rounds established that the routing infrastructure (devtown#57), incident feedback (devtown#5), and positive attestation flow (qhorus LedgerWriteService) were all already shipped. The epic reduced to: MCP tool + E2E closed-loop test + issue filing.
+
+**TrustGatedAttestationPolicy deferred — CommitmentContext lacks capabilityTag.** The attestation policy design uses capabilityScore() not globalScore() for per-capability trust gating. But CommitmentContext doesn't carry capabilityTag — LedgerWriteService extracts it from the COMMAND JSON AFTER calling the policy. Filed qhorus#307 to move extraction before the policy call. TrustGatedAttestationPolicy (devtown#97) blocked on this.
+
+**FLAGGED attestation feedback loop proven end-to-end.** E2E test proves: SOUND attestations → TrustScoreJob materialises capability scores → TrustWeightedAgentStrategy routes to higher-trust agent → IncidentFeedbackService writes FLAGGED → TrustScoreJob recomputes lower score → routing shifts. The WEIGHTED_MAJORITY aggregation masking issue (ledger#157) was fixed upstream. JPA first-level cache stale reads required fresh transactions on the read side (GE-20260625-aaf3d4).
+
+**Key wiring:** `report_incident` MCP tool in `DevtownMcpTools` → `IncidentFeedbackService` → FLAGGED `LedgerAttestation` against the reviewing agent's `WorkerDecisionEntry`. `TrustFeedbackClosedLoopTest` proves the full chain: equal SOUND histories → incident FLAGGED → score decrease → routing shift.
 
 ---
 

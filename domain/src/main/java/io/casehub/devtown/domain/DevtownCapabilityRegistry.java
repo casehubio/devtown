@@ -20,7 +20,11 @@ public class DevtownCapabilityRegistry implements CapabilityRegistry {
         AgentQualification.CI_RUNNER,
         AgentQualification.MERGE_EXECUTOR,
         HumanDecision.PR_APPROVAL,
-        HumanOversight.ROUTING_REVIEW
+        HumanOversight.ROUTING_REVIEW,
+        MergeQueueCapability.BATCH_CI_RUNNER,
+        MergeQueueCapability.BISECTION_SPLITTER,
+        MergeQueueCapability.PR_REJECT_AND_NOTIFY,
+        MergeQueueCapability.MERGE_QUEUE_ENQUEUE
     );
 
     private static final Map<String, RoutingPolicy> POLICIES = Map.of(

@@ -14,12 +14,14 @@ class DevtownCapabilityRegistryTest {
     // === capabilities() ===
 
     @Test
-    void capabilitiesContainsAllTenExpectedValues() {
+    void capabilitiesContainsAllFourteenExpectedValues() {
         assertThat(registry.capabilities()).containsExactlyInAnyOrder(
             "code-analysis", "security-review", "architecture-review",
             "style-review", "test-coverage", "performance-analysis",
             "ci-runner", "merge-executor",
-            "human-decision:pr-approval", "human-oversight:routing-review"
+            "human-decision:pr-approval", "human-oversight:routing-review",
+            "batch-ci-runner", "bisection-splitter",
+            "pr-reject-and-notify", "merge-queue-enqueue"
         );
     }
 
@@ -157,6 +159,26 @@ class DevtownCapabilityRegistryTest {
     @Test
     void humanOversightRoutingReviewHasNoPolicy() {
         assertThat(registry.policy(HumanOversight.ROUTING_REVIEW)).isEmpty();
+    }
+
+    @Test
+    void batchCiRunnerHasNoPolicy() {
+        assertThat(registry.policy(MergeQueueCapability.BATCH_CI_RUNNER)).isEmpty();
+    }
+
+    @Test
+    void bisectionSplitterHasNoPolicy() {
+        assertThat(registry.policy(MergeQueueCapability.BISECTION_SPLITTER)).isEmpty();
+    }
+
+    @Test
+    void prRejectAndNotifyHasNoPolicy() {
+        assertThat(registry.policy(MergeQueueCapability.PR_REJECT_AND_NOTIFY)).isEmpty();
+    }
+
+    @Test
+    void mergeQueueEnqueueHasNoPolicy() {
+        assertThat(registry.policy(MergeQueueCapability.MERGE_QUEUE_ENQUEUE)).isEmpty();
     }
 
     // === All threshold values in valid range ===

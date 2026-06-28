@@ -32,93 +32,6 @@
 
   <dependencyManagement>
     <dependencies>
-      <!-- casehub-engine-api — not in casehub-parent BOM -->
-      <dependency>
-        <groupId>io.casehub</groupId>
-        <artifactId>casehub-engine-api</artifactId>
-        <version>${casehub.version}</version>
-      </dependency>
-
-      <!-- casehub-engine runtime — needed by app/ for YamlCaseHub CDI wiring -->
-      <dependency>
-        <groupId>io.casehub</groupId>
-        <artifactId>casehub-engine</artifactId>
-        <version>${casehub.version}</version>
-      </dependency>
-
-      <!-- casehub-engine-testing — annotated in-memory SPI impls for @QuarkusTest -->
-      <dependency>
-        <groupId>io.casehub</groupId>
-        <artifactId>casehub-engine-testing</artifactId>
-        <version>${casehub.version}</version>
-        <scope>test</scope>
-      </dependency>
-
-      <!-- casehub-engine-scheduler-quartz — JobScheduler + WorkerExecutionManager SPI impls -->
-      <dependency>
-        <groupId>io.casehub</groupId>
-        <artifactId>casehub-engine-scheduler-quartz</artifactId>
-        <version>${casehub.version}</version>
-      </dependency>
-
-      <!-- casehub-engine-work-adapter — bridge between WorkItemLifecycleEvent and PlanItem -->
-      <dependency>
-        <groupId>io.casehub</groupId>
-        <artifactId>casehub-engine-work-adapter</artifactId>
-        <version>${casehub.version}</version>
-      </dependency>
-
-      <!-- casehub-engine-actor-state — GET /actors/{actorId}/state unified actor workload view -->
-      <dependency>
-        <groupId>io.casehub</groupId>
-        <artifactId>casehub-engine-actor-state</artifactId>
-        <version>${casehub.version}</version>
-      </dependency>
-
-      <!-- casehub-engine-persistence-memory — in-memory SPI impls including SubCaseGroupRepository -->
-      <dependency>
-        <groupId>io.casehub</groupId>
-        <artifactId>casehub-engine-persistence-memory</artifactId>
-        <version>${casehub.version}</version>
-        <scope>test</scope>
-      </dependency>
-
-      <!-- casehub-qhorus-api — not in casehub-parent BOM -->
-      <dependency>
-        <groupId>io.casehub</groupId>
-        <artifactId>casehub-qhorus-api</artifactId>
-        <version>${casehub.version}</version>
-      </dependency>
-
-      <!-- casehub-connectors — not in casehub-parent BOM -->
-      <dependency>
-        <groupId>io.casehub</groupId>
-        <artifactId>casehub-connectors-core</artifactId>
-        <version>${casehub.version}</version>
-      </dependency>
-
-      <!-- casehub-platform-expression — JQEvaluator bean (required by casehub-engine since engine#316) -->
-      <dependency>
-        <groupId>io.casehub</groupId>
-        <artifactId>casehub-platform-expression</artifactId>
-        <version>${casehub.version}</version>
-      </dependency>
-
-      <!-- casehub-platform — MockPreferenceProvider @DefaultBean (required by casehub-work) -->
-      <dependency>
-        <groupId>io.casehub</groupId>
-        <artifactId>casehub-platform</artifactId>
-        <version>${casehub.version}</version>
-      </dependency>
-
-      <!-- AssertJ — test assertion library for all devtown modules -->
-      <dependency>
-        <groupId>org.assertj</groupId>
-        <artifactId>assertj-core</artifactId>
-        <version>3.27.7</version>
-        <scope>test</scope>
-      </dependency>
-
       <!-- devtown inter-module -->
       <dependency>
         <groupId>io.casehub</groupId>
@@ -139,14 +52,6 @@
         <groupId>io.casehub</groupId>
         <artifactId>casehub-devtown-github</artifactId>
         <version>${project.version}</version>
-      </dependency>
-
-      <!-- casehub-platform-memory-inmem — in-memory CaseMemoryStore for testing -->
-      <dependency>
-        <groupId>io.casehub</groupId>
-        <artifactId>casehub-platform-memory-inmem</artifactId>
-        <version>${casehub.version}</version>
-        <scope>test</scope>
       </dependency>
 
       <!-- Quarkus MCP Server HTTP -->

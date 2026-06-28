@@ -76,7 +76,7 @@ class CodeReviewComplianceServiceTest {
         mde.caseId = caseId;
         mde.tenancyId = tenancyId;
         mde.entryType = LedgerEntryType.EVENT;
-        mde.prNumber = 42;
+        mde.prNumber = 4300;
         mde.repository = "casehubio/devtown";
         mde.commitSha = "abc123def";
         mde.decision = "APPROVED";
@@ -89,7 +89,7 @@ class CodeReviewComplianceServiceTest {
         ComplianceSupplement cs = new ComplianceSupplement();
         cs.algorithmRef = "casehub-devtown:pr-review-v1";
         cs.humanOverrideAvailable = true;
-        cs.contestationUri = "/api/reviews/42/contest";
+        cs.contestationUri = "/api/reviews/4300/contest";
         mde.attach(cs);
         saveLedgerEntry(mde);
 

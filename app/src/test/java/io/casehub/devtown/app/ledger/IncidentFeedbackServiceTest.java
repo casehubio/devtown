@@ -45,12 +45,12 @@ class IncidentFeedbackServiceTest {
         UUID caseId = UUID.randomUUID();
         Instant now = Instant.now().truncatedTo(ChronoUnit.MILLIS);
 
-        seedMergeDecision(caseId, REPO, 42, "APPROVED", now);
+        seedMergeDecision(caseId, REPO, 4200, "APPROVED", now);
         UUID wdeId = seedWorkerDecision(caseId, "claude:analyst@v1",
                 ReviewDomain.SECURITY_REVIEW, now.plusMillis(100));
 
         IncidentFeedback feedback = new IncidentFeedback(
-                REPO, 42, "INC-789", IncidentSeverity.HIGH,
+                REPO, 4200, "INC-789", IncidentSeverity.HIGH,
                 "Timing attack in crypto", ReviewDomain.SECURITY_REVIEW, null);
 
         IncidentFeedbackResult result = service.recordFeedback(feedback);
@@ -85,14 +85,14 @@ class IncidentFeedbackServiceTest {
         UUID caseId = UUID.randomUUID();
         Instant now = Instant.now().truncatedTo(ChronoUnit.MILLIS);
 
-        seedMergeDecision(caseId, REPO, 43, "APPROVED", now);
+        seedMergeDecision(caseId, REPO, 4201, "APPROVED", now);
         UUID wde1 = seedWorkerDecision(caseId, "claude:analyst-a@v1",
                 ReviewDomain.SECURITY_REVIEW, now.plusMillis(100));
         UUID wde2 = seedWorkerDecision(caseId, "claude:analyst-b@v2",
                 ReviewDomain.SECURITY_REVIEW, now.plusMillis(200));
 
         IncidentFeedback feedback = new IncidentFeedback(
-                REPO, 43, "INC-790", IncidentSeverity.CRITICAL,
+                REPO, 4201, "INC-790", IncidentSeverity.CRITICAL,
                 "Multiple agents missed", ReviewDomain.SECURITY_REVIEW, null);
 
         IncidentFeedbackResult result = service.recordFeedback(feedback);
@@ -124,12 +124,12 @@ class IncidentFeedbackServiceTest {
         UUID caseId = UUID.randomUUID();
         Instant now = Instant.now().truncatedTo(ChronoUnit.MILLIS);
 
-        seedMergeDecision(caseId, REPO, 44, "APPROVED", now);
+        seedMergeDecision(caseId, REPO, 4202, "APPROVED", now);
         seedWorkerDecision(caseId, "claude:analyst@v1",
                 ReviewDomain.CODE_ANALYSIS, now.plusMillis(100));
 
         IncidentFeedback feedback = new IncidentFeedback(
-                REPO, 44, "INC-404-2", IncidentSeverity.HIGH,
+                REPO, 4202, "INC-404-2", IncidentSeverity.HIGH,
                 "Wrong capability", ReviewDomain.SECURITY_REVIEW, null);
 
         assertThatThrownBy(() -> service.recordFeedback(feedback))
@@ -145,11 +145,11 @@ class IncidentFeedbackServiceTest {
         UUID case2 = UUID.randomUUID();
         Instant now = Instant.now().truncatedTo(ChronoUnit.MILLIS);
 
-        seedMergeDecision(case1, REPO, 45, "APPROVED", now);
-        seedMergeDecision(case2, REPO, 45, "APPROVED", now.plusMillis(1000));
+        seedMergeDecision(case1, REPO, 4203, "APPROVED", now);
+        seedMergeDecision(case2, REPO, 4203, "APPROVED", now.plusMillis(1000));
 
         IncidentFeedback feedback = new IncidentFeedback(
-                REPO, 45, "INC-409", IncidentSeverity.HIGH,
+                REPO, 4203, "INC-409", IncidentSeverity.HIGH,
                 "Ambiguous", ReviewDomain.SECURITY_REVIEW, null);
 
         assertThatThrownBy(() -> service.recordFeedback(feedback))
@@ -164,13 +164,13 @@ class IncidentFeedbackServiceTest {
         UUID case2 = UUID.randomUUID();
         Instant now = Instant.now().truncatedTo(ChronoUnit.MILLIS);
 
-        seedMergeDecision(case1, REPO, 46, "APPROVED", now);
-        seedMergeDecision(case2, REPO, 46, "APPROVED", now.plusMillis(1000));
+        seedMergeDecision(case1, REPO, 4204, "APPROVED", now);
+        seedMergeDecision(case2, REPO, 4204, "APPROVED", now.plusMillis(1000));
         seedWorkerDecision(case2, "claude:analyst@v1",
                 ReviewDomain.SECURITY_REVIEW, now.plusMillis(1100));
 
         IncidentFeedback feedback = new IncidentFeedback(
-                REPO, 46, "INC-OK", IncidentSeverity.MEDIUM,
+                REPO, 4204, "INC-OK", IncidentSeverity.MEDIUM,
                 "Disambiguated", ReviewDomain.SECURITY_REVIEW, case2);
 
         IncidentFeedbackResult result = service.recordFeedback(feedback);
@@ -184,7 +184,7 @@ class IncidentFeedbackServiceTest {
         UUID randomCaseId = UUID.randomUUID();
 
         IncidentFeedback feedback = new IncidentFeedback(
-                REPO, 47, "INC-BAD-CASE", IncidentSeverity.HIGH,
+                REPO, 4205, "INC-BAD-CASE", IncidentSeverity.HIGH,
                 "Bad caseId", ReviewDomain.SECURITY_REVIEW, randomCaseId);
 
         assertThatThrownBy(() -> service.recordFeedback(feedback))
@@ -199,10 +199,10 @@ class IncidentFeedbackServiceTest {
         UUID caseId = UUID.randomUUID();
         Instant now = Instant.now().truncatedTo(ChronoUnit.MILLIS);
 
-        seedMergeDecision(caseId, REPO, 48, "APPROVED", now);
+        seedMergeDecision(caseId, REPO, 4206, "APPROVED", now);
 
         IncidentFeedback feedback = new IncidentFeedback(
-                REPO, 48, "INC-400", IncidentSeverity.HIGH,
+                REPO, 4206, "INC-400", IncidentSeverity.HIGH,
                 "Invalid cap", "made-up-capability", null);
 
         assertThatThrownBy(() -> service.recordFeedback(feedback))
@@ -215,10 +215,10 @@ class IncidentFeedbackServiceTest {
         UUID caseId = UUID.randomUUID();
         Instant now = Instant.now().truncatedTo(ChronoUnit.MILLIS);
 
-        seedMergeDecision(caseId, REPO, 49, "APPROVED", now);
+        seedMergeDecision(caseId, REPO, 4207, "APPROVED", now);
 
         IncidentFeedback feedback = new IncidentFeedback(
-                REPO, 49, "INC-400-2", IncidentSeverity.MEDIUM,
+                REPO, 4207, "INC-400-2", IncidentSeverity.MEDIUM,
                 "Non-review", "ci-runner", null);
 
         assertThatThrownBy(() -> service.recordFeedback(feedback))
@@ -231,12 +231,12 @@ class IncidentFeedbackServiceTest {
         UUID caseId = UUID.randomUUID();
         Instant now = Instant.now().truncatedTo(ChronoUnit.MILLIS);
 
-        seedMergeDecision(caseId, REPO, 50, "APPROVED", now);
+        seedMergeDecision(caseId, REPO, 4208, "APPROVED", now);
         seedWorkerDecision(caseId, "claude:analyst@v1",
                 ReviewDomain.SECURITY_REVIEW, now.plusMillis(100));
 
         IncidentFeedback feedback = new IncidentFeedback(
-                REPO, 50, "INC-IDEM", IncidentSeverity.HIGH,
+                REPO, 4208, "INC-IDEM", IncidentSeverity.HIGH,
                 "Idempotent", ReviewDomain.SECURITY_REVIEW, null);
 
         IncidentFeedbackResult result1 = service.recordFeedback(feedback);
@@ -254,15 +254,15 @@ class IncidentFeedbackServiceTest {
         UUID caseId = UUID.randomUUID();
         Instant now = Instant.now().truncatedTo(ChronoUnit.MILLIS);
 
-        seedMergeDecision(caseId, REPO, 51, "APPROVED", now);
+        seedMergeDecision(caseId, REPO, 4209, "APPROVED", now);
         UUID wdeId = seedWorkerDecision(caseId, "claude:analyst@v1",
                 ReviewDomain.SECURITY_REVIEW, now.plusMillis(100));
 
         IncidentFeedback feedback1 = new IncidentFeedback(
-                REPO, 51, "INC-ONE", IncidentSeverity.HIGH,
+                REPO, 4209, "INC-ONE", IncidentSeverity.HIGH,
                 "First incident", ReviewDomain.SECURITY_REVIEW, null);
         IncidentFeedback feedback2 = new IncidentFeedback(
-                REPO, 51, "INC-TWO", IncidentSeverity.CRITICAL,
+                REPO, 4209, "INC-TWO", IncidentSeverity.CRITICAL,
                 "Second incident", ReviewDomain.SECURITY_REVIEW, null);
 
         IncidentFeedbackResult result1 = service.recordFeedback(feedback1);
@@ -278,7 +278,7 @@ class IncidentFeedbackServiceTest {
     @Test
     void eachSeverity_correctConfidence() {
         IncidentSeverity[] severities = IncidentSeverity.values();
-        int prBase = 100;
+        int prBase = 4210;
 
         for (int i = 0; i < severities.length; i++) {
             UUID caseId = UUID.randomUUID();
@@ -314,7 +314,7 @@ class IncidentFeedbackServiceTest {
         UUID caseId = UUID.randomUUID();
         Instant now = Instant.now().truncatedTo(ChronoUnit.MILLIS);
 
-        seedMergeDecision(caseId, REPO, 60, "APPROVED", now);
+        seedMergeDecision(caseId, REPO, 4220, "APPROVED", now);
         seedWorkerDecision(caseId, "claude:analyst@v1", ReviewDomain.CODE_ANALYSIS, now.plusMillis(100));
 
         given()
@@ -322,7 +322,7 @@ class IncidentFeedbackServiceTest {
             .body("""
                 {
                   "repository": "casehubio/devtown",
-                  "prNumber": 60,
+                  "prNumber": 4220,
                   "incidentId": "INC-REST-1",
                   "severity": "HIGH",
                   "description": "REST test",

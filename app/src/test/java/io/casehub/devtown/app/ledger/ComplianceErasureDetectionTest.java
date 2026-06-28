@@ -16,10 +16,14 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Optional;
 import java.util.UUID;
+import org.junit.jupiter.api.MethodOrderer;
+import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestMethodOrder;
 
 @QuarkusTest
 @TestProfile(TokenisationEnabledTestProfile.class)
+@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 class ComplianceErasureDetectionTest {
 
     @Inject CodeReviewComplianceService complianceService;
@@ -28,6 +32,7 @@ class ComplianceErasureDetectionTest {
     @Inject CurrentPrincipal principal;
 
     @Test
+    @Order(2)
     void gdprRequirement_detectsErasedActor() {
         final UUID caseId = UUID.randomUUID();
         final String tenancyId = principal.tenancyId();
@@ -59,6 +64,7 @@ class ComplianceErasureDetectionTest {
     }
 
     @Test
+    @Order(1)
     void gdprRequirement_noErasure_showsFalse() {
         final UUID caseId = UUID.randomUUID();
         final String tenancyId = principal.tenancyId();

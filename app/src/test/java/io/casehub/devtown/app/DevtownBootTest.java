@@ -19,6 +19,6 @@ class DevtownBootTest {
     @Test
     void capabilityRegistryIsDiscoverableViaCdi() {
         assertThat(capabilityRegistry).isNotNull();
-        assertThat(capabilityRegistry.capabilities()).hasSize(10);
+        assertThat(capabilityRegistry.capabilities()).hasSize(14);
     }
 }

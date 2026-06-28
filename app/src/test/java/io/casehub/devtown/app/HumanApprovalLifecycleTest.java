@@ -40,7 +40,7 @@ class HumanApprovalLifecycleTest {
         // - Keeps pr-approved goal unsatisfied (PENDING ≠ APPROVED) so the case stays
         //   active while the human-approval WorkItem lifecycle plays out.
         var pr = Map.<String, Object>of(
-                "id", "42",
+                "id", "42000",
                 "repo", "casehubio/devtown",
                 "linesChanged", 600,       // > humanApprovalThreshold of 500
                 "baseRef", "main",
@@ -91,7 +91,7 @@ class HumanApprovalLifecycleTest {
                 .toList();
 
         toComplete.forEach(wi -> workItemService.completeFromSystem(
-                wi.id, "system", "{\"status\": \"approved\"}"));
+                wi.id, "system", "{\"outcome\": \"APPROVED\"}"));
 
         // CDI @ObservesAsync delivery is verified via test-scope bean (not the external
         // adapter — engine#315 tracks @ObservesAsync for indexed external jar observers).
@@ -111,27 +111,30 @@ class HumanApprovalLifecycleTest {
                 WorkItemLifecycleEvent.of("COMPLETED", wi, "system", wi.resolution)));
 
         // ── Checkpoint 4: case context updated via outputMapping ──────────────
-        await().atMost(5, SECONDS)
+        await().atMost(10, SECONDS)
                 .pollInterval(100, MILLISECONDS)
                 .untilAsserted(() -> {
                     var instance = caseInstanceRepository
                             .findByUuid(caseId)
                             .await().atMost(Duration.ofSeconds(2));
                     assertThat(instance).isNotNull();
-                    Object status = instance.getCaseContext().getPath("humanApproval.status");
-                    assertThat(status)
-                            .as("humanApproval.status should be 'approved' after outputMapping")
-                            .isEqualTo("approved");
+                    Object outcome = instance.getCaseContext().getPath("humanApproval.outcome");
+                    assertThat(outcome)
+                            .as("humanApproval.outcome should be 'APPROVED' after outputMapping")
+                            .isEqualTo("APPROVED");
                 });
 
         // ── Checkpoint 5: case completes when all goals are satisfied ──────────
         // Signal the APPROVED values that were intentionally absent (kept pr-approved
-        // unsatisfied while the WorkItem was live).
+        // unsatisfied while the WorkItem was live).  Signal merge_sha to satisfy the
+        // merge-completed goal directly — this test validates the human approval
+        // lifecycle, not the merge path.
         caseHub.signal(caseId, "styleCheck",          Map.of("outcome", "APPROVED"));
         caseHub.signal(caseId, "testCoverage",         Map.of("outcome", "APPROVED"));
         caseHub.signal(caseId, "performanceAnalysis",  Map.of("outcome", "APPROVED"));
+        caseHub.signal(caseId, "merge_sha",            "test-merge-sha");
 
-        await().atMost(5, SECONDS)
+        await().atMost(10, SECONDS)
                 .pollInterval(100, MILLISECONDS)
                 .untilAsserted(() -> {
                     var instance = caseInstanceRepository

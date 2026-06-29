@@ -1,6 +1,6 @@
 package io.casehub.devtown.app.spi;
 
-import io.casehub.work.api.WorkloadProvider;
+import io.casehub.work.api.spi.WorkloadProvider;
 import jakarta.enterprise.context.ApplicationScoped;
 
 /**

@@ -2,7 +2,7 @@ package io.casehub.devtown.domain.sla;
 
 import io.casehub.work.api.BreachDecision;
 import io.casehub.work.api.SlaBreachContext;
-import io.casehub.work.api.SlaBreachPolicy;
+import io.casehub.work.api.spi.SlaBreachPolicy;
 import java.time.Duration;
 
 public class DefaultSlaBreachPolicy implements SlaBreachPolicy {

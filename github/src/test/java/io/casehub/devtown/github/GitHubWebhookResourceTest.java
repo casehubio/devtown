@@ -1,5 +1,7 @@
 package io.casehub.devtown.github;
 
+import io.casehub.devtown.merge.AdmissionResult;
+import io.casehub.devtown.merge.MergeQueueAdmissionPort;
 import io.casehub.devtown.review.LifecycleResult;
 import io.casehub.devtown.review.PrPayload;
 import io.casehub.devtown.review.PrReviewApplicationService;
@@ -17,6 +19,7 @@ class GitHubWebhookResourceTest {
 
     private static final String SECRET = "test-secret";
     private RecordingService service;
+    private RecordingAdmissionPort admissionPort;
     private GitHubWebhookResource resource;
 
     static class RecordingService implements PrReviewApplicationService {
@@ -77,11 +80,32 @@ class GitHubWebhookResourceTest {
         }
     }
 
+    static class RecordingAdmissionPort implements MergeQueueAdmissionPort {
+        int lastPrNumber;
+        String lastRepo;
+        String lastHeadSha;
+        String lastAuthor;
+        boolean called;
+        AdmissionResult result = AdmissionResult.ENQUEUED;
+
+        @Override
+        public AdmissionResult admit(int prNumber, String repository, String headSha, String author) {
+            called = true;
+            lastPrNumber = prNumber;
+            lastRepo = repository;
+            lastHeadSha = headSha;
+            lastAuthor = author;
+            return result;
+        }
+    }
+
     @BeforeEach
     void setUp() {
         service = new RecordingService();
+        admissionPort = new RecordingAdmissionPort();
         resource = new GitHubWebhookResource();
         resource.service = service;
+        resource.admissionPort = admissionPort;
         resource.webhookSecret = SECRET;
     }
 
@@ -182,7 +206,7 @@ class GitHubWebhookResourceTest {
 
     @Test
     void unknownAction_returns200Ignored() {
-        String body = prEvent("labeled", false, false);
+        String body = prEvent("review_requested", false, false);
         var response = resource.receive(body, "pull_request", sign(body), "delivery-1");
         assertThat(response.getStatus()).isEqualTo(200);
         assertThat(responseBody(response)).containsEntry("status", "ignored");
@@ -238,6 +262,63 @@ class GitHubWebhookResourceTest {
         var response = resource.receive(body, "check_run", sign(body), "delivery-1");
         assertThat(responseBody(response)).containsEntry("status", "ignored");
         assertThat(service.lastCheckRunName).isNull();
+    }
+
+    @Test
+    void labeled_mergeReady_callsAdmit() {
+        String body = labeledEvent("merge-ready", false);
+        var response = resource.receive(body, "pull_request", sign(body), "delivery-1");
+        assertThat(response.getStatus()).isEqualTo(200);
+        assertThat(responseBody(response)).containsEntry("action", "merge-queue-enqueued");
+        assertThat(admissionPort.called).isTrue();
+        assertThat(admissionPort.lastPrNumber).isEqualTo(42);
+        assertThat(admissionPort.lastRepo).isEqualTo("casehubio/devtown");
+        assertThat(admissionPort.lastHeadSha).isEqualTo("abc");
+        assertThat(admissionPort.lastAuthor).isEqualTo("octocat");
+    }
+
+    @Test
+    void labeled_mergeReady_alreadyQueued_returnsAlreadyQueued() {
+        admissionPort.result = AdmissionResult.ALREADY_QUEUED;
+        String body = labeledEvent("merge-ready", false);
+        var response = resource.receive(body, "pull_request", sign(body), "delivery-1");
+        assertThat(response.getStatus()).isEqualTo(200);
+        assertThat(responseBody(response)).containsEntry("action", "already-queued");
+    }
+
+    @Test
+    void labeled_otherLabel_doesNotCallAdmit() {
+        String body = labeledEvent("bug", false);
+        var response = resource.receive(body, "pull_request", sign(body), "delivery-1");
+        assertThat(response.getStatus()).isEqualTo(200);
+        assertThat(responseBody(response)).containsEntry("status", "ignored");
+        assertThat(responseBody(response)).containsEntry("reason", "not-merge-ready");
+        assertThat(admissionPort.called).isFalse();
+    }
+
+    @Test
+    void labeled_nullLabel_doesNotCallAdmit() {
+        String body = labeledEvent(null, false);
+        var response = resource.receive(body, "pull_request", sign(body), "delivery-1");
+        assertThat(response.getStatus()).isEqualTo(200);
+        assertThat(responseBody(response)).containsEntry("status", "ignored");
+        assertThat(admissionPort.called).isFalse();
+    }
+
+    @Test
+    void labeled_draft_doesNotCallAdmit() {
+        String body = labeledEvent("merge-ready", true);
+        var response = resource.receive(body, "pull_request", sign(body), "delivery-1");
+        assertThat(response.getStatus()).isEqualTo(200);
+        assertThat(responseBody(response)).containsEntry("reason", "draft");
+        assertThat(admissionPort.called).isFalse();
+    }
+
+    private String labeledEvent(String labelName, boolean draft) {
+        String labelField = labelName != null
+            ? ",\"label\":{\"name\":\"%s\"}".formatted(labelName)
+            : "";
+        return "{\"action\":\"labeled\",\"number\":42,\"pull_request\":{\"head\":{\"sha\":\"abc\"},\"base\":{\"ref\":\"main\"},\"user\":{\"login\":\"octocat\"},\"draft\":%s,\"merged\":false,\"additions\":10,\"deletions\":5,\"changed_files\":1},\"repository\":{\"full_name\":\"casehubio/devtown\"}%s}".formatted(draft, labelField);
     }
 
     private String prEvent(String action, boolean draft, boolean merged) {

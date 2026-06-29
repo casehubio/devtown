@@ -98,4 +98,19 @@ class GitHubPullRequestEventTest {
         var event = MAPPER.readValue(draft, GitHubPullRequestEvent.class);
         assertThat(event.pull_request().draft()).isTrue();
     }
+
+    @Test
+    void parsesLabeledEvent() throws Exception {
+        String json = "{\"action\":\"labeled\",\"number\":42,\"label\":{\"name\":\"merge-ready\"},\"pull_request\":{\"head\":{\"sha\":\"abc\"},\"base\":{\"ref\":\"main\"},\"user\":{\"login\":\"octocat\"},\"draft\":false,\"merged\":false,\"additions\":10,\"deletions\":5,\"changed_files\":1},\"repository\":{\"full_name\":\"casehubio/devtown\"}}";
+        var event = MAPPER.readValue(json, GitHubPullRequestEvent.class);
+        assertThat(event.label()).isNotNull();
+        assertThat(event.label().name()).isEqualTo("merge-ready");
+    }
+
+    @Test
+    void parsesOpenedEvent_labelIsNull() throws Exception {
+        String json = "{\"action\":\"opened\",\"number\":42,\"pull_request\":{\"head\":{\"sha\":\"abc\"},\"base\":{\"ref\":\"main\"},\"user\":{\"login\":\"octocat\"},\"draft\":false,\"merged\":false,\"additions\":10,\"deletions\":5,\"changed_files\":1},\"repository\":{\"full_name\":\"casehubio/devtown\"}}";
+        var event = MAPPER.readValue(json, GitHubPullRequestEvent.class);
+        assertThat(event.label()).isNull();
+    }
 }

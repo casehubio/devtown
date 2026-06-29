@@ -13,7 +13,8 @@ class GitHubPayloadMapperTest {
             new GitHubPullRequestEvent.PullRequest.User("octocat"),
             false, false, 100, 50, 5
         ),
-        new GitHubPullRequestEvent.Repository("casehubio/devtown")
+        new GitHubPullRequestEvent.Repository("casehubio/devtown"),
+        null
     );
 
     @Test

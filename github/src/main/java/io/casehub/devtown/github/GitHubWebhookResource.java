@@ -1,6 +1,7 @@
 package io.casehub.devtown.github;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.casehub.devtown.merge.MergeQueueAdmissionPort;
 import io.casehub.devtown.review.LifecycleResult;
 import io.casehub.devtown.review.PrReviewApplicationService;
 import jakarta.annotation.security.PermitAll;
@@ -28,6 +29,9 @@ public class GitHubWebhookResource {
 
     @Inject
     PrReviewApplicationService service;
+
+    @Inject
+    MergeQueueAdmissionPort admissionPort;
 
     @ConfigProperty(name = "devtown.github.webhook-secret", defaultValue = "")
     String webhookSecret;
@@ -68,6 +72,7 @@ public class GitHubWebhookResource {
             case "synchronize" -> handleSynchronize(event);
             case "closed" -> handleClosed(event);
             case "reopened" -> handleReopened(event);
+            case "labeled" -> handleLabeled(event);
             default -> ok(Map.of("status", "ignored", "action", event.action()));
         };
     }
@@ -104,6 +109,29 @@ public class GitHubWebhookResource {
     private Response handleReopened(GitHubPullRequestEvent event) {
         service.startReview(GitHubPayloadMapper.toPrPayload(event));
         return ok(Map.of("status", "accepted", "action", "case-started"));
+    }
+
+    private Response handleLabeled(GitHubPullRequestEvent event) {
+        if (event.label() == null || !"merge-ready".equals(event.label().name())) {
+            return ok(Map.of("status", "ignored", "action", "labeled",
+                             "reason", "not-merge-ready"));
+        }
+        if (event.pull_request().draft()) {
+            return ok(Map.of("status", "ignored", "reason", "draft"));
+        }
+
+        var result = admissionPort.admit(
+            event.number(),
+            event.repository().full_name(),
+            event.pull_request().head().sha(),
+            event.pull_request().user().login()
+        );
+
+        String action = switch (result) {
+            case ENQUEUED -> "merge-queue-enqueued";
+            case ALREADY_QUEUED -> "already-queued";
+        };
+        return ok(Map.of("status", "accepted", "action", action));
     }
 
     private Response handleCheckSuite(String body) throws Exception {

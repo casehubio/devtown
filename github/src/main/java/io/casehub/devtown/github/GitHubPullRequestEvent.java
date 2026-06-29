@@ -7,7 +7,8 @@ public record GitHubPullRequestEvent(
     String action,
     int number,
     PullRequest pull_request,
-    Repository repository
+    Repository repository,
+    Label label
 ) {
     @JsonIgnoreProperties(ignoreUnknown = true)
     public record PullRequest(
@@ -24,4 +25,6 @@ public record GitHubPullRequestEvent(
     }
     @JsonIgnoreProperties(ignoreUnknown = true)
     public record Repository(String full_name) {}
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    public record Label(String name) {}
 }

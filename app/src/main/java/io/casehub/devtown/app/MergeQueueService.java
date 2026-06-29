@@ -2,7 +2,9 @@ package io.casehub.devtown.app;
 
 import io.casehub.devtown.domain.queue.MergeQueuePreferenceKeys;
 import io.casehub.devtown.domain.queue.PriorityLane;
+import io.casehub.devtown.merge.AdmissionResult;
 import io.casehub.devtown.merge.BatchRecord;
+import io.casehub.devtown.merge.MergeQueueAdmissionPort;
 import io.casehub.devtown.merge.MergeQueueStore;
 import io.casehub.devtown.merge.QueueEntry;
 import io.casehub.devtown.merge.QueueEntryStatus;
@@ -42,7 +44,7 @@ import org.jboss.logging.Logger;
  * A batch never mixes PRs from different repositories.
  */
 @ApplicationScoped
-public class MergeQueueService {
+public class MergeQueueService implements MergeQueueAdmissionPort {
 
     private static final Logger LOG = Logger.getLogger(MergeQueueService.class);
 
@@ -62,6 +64,21 @@ public class MergeQueueService {
     Instance<WorkItemService> workItemServiceInstance;
 
     // ── Public API ──────────────────────────────────────────────────────────
+
+    /**
+     * Hexagonal port implementation: minimal admission with neutral defaults.
+     *
+     * <p>Neutral defaults: trust=0.5, lane=NORMAL, capabilities=empty,
+     * enqueued_at=now. The webhook boundary provides only prNumber, repository,
+     * headSha, and author.
+     */
+    @Override
+    public AdmissionResult admit(int prNumber, String repository, String headSha, String author) {
+        QueuedPr pr = new QueuedPr(prNumber, repository, headSha, author,
+            0.5, PriorityLane.NORMAL, Instant.now(), Set.of());
+        boolean inserted = enqueue(pr);
+        return inserted ? AdmissionResult.ENQUEUED : AdmissionResult.ALREADY_QUEUED;
+    }
 
     /**
      * Enqueue a PR: resolve preferences, create WorkItem (if available),

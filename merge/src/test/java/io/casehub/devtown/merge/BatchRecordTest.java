@@ -23,7 +23,9 @@ class BatchRecordTest {
             caseId,
             prNumbers,
             repository,
-            dispatchedAt
+            dispatchedAt,
+            null,
+            null
         );
 
         assertThat(record.batchId()).isEqualTo(batchId);
@@ -40,9 +42,25 @@ class BatchRecordTest {
             UUID.randomUUID(),
             List.of(),
             "casehubio/test",
-            Instant.now()
+            Instant.now(),
+            null,
+            null
         );
 
         assertThat(record.prNumbers()).isEmpty();
+    }
+
+    @Test
+    void isActive_returnsTrue_whenCompletedAtNull() {
+        BatchRecord record = new BatchRecord(
+            "batch-1", UUID.randomUUID(), List.of(1), "repo", Instant.now(), null, null);
+        assertThat(record.isActive()).isTrue();
+    }
+
+    @Test
+    void isActive_returnsFalse_whenCompletedAtSet() {
+        BatchRecord record = new BatchRecord(
+            "batch-1", UUID.randomUUID(), List.of(1), "repo", Instant.now(), Instant.now(), true);
+        assertThat(record.isActive()).isFalse();
     }
 }

@@ -38,7 +38,7 @@ public class JpaMergeQueueStore implements MergeQueueStore {
 
     @Override
     @Transactional
-    public void enqueue(QueuedPr pr, UUID workItemId) {
+    public boolean enqueue(QueuedPr pr, UUID workItemId) {
         // Idempotent: check for existing entry
         QueuedPrEntity existing = em.find(QueuedPrEntity.class,
             new QueuedPrEntity.QueuedPrId(pr.number(), pr.repository()));
@@ -47,7 +47,7 @@ public class JpaMergeQueueStore implements MergeQueueStore {
             String status = existing.status;
             if ("QUEUED".equals(status) || "IN_BATCH".equals(status)) {
                 // Already queued or in batch, no-op
-                return;
+                return false;
             }
         }
 
@@ -70,6 +70,7 @@ public class JpaMergeQueueStore implements MergeQueueStore {
         } else {
             em.merge(entity);
         }
+        return true;
     }
 
     @Override
@@ -172,7 +173,7 @@ public class JpaMergeQueueStore implements MergeQueueStore {
     @Override
     @Transactional
     public void recordBatch(String batchId, UUID caseId, List<Integer> prNumbers, String repository) {
-        ActiveBatchEntity entity = new ActiveBatchEntity();
+        BatchEntity entity = new BatchEntity();
         entity.batchId = batchId;
         entity.caseId = caseId;
         entity.prNumbers = serializePrNumbers(prNumbers);
@@ -184,9 +185,9 @@ public class JpaMergeQueueStore implements MergeQueueStore {
     @Override
     public Optional<BatchRecord> findBatchByCaseId(UUID caseId) {
         try {
-            ActiveBatchEntity entity = em.createQuery(
-                "SELECT b FROM ActiveBatchEntity b WHERE b.caseId = :caseId",
-                ActiveBatchEntity.class)
+            BatchEntity entity = em.createQuery(
+                "SELECT b FROM BatchEntity b WHERE b.caseId = :caseId",
+                BatchEntity.class)
                 .setParameter("caseId", caseId)
                 .getSingleResult();
             return Optional.of(toBatchRecord(entity));
@@ -209,13 +210,13 @@ public class JpaMergeQueueStore implements MergeQueueStore {
 
     @Override
     public Map<String, BatchRecord> activeBatches() {
-        List<ActiveBatchEntity> entities = em.createQuery(
-            "SELECT b FROM ActiveBatchEntity b",
-            ActiveBatchEntity.class)
+        List<BatchEntity> entities = em.createQuery(
+            "SELECT b FROM BatchEntity b WHERE b.completedAt IS NULL",
+            BatchEntity.class)
             .getResultList();
 
         Map<String, BatchRecord> result = new HashMap<>();
-        for (ActiveBatchEntity entity : entities) {
+        for (BatchEntity entity : entities) {
             result.put(entity.batchId, toBatchRecord(entity));
         }
         return result;
@@ -223,18 +224,27 @@ public class JpaMergeQueueStore implements MergeQueueStore {
 
     @Override
     @Transactional
-    public void deleteBatch(String batchId) {
-        ActiveBatchEntity entity = em.createQuery(
-            "SELECT b FROM ActiveBatchEntity b WHERE b.batchId = :batchId",
-            ActiveBatchEntity.class)
-            .setParameter("batchId", batchId)
-            .getResultStream()
-            .findFirst()
-            .orElse(null);
+    public void completeBatch(String batchId, boolean succeeded) {
+        BatchEntity entity = em.find(BatchEntity.class, batchId);
+        if (entity == null || entity.completedAt != null) return;
+        entity.completedAt = Instant.now();
+        entity.succeeded = succeeded;
+        em.merge(entity);
+    }
 
-        if (entity != null) {
-            em.remove(entity);
-        }
+    @Override
+    public double recentBatchFailureRate(String repository, int window) {
+        List<BatchEntity> recent = em.createQuery(
+            "SELECT b FROM BatchEntity b WHERE b.repository = :repo " +
+            "AND b.completedAt IS NOT NULL ORDER BY b.completedAt DESC",
+            BatchEntity.class)
+            .setParameter("repo", repository)
+            .setMaxResults(window)
+            .getResultList();
+
+        if (recent.isEmpty()) return 0.0;
+        long failed = recent.stream().filter(b -> Boolean.FALSE.equals(b.succeeded)).count();
+        return (double) failed / recent.size();
     }
 
     // ── Converters ─────────────────────────────────────────────────────────
@@ -292,13 +302,15 @@ public class JpaMergeQueueStore implements MergeQueueStore {
         );
     }
 
-    private BatchRecord toBatchRecord(ActiveBatchEntity entity) {
+    private BatchRecord toBatchRecord(BatchEntity entity) {
         return new BatchRecord(
             entity.batchId,
             entity.caseId,
             deserializePrNumbers(entity.prNumbers),
             entity.repository,
-            entity.dispatchedAt
+            entity.dispatchedAt,
+            entity.completedAt,
+            entity.succeeded
         );
     }
 

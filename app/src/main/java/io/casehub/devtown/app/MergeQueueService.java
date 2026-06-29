@@ -68,8 +68,10 @@ public class MergeQueueService {
      * persist queue entry, trigger batch formation.
      *
      * <p>Idempotent: duplicate enqueue for same (prNumber, repository) is silently ignored.
+     *
+     * @return true if a new entry was created; false if already queued (no-op)
      */
-    public void enqueue(QueuedPr pr) {
+    public boolean enqueue(QueuedPr pr) {
         UUID workItemId = null;
 
         if (workItemServiceInstance.isResolvable()) {
@@ -94,11 +96,13 @@ public class MergeQueueService {
                 workItemId, pr.repository(), pr.number(), slaDuration);
         }
 
-        store.enqueue(pr, workItemId);
+        boolean inserted = store.enqueue(pr, workItemId);
         LOG.infof("Enqueued PR #%d from %s (trust=%.2f, lane=%s)",
             pr.number(), pr.repository(), pr.trustScore(), pr.lane());
-
-        formAndDispatchBatches();
+        if (inserted) {
+            formAndDispatchBatches();
+        }
+        return inserted;
     }
 
     /**
@@ -183,6 +187,11 @@ public class MergeQueueService {
         }
 
         BatchRecord batch = batchOpt.get();
+        if (!batch.isActive()) {
+            LOG.debugf("Batch %s already completed — idempotent no-op", batch.batchId());
+            return;
+        }
+
         List<QueueEntry> entries = store.findEntriesByBatchId(batch.batchId());
 
         for (QueueEntry entry : entries) {
@@ -211,7 +220,7 @@ public class MergeQueueService {
         LOG.infof("Batch %s completed (case %s): %d entries processed, succeeded=%s, rejected=%s",
             batch.batchId(), caseId, entries.size(), batchSucceeded, rejectedPrNumbers);
 
-        store.deleteBatch(batch.batchId());
+        store.completeBatch(batch.batchId(), batchSucceeded);
     }
 
     /**
@@ -284,6 +293,7 @@ public class MergeQueueService {
         double decayRatePerHour = (double) prefs.getOrDefault(MergeQueuePreferenceKeys.DECAY_RATE_PER_HOUR).value();
         String targetBranch = prefs.getOrDefault(MergeQueuePreferenceKeys.TARGET_BRANCH).value();
         String bisectionStrategy = prefs.getOrDefault(MergeQueuePreferenceKeys.BISECTION_STRATEGY).value();
+        int failureRateWindow = prefs.getOrDefault(MergeQueuePreferenceKeys.FAILURE_RATE_WINDOW).value();
 
         // Group by repository
         Map<String, List<QueueEntry>> byRepo = queued.stream()
@@ -313,7 +323,7 @@ public class MergeQueueService {
                 maxBatchSize,
                 minBatchSize,
                 decayRatePerHour,
-                0.0,  // recentFailureRate — wired in devtown#103
+                store.recentBatchFailureRate(repository, failureRateWindow),
                 repository,
                 targetBranch,
                 "ROUTINE",

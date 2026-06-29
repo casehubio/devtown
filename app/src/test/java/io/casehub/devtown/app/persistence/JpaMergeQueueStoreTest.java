@@ -348,4 +348,124 @@ class JpaMergeQueueStoreTest {
         assertThat(queued).hasSize(1);
         assertThat(queued.get(0).pr().dependsOn()).containsExactlyInAnyOrder(100, 101);
     }
+
+    @Test
+    @Transactional
+    void completeBatch_setsOutcome() {
+        UUID caseId = UUID.randomUUID();
+        store.recordBatch("batch-complete-1", caseId, List.of(200), "casehubio/devtown");
+
+        store.completeBatch("batch-complete-1", true);
+
+        Optional<BatchRecord> found = store.findBatchByCaseId(caseId);
+        assertThat(found).isPresent();
+        assertThat(found.get().completedAt()).isNotNull();
+        assertThat(found.get().succeeded()).isTrue();
+        assertThat(found.get().isActive()).isFalse();
+    }
+
+    @Test
+    @Transactional
+    void completeBatch_idempotent_preservesOriginalValues() {
+        UUID caseId = UUID.randomUUID();
+        store.recordBatch("batch-complete-2", caseId, List.of(201), "casehubio/devtown");
+        store.completeBatch("batch-complete-2", true);
+
+        Instant firstCompletedAt = store.findBatchByCaseId(caseId).get().completedAt();
+
+        store.completeBatch("batch-complete-2", false);
+
+        BatchRecord after = store.findBatchByCaseId(caseId).get();
+        assertThat(after.completedAt()).isEqualTo(firstCompletedAt);
+        assertThat(after.succeeded()).isTrue();
+    }
+
+    @Test
+    @Transactional
+    void activeBatches_excludesCompleted() {
+        store.recordBatch("batch-active", UUID.randomUUID(), List.of(202), "casehubio/devtown");
+        store.recordBatch("batch-done", UUID.randomUUID(), List.of(203), "casehubio/devtown");
+        store.completeBatch("batch-done", true);
+
+        Map<String, BatchRecord> active = store.activeBatches();
+        assertThat(active).hasSize(1);
+        assertThat(active).containsKey("batch-active");
+    }
+
+    @Test
+    @Transactional
+    void findBatchByCaseId_returnsCompletedBatch() {
+        UUID caseId = UUID.randomUUID();
+        store.recordBatch("batch-find-completed", caseId, List.of(204), "casehubio/devtown");
+        store.completeBatch("batch-find-completed", false);
+
+        Optional<BatchRecord> found = store.findBatchByCaseId(caseId);
+        assertThat(found).isPresent();
+        assertThat(found.get().succeeded()).isFalse();
+    }
+
+    @Test
+    @Transactional
+    void recentBatchFailureRate_returnsZero_withNoHistory() {
+        double rate = store.recentBatchFailureRate("casehubio/devtown", 20);
+        assertThat(rate).isEqualTo(0.0);
+    }
+
+    @Test
+    @Transactional
+    void recentBatchFailureRate_computesCorrectly() {
+        for (int i = 0; i < 5; i++) {
+            store.recordBatch("batch-rate-" + i, UUID.randomUUID(), List.of(300 + i), "casehubio/devtown");
+            store.completeBatch("batch-rate-" + i, i < 3);
+        }
+
+        double rate = store.recentBatchFailureRate("casehubio/devtown", 20);
+        assertThat(rate).isCloseTo(0.4, org.assertj.core.data.Offset.offset(0.001));
+    }
+
+    @Test
+    @Transactional
+    void recentBatchFailureRate_respectsWindow() {
+        for (int i = 0; i < 10; i++) {
+            store.recordBatch("batch-window-" + i, UUID.randomUUID(), List.of(400 + i), "casehubio/devtown");
+            store.completeBatch("batch-window-" + i, i < 8);
+        }
+
+        double rateAll = store.recentBatchFailureRate("casehubio/devtown", 20);
+        double rateWindow5 = store.recentBatchFailureRate("casehubio/devtown", 5);
+        assertThat(rateAll).isCloseTo(0.2, org.assertj.core.data.Offset.offset(0.001));
+        assertThat(rateWindow5).isCloseTo(0.4, org.assertj.core.data.Offset.offset(0.001));
+    }
+
+    @Test
+    @Transactional
+    void recentBatchFailureRate_isPerRepository() {
+        store.recordBatch("batch-repoA", UUID.randomUUID(), List.of(500), "casehubio/devtown");
+        store.completeBatch("batch-repoA", false);
+
+        store.recordBatch("batch-repoB", UUID.randomUUID(), List.of(501), "casehubio/engine");
+        store.completeBatch("batch-repoB", true);
+
+        assertThat(store.recentBatchFailureRate("casehubio/devtown", 20)).isEqualTo(1.0);
+        assertThat(store.recentBatchFailureRate("casehubio/engine", 20)).isEqualTo(0.0);
+    }
+
+    @Test
+    @Transactional
+    void enqueue_returnsTrue_whenNewEntry() {
+        QueuedPr pr = new QueuedPr(600, "casehubio/devtown", "abc", "author", 0.5,
+            PriorityLane.NORMAL, Instant.now(), Set.of());
+        boolean result = store.enqueue(pr, UUID.randomUUID());
+        assertThat(result).isTrue();
+    }
+
+    @Test
+    @Transactional
+    void enqueue_returnsFalse_whenDuplicate() {
+        QueuedPr pr = new QueuedPr(601, "casehubio/devtown", "abc", "author", 0.5,
+            PriorityLane.NORMAL, Instant.now(), Set.of());
+        store.enqueue(pr, UUID.randomUUID());
+        boolean result = store.enqueue(pr, UUID.randomUUID());
+        assertThat(result).isFalse();
+    }
 }

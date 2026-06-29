@@ -23,12 +23,13 @@ public interface MergeQueueStore {
      * Enqueue a PR with its associated SLA WorkItem ID.
      *
      * <p>Idempotent: if an entry for {@code (pr.number(), pr.repository())} already exists
-     * in state {@code QUEUED} or {@code IN_BATCH}, this is a no-op.
+     * in state {@code QUEUED} or {@code IN_BATCH}, this is a no-op and returns {@code false}.
      *
      * @param pr the PR to enqueue
      * @param workItemId the SLA WorkItem tracking queue wait time
+     * @return true if a new entry was created; false if already queued (no-op)
      */
-    void enqueue(QueuedPr pr, UUID workItemId);
+    boolean enqueue(QueuedPr pr, UUID workItemId);
 
     /**
      * Remove a PR from the queue (sets status to DEQUEUED).
@@ -129,9 +130,19 @@ public interface MergeQueueStore {
     Map<String, BatchRecord> activeBatches();
 
     /**
-     * Delete a batch record after completion.
+     * Mark a batch as completed.
      *
      * @param batchId batch identifier
+     * @param succeeded true if batch succeeded (all PRs merged), false if failed
      */
-    void deleteBatch(String batchId);
+    void completeBatch(String batchId, boolean succeeded);
+
+    /**
+     * Compute the failure rate of recent batches for a repository.
+     *
+     * @param repository repository name
+     * @param window maximum number of recent completed batches to consider
+     * @return failure rate [0.0, 1.0]; 0.0 if no completed batches exist
+     */
+    double recentBatchFailureRate(String repository, int window);
 }

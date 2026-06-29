@@ -47,7 +47,7 @@ class MergeQueueMultiRepoBatchTest {
     void cleanAll() {
         // Clean ALL entries and batches — not just QUEUED — to avoid cross-test contamination
         em.createQuery("DELETE FROM QueuedPrEntity").executeUpdate();
-        em.createQuery("DELETE FROM ActiveBatchEntity").executeUpdate();
+        em.createQuery("DELETE FROM BatchEntity").executeUpdate();
     }
 
     @Test

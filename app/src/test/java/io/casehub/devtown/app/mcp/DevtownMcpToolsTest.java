@@ -487,7 +487,7 @@ class DevtownMcpToolsTest {
         QueuedPr pr = new QueuedPr(101, "casehubio/devtown", "sha1", "alice", 0.85, PriorityLane.HIGH, enqueued, java.util.Set.of());
 
         UUID batchCaseId = UUID.randomUUID();
-        BatchRecord batchRecord = new BatchRecord("batch-1", batchCaseId, List.of(101), "casehubio/devtown", Instant.now());
+        BatchRecord batchRecord = new BatchRecord("batch-1", batchCaseId, List.of(101), "casehubio/devtown", Instant.now(), null, null);
 
         when(mergeQueueService.queuedPrs()).thenReturn(List.of(pr));
         when(mergeQueueService.activeBatches()).thenReturn(Map.of("batch-1", batchRecord));
@@ -517,7 +517,7 @@ class DevtownMcpToolsTest {
     @Test
     void getBatchStatus_knownBatch_returnsDetail() {
         UUID batchCaseId = UUID.randomUUID();
-        BatchRecord batchRecord = new BatchRecord("batch-2", batchCaseId, List.of(10, 11), "casehubio/devtown", Instant.now());
+        BatchRecord batchRecord = new BatchRecord("batch-2", batchCaseId, List.of(10, 11), "casehubio/devtown", Instant.now(), null, null);
 
         when(mergeQueueService.activeBatches()).thenReturn(Map.of("batch-2", batchRecord));
 

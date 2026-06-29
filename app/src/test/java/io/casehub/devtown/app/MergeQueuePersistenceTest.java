@@ -47,7 +47,7 @@ class MergeQueuePersistenceTest {
     @Transactional
     void cleanAll() {
         em.createQuery("DELETE FROM QueuedPrEntity").executeUpdate();
-        em.createQuery("DELETE FROM ActiveBatchEntity").executeUpdate();
+        em.createQuery("DELETE FROM BatchEntity").executeUpdate();
     }
 
     @Test

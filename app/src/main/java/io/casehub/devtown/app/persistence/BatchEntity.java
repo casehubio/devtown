@@ -9,15 +9,16 @@ import java.time.Instant;
 import java.util.UUID;
 
 /**
- * JPA entity for active batch metadata.
+ * JPA entity for batch metadata.
  *
- * <p>Links a batch case ID to the batch's member PR numbers.
+ * <p>Links a batch case ID to the batch's member PR numbers and tracks lifecycle.
  */
 @Entity
 @Table(name = "merge_queue_batch", indexes = {
-    @Index(name = "idx_merge_queue_batch_case_id", columnList = "case_id")
+    @Index(name = "idx_merge_queue_batch_case_id", columnList = "case_id"),
+    @Index(name = "idx_merge_queue_batch_repo_completed", columnList = "repository, completed_at")
 })
-public class ActiveBatchEntity {
+public class BatchEntity {
 
     @Id
     @Column(name = "batch_id", nullable = false, length = 100)
@@ -34,4 +35,10 @@ public class ActiveBatchEntity {
 
     @Column(name = "dispatched_at", nullable = false)
     public Instant dispatchedAt;
+
+    @Column(name = "completed_at")
+    public Instant completedAt;
+
+    @Column(name = "succeeded")
+    public Boolean succeeded;
 }

@@ -2,6 +2,7 @@ package io.casehub.devtown.app.ledger;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.casehub.api.context.CaseContext;
+import io.casehub.devtown.domain.DeterministicUuid;
 import io.casehub.engine.common.internal.model.CaseInstance;
 import io.casehub.engine.common.spi.CrossTenantCaseInstanceRepository;
 import io.casehub.engine.common.spi.event.CaseLifecycleEvent;
@@ -15,7 +16,8 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.event.ObservesAsync;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
-import java.nio.charset.StandardCharsets;
+import org.jboss.logging.Logger;
+
 import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -23,7 +25,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import org.jboss.logging.Logger;
 
 /**
  * Observes terminal {@link CaseLifecycleEvent} transitions and writes a
@@ -189,8 +190,9 @@ public class MergeDecisionObserver {
             int prNumber = n.intValue();
 
             // Derive deterministic subjectId from caseId + prNumber (UUID v5)
-            String nameInput = event.caseId().toString() + ":" + prNumber;
-            java.util.UUID subjectId = java.util.UUID.nameUUIDFromBytes(nameInput.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+            UUID subjectId = DeterministicUuid.v5(
+                    DeterministicUuid.MERGE_DECISION_NS,
+                    event.caseId() + ":" + prNumber);
 
             MergeDecisionLedgerEntry entry = new MergeDecisionLedgerEntry();
             entry.subjectId = subjectId;

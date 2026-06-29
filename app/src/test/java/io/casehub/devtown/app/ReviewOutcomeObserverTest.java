@@ -110,9 +110,9 @@ class ReviewOutcomeObserverTest {
         planItemCompletedEvents.fireAsync(
                 new PlanItemCompletedEvent(caseId, "run-ci", "ci-runner", "test-tenant"));
 
-        // "merge" is another infrastructure binding
+        // "merge-direct" is an infrastructure binding (renamed from "merge" when enqueue-for-merge was added)
         planItemCompletedEvents.fireAsync(
-                new PlanItemCompletedEvent(caseId, "merge", "merge-bot", "test-tenant"));
+                new PlanItemCompletedEvent(caseId, "merge-direct", "merge-bot", "test-tenant"));
 
         // Give enough time for any event to propagate
         Thread.sleep(500);

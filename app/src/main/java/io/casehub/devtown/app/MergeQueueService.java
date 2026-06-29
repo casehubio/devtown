@@ -27,6 +27,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -246,27 +247,21 @@ public class MergeQueueService implements MergeQueueAdmissionPort {
      * @return true if a QUEUED entry was dequeued
      */
     public boolean dequeue(int prNumber, String repository) {
-        // Look up the entry to get its WorkItem ID before dequeuing
-        List<QueueEntry> queued = store.queued();
-        QueueEntry target = queued.stream()
-            .filter(e -> e.pr().number() == prNumber && e.pr().repository().equals(repository))
-            .findFirst()
-            .orElse(null);
+        Optional<QueueEntry> dequeued = store.dequeue(prNumber, repository);
+        if (dequeued.isEmpty()) return false;
 
-        boolean removed = store.dequeue(prNumber, repository);
-
-        if (removed && target != null && target.workItemId() != null
-                && workItemServiceInstance.isResolvable()) {
+        UUID workItemId = dequeued.get().workItemId();
+        if (workItemId != null && workItemServiceInstance.isResolvable()) {
             try {
                 workItemServiceInstance.get().obsoleteFromSystem(
-                    target.workItemId(), "system", "dequeued");
+                    workItemId, "system", "dequeued");
             } catch (Exception e) {
                 LOG.warnf(e, "Failed to obsolete WorkItem %s for dequeued PR #%d",
-                    target.workItemId(), prNumber);
+                    workItemId, prNumber);
             }
         }
 
-        return removed;
+        return true;
     }
 
     // ── Read accessors (delegated to store) ─────────────────────────────────

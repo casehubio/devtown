@@ -75,17 +75,17 @@ public class JpaMergeQueueStore implements MergeQueueStore {
 
     @Override
     @Transactional
-    public boolean dequeue(int prNumber, String repository) {
+    public Optional<QueueEntry> dequeue(int prNumber, String repository) {
         QueuedPrEntity entity = em.find(QueuedPrEntity.class,
             new QueuedPrEntity.QueuedPrId(prNumber, repository));
 
         if (entity == null || !"QUEUED".equals(entity.status)) {
-            return false;
+            return Optional.empty();
         }
 
         entity.status = QueueEntryStatus.DEQUEUED.name();
         em.merge(entity);
-        return true;
+        return Optional.of(toQueueEntry(entity));
     }
 
     @Override

@@ -138,17 +138,18 @@ class JpaMergeQueueStoreTest {
         );
 
         store.enqueue(pr, UUID.randomUUID());
-        boolean dequeued = store.dequeue(103, "casehubio/devtown");
+        Optional<QueueEntry> dequeued = store.dequeue(103, "casehubio/devtown");
 
-        assertThat(dequeued).isTrue();
+        assertThat(dequeued).isPresent();
+        assertThat(dequeued.get().status()).isEqualTo(QueueEntryStatus.DEQUEUED);
         assertThat(store.queued()).isEmpty();
     }
 
     @Test
     @Transactional
     void dequeue_returnsFalse_whenNotQueued() {
-        boolean dequeued = store.dequeue(999, "casehubio/nonexistent");
-        assertThat(dequeued).isFalse();
+        Optional<QueueEntry> dequeued = store.dequeue(999, "casehubio/nonexistent");
+        assertThat(dequeued).isEmpty();
     }
 
     @Test

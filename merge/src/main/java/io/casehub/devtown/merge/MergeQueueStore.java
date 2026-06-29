@@ -36,9 +36,9 @@ public interface MergeQueueStore {
      *
      * @param prNumber PR number
      * @param repository repository name
-     * @return true if a QUEUED entry was dequeued; false if no QUEUED entry exists
+     * @return the dequeued entry if found in QUEUED state; empty if absent or not QUEUED
      */
-    boolean dequeue(int prNumber, String repository);
+    Optional<QueueEntry> dequeue(int prNumber, String repository);
 
     /**
      * Returns all entries in QUEUED status.

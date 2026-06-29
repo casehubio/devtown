@@ -1,4 +1,4 @@
-package io.casehub.devtown.queue;
+package io.casehub.devtown.domain.queue;
 
 public enum PriorityLane {
     NORMAL(1), HIGH(2), CRITICAL(3);

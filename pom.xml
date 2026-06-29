@@ -22,6 +22,7 @@
     <module>domain</module>
     <module>review</module>
     <module>queue</module>
+    <module>merge</module>
     <module>github</module>
     <module>app</module>
   </modules>
@@ -46,6 +47,11 @@
       <dependency>
         <groupId>io.casehub</groupId>
         <artifactId>casehub-devtown-queue</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>io.casehub</groupId>
+        <artifactId>casehub-devtown-merge</artifactId>
         <version>${project.version}</version>
       </dependency>
       <dependency>

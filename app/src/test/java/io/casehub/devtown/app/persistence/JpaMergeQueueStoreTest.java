@@ -1,0 +1,351 @@
+package io.casehub.devtown.app.persistence;
+
+import static org.assertj.core.api.Assertions.assertThat;
+
+import io.casehub.devtown.domain.queue.PriorityLane;
+import io.casehub.devtown.merge.BatchRecord;
+import io.casehub.devtown.merge.MergeQueueStore;
+import io.casehub.devtown.merge.QueueEntry;
+import io.casehub.devtown.merge.QueueEntryStatus;
+import io.casehub.devtown.queue.QueuedPr;
+import io.quarkus.hibernate.orm.PersistenceUnit;
+import io.quarkus.test.junit.QuarkusTest;
+import jakarta.inject.Inject;
+import jakarta.persistence.EntityManager;
+import jakarta.transaction.Transactional;
+import java.time.Instant;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+import java.util.UUID;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
+/**
+ * Integration test for {@link JpaMergeQueueStore}.
+ *
+ * <p>Verifies persistence, idempotence, SELECT FOR UPDATE locking, and batch lifecycle.
+ */
+@QuarkusTest
+class JpaMergeQueueStoreTest {
+
+    @Inject
+    MergeQueueStore store;
+
+    @Inject
+    @PersistenceUnit("qhorus")
+    EntityManager em;
+
+    @BeforeEach
+    @Transactional
+    void setUp() {
+        // Clean tables before each test for isolation
+        em.createNativeQuery("DELETE FROM merge_queue_batch").executeUpdate();
+        em.createNativeQuery("DELETE FROM merge_queue_entry").executeUpdate();
+    }
+
+    @Test
+    @Transactional
+    void enqueue_persistsPr() {
+        QueuedPr pr = new QueuedPr(
+            100,
+            "casehubio/devtown",
+            "abc123",
+            "author1",
+            0.75,
+            PriorityLane.NORMAL,
+            Instant.now(),
+            Set.of()
+        );
+        UUID workItemId = UUID.randomUUID();
+
+        store.enqueue(pr, workItemId);
+
+        List<QueueEntry> queued = store.queued();
+        assertThat(queued).hasSize(1);
+        QueueEntry entry = queued.get(0);
+        assertThat(entry.pr().number()).isEqualTo(100);
+        assertThat(entry.pr().repository()).isEqualTo("casehubio/devtown");
+        assertThat(entry.workItemId()).isEqualTo(workItemId);
+        assertThat(entry.status()).isEqualTo(QueueEntryStatus.QUEUED);
+        assertThat(entry.prioritized()).isFalse();
+        assertThat(entry.batchId()).isNull();
+    }
+
+    @Test
+    @Transactional
+    void enqueue_idempotent_whenQueued() {
+        QueuedPr pr = new QueuedPr(
+            101,
+            "casehubio/devtown",
+            "abc123",
+            "author1",
+            0.75,
+            PriorityLane.NORMAL,
+            Instant.now(),
+            Set.of()
+        );
+        UUID workItemId1 = UUID.randomUUID();
+        UUID workItemId2 = UUID.randomUUID();
+
+        store.enqueue(pr, workItemId1);
+        store.enqueue(pr, workItemId2);  // second enqueue should be no-op
+
+        List<QueueEntry> queued = store.queued();
+        assertThat(queued).hasSize(1);
+        assertThat(queued.get(0).workItemId()).isEqualTo(workItemId1);
+    }
+
+    @Test
+    @Transactional
+    void enqueue_idempotent_whenInBatch() {
+        QueuedPr pr = new QueuedPr(
+            102,
+            "casehubio/devtown",
+            "abc123",
+            "author1",
+            0.75,
+            PriorityLane.NORMAL,
+            Instant.now(),
+            Set.of()
+        );
+        UUID workItemId = UUID.randomUUID();
+
+        store.enqueue(pr, workItemId);
+        store.markInBatch(List.of(102), "casehubio/devtown", "batch-001");
+
+        // Second enqueue should be no-op
+        store.enqueue(pr, UUID.randomUUID());
+
+        List<QueueEntry> entries = store.findEntriesByBatchId("batch-001");
+        assertThat(entries).hasSize(1);
+        assertThat(entries.get(0).workItemId()).isEqualTo(workItemId);
+    }
+
+    @Test
+    @Transactional
+    void dequeue_removesQueuedPr() {
+        QueuedPr pr = new QueuedPr(
+            103,
+            "casehubio/devtown",
+            "abc123",
+            "author1",
+            0.75,
+            PriorityLane.NORMAL,
+            Instant.now(),
+            Set.of()
+        );
+
+        store.enqueue(pr, UUID.randomUUID());
+        boolean dequeued = store.dequeue(103, "casehubio/devtown");
+
+        assertThat(dequeued).isTrue();
+        assertThat(store.queued()).isEmpty();
+    }
+
+    @Test
+    @Transactional
+    void dequeue_returnsFalse_whenNotQueued() {
+        boolean dequeued = store.dequeue(999, "casehubio/nonexistent");
+        assertThat(dequeued).isFalse();
+    }
+
+    @Test
+    @Transactional
+    void markInBatch_updatesStatusAndBatchId() {
+        QueuedPr pr1 = new QueuedPr(
+            104,
+            "casehubio/devtown",
+            "abc123",
+            "author1",
+            0.75,
+            PriorityLane.NORMAL,
+            Instant.now(),
+            Set.of()
+        );
+        QueuedPr pr2 = new QueuedPr(
+            105,
+            "casehubio/devtown",
+            "def456",
+            "author2",
+            0.80,
+            PriorityLane.HIGH,
+            Instant.now(),
+            Set.of()
+        );
+
+        store.enqueue(pr1, UUID.randomUUID());
+        store.enqueue(pr2, UUID.randomUUID());
+
+        store.markInBatch(List.of(104, 105), "casehubio/devtown", "batch-002");
+
+        assertThat(store.queued()).isEmpty();
+
+        List<QueueEntry> batchEntries = store.findEntriesByBatchId("batch-002");
+        assertThat(batchEntries).hasSize(2);
+        assertThat(batchEntries).allMatch(e -> e.status() == QueueEntryStatus.IN_BATCH);
+        assertThat(batchEntries).allMatch(e -> "batch-002".equals(e.batchId()));
+    }
+
+    @Test
+    @Transactional
+    void markCompleted_setsOutcome() {
+        QueuedPr pr = new QueuedPr(
+            106,
+            "casehubio/devtown",
+            "abc123",
+            "author1",
+            0.75,
+            PriorityLane.NORMAL,
+            Instant.now(),
+            Set.of()
+        );
+
+        store.enqueue(pr, UUID.randomUUID());
+        store.markInBatch(List.of(106), "casehubio/devtown", "batch-003");
+        store.markCompleted(106, "casehubio/devtown", "MERGED");
+
+        List<QueueEntry> entries = store.findEntriesByBatchId("batch-003");
+        assertThat(entries).hasSize(1);
+        assertThat(entries.get(0).status()).isEqualTo(QueueEntryStatus.MERGED);
+    }
+
+    @Test
+    @Transactional
+    void markPrioritized_setsFlag() {
+        QueuedPr pr = new QueuedPr(
+            107,
+            "casehubio/devtown",
+            "abc123",
+            "author1",
+            0.75,
+            PriorityLane.NORMAL,
+            Instant.now(),
+            Set.of()
+        );
+
+        store.enqueue(pr, UUID.randomUUID());
+        store.markPrioritized(107, "casehubio/devtown");
+
+        List<QueueEntry> queued = store.queued();
+        assertThat(queued).hasSize(1);
+        assertThat(queued.get(0).prioritized()).isTrue();
+    }
+
+    @Test
+    @Transactional
+    void markQueued_resetsStatusAndBatchId() {
+        QueuedPr pr = new QueuedPr(
+            108,
+            "casehubio/devtown",
+            "abc123",
+            "author1",
+            0.75,
+            PriorityLane.NORMAL,
+            Instant.now(),
+            Set.of()
+        );
+
+        store.enqueue(pr, UUID.randomUUID());
+        store.markInBatch(List.of(108), "casehubio/devtown", "batch-004");
+        store.markQueued(List.of(108), "casehubio/devtown");
+
+        List<QueueEntry> queued = store.queued();
+        assertThat(queued).hasSize(1);
+        assertThat(queued.get(0).status()).isEqualTo(QueueEntryStatus.QUEUED);
+        assertThat(queued.get(0).batchId()).isNull();
+    }
+
+    @Test
+    @Transactional
+    void recordBatch_persistsBatch() {
+        UUID caseId = UUID.randomUUID();
+        List<Integer> prNumbers = List.of(109, 110, 111);
+
+        store.recordBatch("batch-005", caseId, prNumbers, "casehubio/devtown");
+
+        Optional<BatchRecord> found = store.findBatchByCaseId(caseId);
+        assertThat(found).isPresent();
+        BatchRecord batch = found.get();
+        assertThat(batch.batchId()).isEqualTo("batch-005");
+        assertThat(batch.caseId()).isEqualTo(caseId);
+        assertThat(batch.prNumbers()).containsExactly(109, 110, 111);
+        assertThat(batch.repository()).isEqualTo("casehubio/devtown");
+    }
+
+    @Test
+    @Transactional
+    void findBatchByCaseId_returnsEmpty_whenNotFound() {
+        Optional<BatchRecord> found = store.findBatchByCaseId(UUID.randomUUID());
+        assertThat(found).isEmpty();
+    }
+
+    @Test
+    @Transactional
+    void activeBatches_returnsAllBatches() {
+        UUID caseId1 = UUID.randomUUID();
+        UUID caseId2 = UUID.randomUUID();
+
+        store.recordBatch("batch-006", caseId1, List.of(112), "casehubio/devtown");
+        store.recordBatch("batch-007", caseId2, List.of(113, 114), "casehubio/engine");
+
+        Map<String, BatchRecord> active = store.activeBatches();
+        assertThat(active).hasSize(2);
+        assertThat(active).containsKeys("batch-006", "batch-007");
+    }
+
+    @Test
+    @Transactional
+    void queuedForUpdate_returnsQueuedEntries() {
+        QueuedPr pr1 = new QueuedPr(
+            115,
+            "casehubio/devtown",
+            "abc123",
+            "author1",
+            0.75,
+            PriorityLane.NORMAL,
+            Instant.now(),
+            Set.of()
+        );
+        QueuedPr pr2 = new QueuedPr(
+            116,
+            "casehubio/devtown",
+            "def456",
+            "author2",
+            0.80,
+            PriorityLane.HIGH,
+            Instant.now(),
+            Set.of()
+        );
+
+        store.enqueue(pr1, UUID.randomUUID());
+        store.enqueue(pr2, UUID.randomUUID());
+
+        List<QueueEntry> locked = store.queuedForUpdate();
+
+        assertThat(locked).hasSize(2);
+        assertThat(locked).allMatch(e -> e.status() == QueueEntryStatus.QUEUED);
+    }
+
+    @Test
+    @Transactional
+    void dependsOn_roundTrips() {
+        QueuedPr pr = new QueuedPr(
+            117,
+            "casehubio/devtown",
+            "abc123",
+            "author1",
+            0.75,
+            PriorityLane.NORMAL,
+            Instant.now(),
+            Set.of(100, 101)
+        );
+
+        store.enqueue(pr, UUID.randomUUID());
+
+        List<QueueEntry> queued = store.queued();
+        assertThat(queued).hasSize(1);
+        assertThat(queued.get(0).pr().dependsOn()).containsExactlyInAnyOrder(100, 101);
+    }
+}

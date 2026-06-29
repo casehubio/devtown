@@ -3,11 +3,14 @@ package io.casehub.devtown.app;
 import io.casehub.devtown.app.mcp.PrReviewCaseTracker;
 import io.casehub.devtown.domain.CiStatusClient;
 import io.casehub.devtown.domain.CombinedCiStatus;
+import io.casehub.devtown.domain.queue.MergeQueuePreferenceKeys;
 import io.casehub.devtown.review.LifecycleResult;
 import io.casehub.devtown.review.PrPayload;
 import io.casehub.devtown.review.PrReviewApplicationService;
 import io.casehub.devtown.review.PrReviewOutcome;
 import io.casehub.platform.api.identity.CurrentPrincipal;
+import io.casehub.platform.api.preferences.PreferenceProvider;
+import io.casehub.platform.api.preferences.SettingsScope;
 import jakarta.annotation.Priority;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.inject.Alternative;
@@ -42,6 +45,9 @@ public class PrReviewCaseService implements PrReviewApplicationService {
     @Inject
     CiStatusClient ciStatusClient;
 
+    @Inject
+    PreferenceProvider preferenceProvider;
+
     @ConfigProperty(name = "devtown.policy.human-approval-threshold", defaultValue = "500")
     int humanApprovalThreshold;
 
@@ -64,11 +70,17 @@ public class PrReviewCaseService implements PrReviewApplicationService {
 
         var memoryContext = memoryRecaller.recall(pr);
 
+        // Resolve merge queue preference
+        var mergeQueueScope = SettingsScope.of("casehubio", "devtown", "merge-queue");
+        var mergeQueuePrefs = preferenceProvider.resolve(mergeQueueScope);
+        boolean mergeQueueEnabled = mergeQueuePrefs.getOrDefault(MergeQueuePreferenceKeys.ENABLED).value();
+
         // TODO(parent#26): replace @ConfigProperty injection with PreferenceProvider.resolve(scope).asMap()
         var policy = Map.<String, Object>of(
             "humanApprovalThreshold", humanApprovalThreshold,
             "securityReviewRequired", securityReviewRequired,
-            "requireSeniorApproval", requireSeniorApproval
+            "requireSeniorApproval", requireSeniorApproval,
+            "mergeQueueEnabled", mergeQueueEnabled
         );
         var prContext = new LinkedHashMap<String, Object>(Map.of(
             "id", String.valueOf(pr.prNumber()),

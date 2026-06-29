@@ -299,6 +299,7 @@ class MergeQueueBisectionTest {
     static Map<String, Object> prMap(int number, String headSha, String author, double trustScore) {
         var m = new LinkedHashMap<String, Object>();
         m.put("number", number);
+        m.put("repository", "casehubio/devtown");
         m.put("headSha", headSha);
         m.put("author", author);
         m.put("trustScore", trustScore);
@@ -309,6 +310,7 @@ class MergeQueueBisectionTest {
     static Map<String, Object> buildBatchContext(List<Map<String, Object>> prs, String riskLevel) {
         var batchMap = new LinkedHashMap<String, Object>();
         batchMap.put("id", "test-batch-" + UUID.randomUUID().toString().substring(0, 8));
+        batchMap.put("repository", "casehubio/devtown");
         batchMap.put("targetBranch", "main");
         batchMap.put("size", prs.size());
         batchMap.put("riskLevel", riskLevel);

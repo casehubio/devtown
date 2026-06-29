@@ -36,6 +36,21 @@ public class MergeDecisionLedgerEntry extends LedgerEntry {
     @Column(name = "case_id", nullable = false)
     public UUID caseId;
 
+    @Column(name = "batch_id", length = 64)
+    public String batchId;
+
+    @Column(name = "batch_size")
+    public Integer batchSize;
+
+    @Column(name = "bisection_occurred")
+    public Boolean bisectionOccurred;
+
+    @Column(name = "bisection_strategy", length = 30)
+    public String bisectionStrategy;
+
+    @Column(name = "batch_context_json", columnDefinition = "TEXT")
+    public String batchContextJson;
+
     @Override
     protected byte[] domainContentBytes() {
         return String.join("|",
@@ -43,7 +58,11 @@ public class MergeDecisionLedgerEntry extends LedgerEntry {
                 LedgerContentUtils.escapePipe(repository),
                 LedgerContentUtils.escapePipe(commitSha),
                 LedgerContentUtils.escapePipe(decision),
-                caseId != null ? caseId.toString() : ""
+                caseId != null ? caseId.toString() : "",
+                LedgerContentUtils.escapePipe(batchId),
+                batchSize != null ? String.valueOf(batchSize) : "",
+                bisectionOccurred != null ? String.valueOf(bisectionOccurred) : "",
+                LedgerContentUtils.escapePipe(bisectionStrategy)
         ).getBytes(StandardCharsets.UTF_8);
     }
 }

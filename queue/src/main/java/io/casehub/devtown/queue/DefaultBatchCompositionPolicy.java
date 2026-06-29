@@ -42,7 +42,7 @@ public class DefaultBatchCompositionPolicy implements BatchCompositionPolicy {
 
     private Batch buildBatch(List<QueuedPr> prs, BatchFormationContext ctx) {
         String id = "batch-" + ctx.now().getEpochSecond() + "-" + ctx.nextBatchSequence();
-        return new Batch(id, List.copyOf(prs), ctx.targetBranch(),
+        return new Batch(id, List.copyOf(prs), ctx.repository(), ctx.targetBranch(),
                          ctx.riskLevel(), ctx.bisectionStrategy());
     }
 }

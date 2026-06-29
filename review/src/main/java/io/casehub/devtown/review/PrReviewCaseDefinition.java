@@ -59,6 +59,7 @@ public final class PrReviewCaseDefinition {
         var perfAnalysisCap   = cap(ReviewDomain.PERFORMANCE_ANALYSIS, "{ pr: .pr }", "{ performanceAnalysis: { outcome: . } }");
         var ciRunnerCap       = cap(AgentQualification.CI_RUNNER, "{ pr: .pr }", "{ ci: { status: . } }");
         var mergeExecutorCap  = cap(AgentQualification.MERGE_EXECUTOR, "{ pr: .pr }", ".");
+        var mergeQueueEnqueueCap = cap("merge-queue-enqueue", "{ pr: .pr, codeAnalysis: .codeAnalysis }", "{ enqueueResult: . }");
 
         // ── Goals ──
 
@@ -125,7 +126,7 @@ public final class PrReviewCaseDefinition {
         def.getCapabilities().addAll(List.of(
             codeAnalysisCap, securityReviewCap, archReviewCap,
             styleReviewCap, testCoverageCap, perfAnalysisCap,
-            ciRunnerCap, mergeExecutorCap));
+            ciRunnerCap, mergeExecutorCap, mergeQueueEnqueueCap));
 
         def.getGoals().addAll(List.of(prApproved, securityVerified, ciPassing,
             reviewBlocked, reviewRejected, reviewAbandoned, mergeCompleted));
@@ -248,24 +249,53 @@ public final class PrReviewCaseDefinition {
             "ci", false, "pr-reviewers",
             PrReviewCaseDescriptor.FAILURE_POLICIES.get(AgentQualification.CI_RUNNER));
 
-        // ── Merge ──
+        // ── Merge bindings — mutually exclusive based on merge queue enablement ──
 
-        def.getBindings().add(Binding.builder().name("merge").on(trigger)
+        def.getBindings().add(Binding.builder().name("enqueue-for-merge").on(trigger)
             .when(new LambdaExpressionEvaluator(ctx -> {
                 Object linesChanged = ctx.getPath("pr.linesChanged");
                 boolean humanOk =
                     (linesChanged instanceof Number l && l.intValue() <= humanApprovalThreshold) ||
                     "APPROVED".equals(ctx.getPath("humanApproval.outcome"));
-                return (Boolean.FALSE.equals(ctx.getPath("codeAnalysis.securitySensitive")) ||
-                            "APPROVED".equals(ctx.getPath("securityReview.outcome"))) &&
+                return ctx.get("merge_sha") == null &&
+                    ctx.get("enqueueResult") == null &&
+                    !"merged".equals(ctx.getPath("pr.status")) &&
+                    (Boolean.FALSE.equals(ctx.getPath("codeAnalysis.securitySensitive")) ||
+                        "APPROVED".equals(ctx.getPath("securityReview.outcome"))) &&
                     (Boolean.FALSE.equals(ctx.getPath("codeAnalysis.architectureCrossing")) ||
                         "APPROVED".equals(ctx.getPath("architectureReview.outcome"))) &&
                     "APPROVED".equals(ctx.getPath("styleCheck.outcome")) &&
                     "APPROVED".equals(ctx.getPath("testCoverage.outcome")) &&
                     "APPROVED".equals(ctx.getPath("performanceAnalysis.outcome")) &&
                     humanOk &&
-                    "passing".equals(ctx.getPath("ci.status"));
+                    "passing".equals(ctx.getPath("ci.status")) &&
+                    Boolean.TRUE.equals(ctx.getPath("policy.mergeQueueEnabled"));
             }))
+            .conflictResolverStrategy(DEEP_MERGE)
+            .outcomePolicy(new OutcomePolicy(OutcomeAction.FAULT, OutcomeAction.FAULT, OutcomeAction.FAULT, 0))
+            .capability(mergeQueueEnqueueCap).build());
+
+        def.getBindings().add(Binding.builder().name("merge-direct").on(trigger)
+            .when(new LambdaExpressionEvaluator(ctx -> {
+                Object linesChanged = ctx.getPath("pr.linesChanged");
+                boolean humanOk =
+                    (linesChanged instanceof Number l && l.intValue() <= humanApprovalThreshold) ||
+                    "APPROVED".equals(ctx.getPath("humanApproval.outcome"));
+                return ctx.get("merge_sha") == null &&
+                    !"merged".equals(ctx.getPath("pr.status")) &&
+                    (Boolean.FALSE.equals(ctx.getPath("codeAnalysis.securitySensitive")) ||
+                        "APPROVED".equals(ctx.getPath("securityReview.outcome"))) &&
+                    (Boolean.FALSE.equals(ctx.getPath("codeAnalysis.architectureCrossing")) ||
+                        "APPROVED".equals(ctx.getPath("architectureReview.outcome"))) &&
+                    "APPROVED".equals(ctx.getPath("styleCheck.outcome")) &&
+                    "APPROVED".equals(ctx.getPath("testCoverage.outcome")) &&
+                    "APPROVED".equals(ctx.getPath("performanceAnalysis.outcome")) &&
+                    humanOk &&
+                    "passing".equals(ctx.getPath("ci.status")) &&
+                    !Boolean.TRUE.equals(ctx.getPath("policy.mergeQueueEnabled"));
+            }))
+            .conflictResolverStrategy(DEEP_MERGE)
+            .outcomePolicy(new OutcomePolicy(OutcomeAction.FAULT, OutcomeAction.FAULT, OutcomeAction.FAULT, 0))
             .capability(mergeExecutorCap).build());
 
         return def;

@@ -9,6 +9,7 @@ public record BatchFormationContext(
     int minBatchSize,
     double decayRatePerHour,
     double recentFailureRate,
+    String repository,
     String targetBranch,
     String riskLevel,
     String bisectionStrategy,

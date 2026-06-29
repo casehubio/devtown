@@ -2,6 +2,8 @@ package io.casehub.devtown.queue;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.casehub.devtown.domain.queue.PriorityLane;
+
 import java.time.Instant;
 import java.util.List;
 import java.util.Set;
@@ -16,18 +18,18 @@ class DefaultBatchCompositionPolicyTest {
     private final DefaultBatchCompositionPolicy policy = new DefaultBatchCompositionPolicy();
 
     private QueuedPr pr(int number, double trust) {
-        return new QueuedPr(number, "sha" + number, "author" + number, trust,
+        return new QueuedPr(number, "casehubio/devtown", "sha" + number, "author" + number, trust,
                             PriorityLane.NORMAL, NOW, Set.of());
     }
 
     private QueuedPr pr(int number, double trust, Set<Integer> deps) {
-        return new QueuedPr(number, "sha" + number, "author" + number, trust,
+        return new QueuedPr(number, "casehubio/devtown", "sha" + number, "author" + number, trust,
                             PriorityLane.NORMAL, NOW, deps);
     }
 
     private BatchFormationContext ctx(int maxBatch, int minBatch, double failureRate) {
         return new BatchFormationContext(NOW, maxBatch, minBatch, DECAY_RATE, failureRate,
-                                         "main", "normal", "trust-weighted",
+                                         "casehubio/devtown", "main", "normal", "trust-weighted",
                                          new AtomicInteger(0));
     }
 

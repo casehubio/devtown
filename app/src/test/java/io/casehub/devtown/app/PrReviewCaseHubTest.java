@@ -23,9 +23,9 @@ class PrReviewCaseHubTest {
     }
 
     @Test
-    void hasEighteenBindings() {
+    void hasNineteenBindings() {
         var def = caseHub.getDefinition();
-        assertThat(def.getBindings()).hasSize(18);
+        assertThat(def.getBindings()).hasSize(19);
         var names = def.getBindings().stream().map(Binding::getName).toList();
         assertThat(names).containsExactlyInAnyOrder(
             "initial-analysis", "run-ci",
@@ -37,7 +37,7 @@ class PrReviewCaseHubTest {
             "style-check-human-escalation", "test-coverage-human-escalation",
             "performance-analysis-human-escalation", "code-analysis-human-escalation",
             "ci-runner-human-escalation",
-            "merge");
+            "enqueue-for-merge", "merge-direct");
     }
 
     @Test
@@ -45,7 +45,8 @@ class PrReviewCaseHubTest {
         var def = caseHub.getDefinition();
         var capabilityBindings = def.getBindings().stream()
                 .filter(b -> b.target() instanceof io.casehub.api.model.CapabilityTarget)
-                .filter(b -> !"merge".equals(b.getName()))
+                .filter(b -> !"merge-direct".equals(b.getName()))
+                .filter(b -> !"enqueue-for-merge".equals(b.getName()))
                 .toList();
         assertThat(capabilityBindings).isNotEmpty();
         for (Binding b : capabilityBindings) {
@@ -83,9 +84,9 @@ class PrReviewCaseHubTest {
     }
 
     @Test
-    void hasEightCapabilities() {
+    void hasNineCapabilities() {
         var def = caseHub.getDefinition();
-        assertThat(def.getCapabilities()).hasSize(8);
+        assertThat(def.getCapabilities()).hasSize(9);
     }
 
     @Test

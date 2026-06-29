@@ -2,6 +2,8 @@ package io.casehub.devtown.queue;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.casehub.devtown.domain.queue.PriorityLane;
+
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Set;
@@ -13,7 +15,7 @@ class QueuePriorityCalculatorTest {
     private static final Instant NOW = Instant.parse("2026-06-27T12:00:00Z");
 
     private QueuedPr pr(PriorityLane lane, double trust, Instant enqueued) {
-        return new QueuedPr(1, "abc", "alice", trust, lane, enqueued, Set.of());
+        return new QueuedPr(1, "casehubio/devtown", "abc", "alice", trust, lane, enqueued, Set.of());
     }
 
     @Test

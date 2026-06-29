@@ -155,6 +155,7 @@ class MergeQueueBatchLifecycleTest {
     static Map<String, Object> buildBatchContext(int prCount, String riskLevel) {
         var batchMap = new LinkedHashMap<String, Object>();
         batchMap.put("id", "test-batch-" + UUID.randomUUID().toString().substring(0, 8));
+        batchMap.put("repository", "casehubio/devtown");
         batchMap.put("targetBranch", "main");
         batchMap.put("size", prCount);
         batchMap.put("riskLevel", riskLevel);
@@ -165,6 +166,7 @@ class MergeQueueBatchLifecycleTest {
         for (int i = 0; i < prCount; i++) {
             var prMap = new LinkedHashMap<String, Object>();
             prMap.put("number", 100 + i);
+            prMap.put("repository", "casehubio/devtown");
             prMap.put("headSha", "sha-" + (100 + i));
             prMap.put("author", "author-" + i);
             prMap.put("trustScore", 0.5 + (i * 0.1));

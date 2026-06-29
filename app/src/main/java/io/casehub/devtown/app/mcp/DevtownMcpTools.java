@@ -9,8 +9,9 @@ import io.casehub.devtown.app.ledger.IncidentFeedbackService;
 import io.casehub.devtown.domain.IncidentFeedback;
 import io.casehub.devtown.domain.IncidentFeedbackResult;
 import io.casehub.devtown.domain.IncidentSeverity;
+import io.casehub.devtown.merge.BatchRecord;
 import io.casehub.devtown.queue.Batch;
-import io.casehub.devtown.queue.PriorityLane;
+import io.casehub.devtown.domain.queue.PriorityLane;
 import io.casehub.devtown.queue.QueuedPr;
 import io.casehub.devtown.review.PrPayload;
 import io.casehub.ledger.runtime.service.LedgerProvExportService;
@@ -183,6 +184,7 @@ public class DevtownMcpTools {
 
     public record QueuedPrEntry(
         int number,
+        String repository,
         String headSha,
         String author,
         double trustScore,
@@ -202,7 +204,7 @@ public class DevtownMcpTools {
         String bisectionStrategy
     ) {}
 
-    public record BatchPrEntry(int number, String headSha, String author, double trustScore, String lane) {}
+    public record BatchPrEntry(int number, String repository, String headSha, String author, double trustScore, String lane) {}
 
     public record MergeQueueMetrics(
         int queueDepth,
@@ -542,11 +544,12 @@ public class DevtownMcpTools {
     public MergeQueueStatus getMergeQueue() {
         Instant now = Instant.now();
         List<QueuedPr> queued = mergeQueueService.queuedPrs();
-        Map<UUID, Batch> batches = mergeQueueService.activeBatches();
+        Map<String, BatchRecord> batches = mergeQueueService.activeBatches();
 
         List<QueuedPrEntry> prEntries = queued.stream()
             .map(pr -> new QueuedPrEntry(
                 pr.number(),
+                pr.repository(),
                 pr.headSha(),
                 pr.author(),
                 pr.trustScore(),
@@ -557,8 +560,8 @@ public class DevtownMcpTools {
             ))
             .toList();
 
-        List<ActiveBatchEntry> batchEntries = batches.entrySet().stream()
-            .map(e -> new ActiveBatchEntry(e.getKey(), e.getValue().id(), e.getValue().size(), e.getValue().riskLevel()))
+        List<ActiveBatchEntry> batchEntries = batches.values().stream()
+            .map(b -> new ActiveBatchEntry(b.caseId(), b.batchId(), b.prNumbers().size(), "ROUTINE"))
             .toList();
 
         return new MergeQueueStatus(queued.size(), batches.size(), prEntries, batchEntries);
@@ -572,17 +575,18 @@ public class DevtownMcpTools {
         @ToolArg(name = "batch_case_id", description = "Case UUID of the batch", required = true) String batchCaseIdStr
     ) {
         UUID batchCaseId = UUID.fromString(batchCaseIdStr);
-        Map<UUID, Batch> batches = mergeQueueService.activeBatches();
-        Batch batch = batches.get(batchCaseId);
-        if (batch == null) {
-            throw new IllegalArgumentException("No active batch found for case: " + batchCaseId);
-        }
+        Map<String, BatchRecord> batches = mergeQueueService.activeBatches();
+        BatchRecord batch = batches.values().stream()
+            .filter(b -> b.caseId().equals(batchCaseId))
+            .findFirst()
+            .orElseThrow(() -> new IllegalArgumentException("No active batch found for case: " + batchCaseId));
 
-        List<BatchPrEntry> prEntries = batch.prs().stream()
-            .map(pr -> new BatchPrEntry(pr.number(), pr.headSha(), pr.author(), pr.trustScore(), pr.lane().name()))
+        // BatchRecord does not carry full PR details — return PR numbers with placeholders
+        List<BatchPrEntry> prEntries = batch.prNumbers().stream()
+            .map(prNum -> new BatchPrEntry(prNum, batch.repository(), "", "", 0.0, ""))
             .toList();
 
-        return new BatchStatus(batch.id(), batchCaseId, prEntries, batch.riskLevel(), batch.bisectionStrategy());
+        return new BatchStatus(batch.batchId(), batchCaseId, prEntries, "ROUTINE", "trust-weighted");
     }
 
     @Tool(
@@ -592,7 +596,7 @@ public class DevtownMcpTools {
     public MergeQueueMetrics getMergeQueueMetrics() {
         Instant now = Instant.now();
         List<QueuedPr> queued = mergeQueueService.queuedPrs();
-        Map<UUID, Batch> batches = mergeQueueService.activeBatches();
+        Map<String, BatchRecord> batches = mergeQueueService.activeBatches();
 
         long oldestWaitMinutes = queued.stream()
             .mapToLong(pr -> Duration.between(pr.enqueuedAt(), now).toMinutes())
@@ -744,7 +748,7 @@ public class DevtownMcpTools {
             lane = PriorityLane.valueOf(priority.toUpperCase());
         }
 
-        QueuedPr pr = new QueuedPr(prNumber, headSha, author, trustScore, lane, Instant.now(), Set.of());
+        QueuedPr pr = new QueuedPr(prNumber, repo, headSha, author, trustScore, lane, Instant.now(), Set.of());
         mergeQueueService.enqueue(pr);
 
         return new EnqueueResult(prNumber, lane.name(), "ENQUEUED");
@@ -762,7 +766,7 @@ public class DevtownMcpTools {
             throw new IllegalArgumentException("repo is required");
         }
 
-        boolean removed = mergeQueueService.dequeue(prNumber);
+        boolean removed = mergeQueueService.dequeue(prNumber, repo);
         return new DequeueResult(prNumber, removed, removed ? "REMOVED" : "NOT_FOUND");
     }
 

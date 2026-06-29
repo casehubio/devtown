@@ -47,6 +47,11 @@ spec:
       description: "Executes the merge when all goals are satisfied"
       inputSchema: "{ pr: .pr }"
 
+    - name: merge-queue-enqueue
+      description: "Enqueues the PR into the merge queue"
+      inputSchema: "{ pr: .pr, codeAnalysis: .codeAnalysis }"
+      outputSchema: "{ enqueueResult: . }"
+
   ## ─── Goals ──────────────────────────────────────────────────────────
   goals:
     - name: pr-approved
@@ -329,9 +334,30 @@ spec:
         outputMapping: "{ ci: { outcome: . } }"
         outcomes: [APPROVED, REJECTED, BLOCKED]
 
-    ## ── Merge — fires when all success conditions satisfied ──
+    ## ── Merge bindings — mutually exclusive based on merge queue enablement ──
 
-    - name: merge
+    - name: enqueue-for-merge
+      on: { contextChange: {} }
+      when: >-
+        .merge_sha == null and
+        .enqueueResult == null and
+        .pr.status != "merged" and
+        (.codeAnalysis.securitySensitive == false or .securityReview.outcome == "APPROVED") and
+        (.codeAnalysis.architectureCrossing == false or .architectureReview.outcome == "APPROVED") and
+        .styleCheck.outcome == "APPROVED" and
+        .testCoverage.outcome == "APPROVED" and
+        .performanceAnalysis.outcome == "APPROVED" and
+        (.pr.linesChanged <= .policy.humanApprovalThreshold or .humanApproval.outcome == "APPROVED") and
+        .ci.status == "passing" and
+        .policy.mergeQueueEnabled == true
+      capability: merge-queue-enqueue
+      conflictResolverStrategy: DEEP_MERGE
+      outcomePolicy:
+        onDecline: FAULT
+        onFailure: FAULT
+        onExpired: FAULT
+
+    - name: merge-direct
       on: { contextChange: {} }
       when: >-
         .merge_sha == null and
@@ -342,7 +368,8 @@ spec:
         .testCoverage.outcome == "APPROVED" and
         .performanceAnalysis.outcome == "APPROVED" and
         (.pr.linesChanged <= .policy.humanApprovalThreshold or .humanApproval.outcome == "APPROVED") and
-        .ci.status == "passing"
+        .ci.status == "passing" and
+        .policy.mergeQueueEnabled != true
       capability: merge-executor
       conflictResolverStrategy: DEEP_MERGE
       outcomePolicy:

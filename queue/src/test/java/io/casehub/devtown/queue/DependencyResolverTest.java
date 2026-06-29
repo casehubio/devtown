@@ -3,6 +3,8 @@ package io.casehub.devtown.queue;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import io.casehub.devtown.domain.queue.PriorityLane;
+
 import java.time.Instant;
 import java.util.List;
 import java.util.Set;
@@ -13,7 +15,7 @@ class DependencyResolverTest {
     private static final Instant NOW = Instant.parse("2026-06-27T12:00:00Z");
 
     private QueuedPr pr(int number, Set<Integer> deps) {
-        return new QueuedPr(number, "sha" + number, "alice", 0.7, PriorityLane.NORMAL, NOW, deps);
+        return new QueuedPr(number, "casehubio/devtown", "sha" + number, "alice", 0.7, PriorityLane.NORMAL, NOW, deps);
     }
 
     @Test

@@ -1,0 +1,18 @@
+# Merge queue preferences — scope: casehubio/devtown/merge-queue
+# All keys resolved via PreferenceProvider at this scope.
+# SLA escalation overrides for merge-queue WorkItems included.
+entries:
+  - scope: casehubio/devtown/merge-queue
+    devtown.merge-queue.enabled: "false"
+    devtown.merge-queue.max-batch-size: "10"
+    devtown.merge-queue.min-batch-size: "1"
+    devtown.merge-queue.bisection-strategy: "trust-weighted"
+    devtown.merge-queue.failure-rate-window: "20"
+    devtown.merge-queue.priority.decay-rate-per-hour: "125"
+    devtown.merge-queue.target-branch: "main"
+    devtown.merge-queue.sla.CRITICAL: "PT1H"
+    devtown.merge-queue.sla.HIGH: "PT4H"
+    devtown.merge-queue.sla.NORMAL: "PT8H"
+    devtown.sla.escalation-group: "merge-leads"
+    devtown.sla.escalation-hours: "4"
+    devtown.sla.breach-terminal-reason: "merge-queue-sla-breach"

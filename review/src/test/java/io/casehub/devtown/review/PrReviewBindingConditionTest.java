@@ -193,45 +193,45 @@ class PrReviewBindingConditionTest {
         }
 
         @Test void fires_whenAllConditionsSatisfied_noArchCrossing_noHumanRequired() {
-            assertThat(condition("merge").test(ctx(allApproved()))).isTrue();
+            assertThat(condition("merge-direct").test(ctx(allApproved()))).isTrue();
         }
         @Test void doesNotFire_whenCiNotPassing() {
             var data = new java.util.HashMap<>(allApproved());
             data.put("ci", Map.of("status", "failing"));
-            assertThat(condition("merge").test(ctx(data))).isFalse();
+            assertThat(condition("merge-direct").test(ctx(data))).isFalse();
         }
         @Test void doesNotFire_whenStyleCheckNotApproved() {
             var data = new java.util.HashMap<>(allApproved());
             data.put("styleCheck", Map.of("outcome", "FAILED"));
-            assertThat(condition("merge").test(ctx(data))).isFalse();
+            assertThat(condition("merge-direct").test(ctx(data))).isFalse();
         }
         @Test void doesNotFire_whenArchCrossingAndNoArchReview() {
             var data = new java.util.HashMap<>(allApproved());
             data.put("codeAnalysis", analysis(false, true));
-            assertThat(condition("merge").test(ctx(data))).isFalse();
+            assertThat(condition("merge-direct").test(ctx(data))).isFalse();
         }
         @Test void fires_whenArchCrossingAndArchReviewApproved() {
             var data = new java.util.HashMap<>(allApproved());
             data.put("codeAnalysis", analysis(false, true));
             data.put("architectureReview", Map.of("outcome", "APPROVED"));
-            assertThat(condition("merge").test(ctx(data))).isTrue();
+            assertThat(condition("merge-direct").test(ctx(data))).isTrue();
         }
         @Test void doesNotFire_whenHumanRequiredButNotApproved() {
             var data = new java.util.HashMap<>(allApproved());
             data.put("pr", pr(THRESHOLD + 1));
-            assertThat(condition("merge").test(ctx(data))).isFalse();
+            assertThat(condition("merge-direct").test(ctx(data))).isFalse();
         }
         @Test void fires_whenHumanRequiredAndApproved() {
             var data = new java.util.HashMap<>(allApproved());
             data.put("pr", pr(THRESHOLD + 1));
             data.put("humanApproval", Map.of("outcome", "APPROVED"));
-            assertThat(condition("merge").test(ctx(data))).isTrue();
+            assertThat(condition("merge-direct").test(ctx(data))).isTrue();
         }
         @Test void fires_whenNotSecuritySensitiveAndNoSecurityReview() {
             var data = new java.util.HashMap<>(allApproved());
             data.remove("securityReview");
             // codeAnalysis already has securitySensitive=false in allApproved() via analysis(false, false)
-            assertThat(condition("merge").test(ctx(data))).isTrue();
+            assertThat(condition("merge-direct").test(ctx(data))).isTrue();
         }
     }
 }

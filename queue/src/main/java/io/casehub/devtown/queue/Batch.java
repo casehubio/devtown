@@ -5,6 +5,7 @@ import java.util.List;
 public record Batch(
     String id,
     List<QueuedPr> prs,
+    String repository,
     String targetBranch,
     String riskLevel,
     String bisectionStrategy

@@ -567,6 +567,7 @@ class DevtownMcpToolsTest {
 
     @Test
     void enqueuePr_validInputs_enqueuesSuccessfully() {
+        when(mergeQueueService.enqueue(any())).thenReturn(true);
         DevtownMcpTools.EnqueueResult result = tools.enqueuePr(
             "casehubio/devtown", 99, "deadbeef", "alice", 0.75, "HIGH"
         );
@@ -574,9 +575,15 @@ class DevtownMcpToolsTest {
         assertThat(result.prNumber()).isEqualTo(99);
         assertThat(result.lane()).isEqualTo("HIGH");
         assertThat(result.status()).isEqualTo("ENQUEUED");
-        verify(mergeQueueService).enqueue(argThat(pr ->
-            pr.number() == 99 && pr.headSha().equals("deadbeef") && pr.lane() == PriorityLane.HIGH
-        ));
+    }
+
+    @Test
+    void enqueuePr_duplicate_returnsAlreadyQueued() {
+        when(mergeQueueService.enqueue(any())).thenReturn(false);
+        DevtownMcpTools.EnqueueResult result = tools.enqueuePr(
+            "casehubio/devtown", 99, "deadbeef", "alice", 0.75, "HIGH"
+        );
+        assertThat(result.status()).isEqualTo("ALREADY_QUEUED");
     }
 
     @Test

@@ -749,9 +749,8 @@ public class DevtownMcpTools {
         }
 
         QueuedPr pr = new QueuedPr(prNumber, repo, headSha, author, trustScore, lane, Instant.now(), Set.of());
-        mergeQueueService.enqueue(pr);
-
-        return new EnqueueResult(prNumber, lane.name(), "ENQUEUED");
+        boolean inserted = mergeQueueService.enqueue(pr);
+        return new EnqueueResult(prNumber, lane.name(), inserted ? "ENQUEUED" : "ALREADY_QUEUED");
     }
 
     @Tool(

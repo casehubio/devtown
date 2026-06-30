@@ -115,10 +115,13 @@ public class MergeQueueService implements MergeQueueAdmissionPort {
         }
 
         boolean inserted = store.enqueue(pr, workItemId);
-        LOG.infof("Enqueued PR #%d from %s (trust=%.2f, lane=%s)",
-            pr.number(), pr.repository(), pr.trustScore(), pr.lane());
         if (inserted) {
+            LOG.infof("Enqueued PR #%d from %s (trust=%.2f, lane=%s)",
+                pr.number(), pr.repository(), pr.trustScore(), pr.lane());
             formAndDispatchBatches();
+        } else {
+            LOG.debugf("Duplicate enqueue for PR #%d from %s — no-op",
+                pr.number(), pr.repository());
         }
         return inserted;
     }

@@ -103,9 +103,6 @@ public class DevtownMcpTools {
     @ConfigProperty(name = "devtown.policy.require-senior-approval", defaultValue = "false")
     boolean requireSeniorApproval;
 
-    @ConfigProperty(name = "devtown.queue.sla-minutes", defaultValue = "120")
-    int queueSlaMinutes;
-
     // ==================== Response Records ====================
 
     public record QueueStatus(int total, Map<String, Integer> countsByStatus, List<ActiveReview> reviews) {}
@@ -210,8 +207,12 @@ public class DevtownMcpTools {
         int queueDepth,
         int activeBatches,
         long oldestWaitMinutes,
+        long avgWaitMinutes,
         double avgTrustScore,
-        Map<String, Integer> countsByLane
+        Map<String, Integer> countsByLane,
+        int throughput24h,
+        double failureRate,
+        Map<Integer, Integer> batchSizeDistribution
     ) {}
 
     public record EnqueueResult(int prNumber, String lane, String status) {}
@@ -359,21 +360,19 @@ public class DevtownMcpTools {
             }
         }
 
-        // Queue SLA breaches — PRs waiting longer than the configured SLA
-        Instant now2 = Instant.now();
-        for (QueuedPr pr : mergeQueueService.queuedPrs()) {
-            long waitMinutes = Duration.between(pr.enqueuedAt(), now2).toMinutes();
-            if (waitMinutes > queueSlaMinutes) {
-                problems.add(new Problem(
-                    "queue_sla_breach",
-                    "warning",
-                    String.format("PR #%d has been queued for %d minutes (SLA: %d minutes)",
-                        pr.number(), waitMinutes, queueSlaMinutes),
-                    null,
-                    pr.author(),
-                    pr.enqueuedAt()
-                ));
-            }
+        // Queue SLA breaches — delegate to service for lane-specific SLA detection
+        for (var breach : mergeQueueService.detectSlaBreaches()) {
+            problems.add(new Problem(
+                "queue_sla_breach",
+                "warning",
+                String.format("PR #%d (%s) has waited %d min — exceeds %s SLA (%d min)",
+                    breach.pr().number(), breach.pr().lane(),
+                    breach.waited().toMinutes(),
+                    breach.pr().lane(), breach.sla().toMinutes()),
+                null,
+                breach.pr().author(),
+                breach.pr().enqueuedAt()
+            ));
         }
 
         return problems;
@@ -591,7 +590,7 @@ public class DevtownMcpTools {
 
     @Tool(
         name = "get_merge_queue_metrics",
-        description = "Get operational metrics: queue depth, active batches, oldest wait time, average trust score, lane distribution"
+        description = "Get operational metrics: queue depth, active batches, wait times, throughput, failure rate, trust score, lane and batch size distribution"
     )
     public MergeQueueMetrics getMergeQueueMetrics() {
         Instant now = Instant.now();
@@ -603,6 +602,11 @@ public class DevtownMcpTools {
             .max()
             .orElse(0);
 
+        long avgWaitMinutes = queued.isEmpty() ? 0 :
+            (long) queued.stream()
+                .mapToLong(pr -> Duration.between(pr.enqueuedAt(), now).toMinutes())
+                .average().orElse(0);
+
         double avgTrust = queued.stream()
             .mapToDouble(QueuedPr::trustScore)
             .average()
@@ -613,7 +617,19 @@ public class DevtownMcpTools {
             countsByLane.merge(pr.lane().name(), 1, Integer::sum);
         }
 
-        return new MergeQueueMetrics(queued.size(), batches.size(), oldestWaitMinutes, avgTrust, countsByLane);
+        List<BatchRecord> completed = mergeQueueService.completedBatches(Duration.ofHours(24));
+        int throughput24h = completed.size();
+
+        double failureRate = mergeQueueService.aggregateFailureRate();
+
+        Map<Integer, Integer> batchSizeDist = new HashMap<>();
+        for (BatchRecord batch : completed) {
+            batchSizeDist.merge(batch.prNumbers().size(), 1, Integer::sum);
+        }
+
+        return new MergeQueueMetrics(
+            queued.size(), batches.size(), oldestWaitMinutes, avgWaitMinutes,
+            avgTrust, countsByLane, throughput24h, failureRate, batchSizeDist);
     }
 
     // ==================== Write Tools ====================

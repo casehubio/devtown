@@ -2,6 +2,7 @@ package io.casehub.devtown.merge;
 
 import io.casehub.devtown.queue.QueuedPr;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -145,4 +146,23 @@ public interface MergeQueueStore {
      * @return failure rate [0.0, 1.0]; 0.0 if no completed batches exist
      */
     double recentBatchFailureRate(String repository, int window);
+
+    /**
+     * Returns all batches completed since the given instant.
+     *
+     * @param since cutoff instant (inclusive)
+     * @return completed batches ordered by completedAt descending
+     */
+    List<BatchRecord> completedBatchesSince(Instant since);
+
+    /**
+     * Aggregate failure rate across all repositories.
+     *
+     * <p>Overload of {@link #recentBatchFailureRate(String, int)} without the
+     * repository filter — for cross-repo aggregate metrics.
+     *
+     * @param window maximum number of recent completed batches to consider
+     * @return failure rate [0.0, 1.0]; 0.0 if no completed batches exist
+     */
+    double recentBatchFailureRate(int window);
 }

@@ -220,7 +220,7 @@ class DevtownMcpToolsTest {
         when(tracker.stalledCases(60)).thenReturn(List.of(stalledCase));
         when(commitmentStore.findExpiredBefore(any(Instant.class))).thenReturn(List.of());
         when(tracker.recentEvents(100, null)).thenReturn(List.of());
-        when(mergeQueueService.queuedPrs()).thenReturn(List.of());
+        when(mergeQueueService.detectSlaBreaches()).thenReturn(List.of());
 
         List<DevtownMcpTools.Problem> problems = tools.listProblems(60);
 
@@ -244,7 +244,7 @@ class DevtownMcpToolsTest {
         when(tracker.stalledCases(60)).thenReturn(List.of());
         when(commitmentStore.findExpiredBefore(any(Instant.class))).thenReturn(List.of(commitment));
         when(tracker.recentEvents(100, null)).thenReturn(List.of());
-        when(mergeQueueService.queuedPrs()).thenReturn(List.of());
+        when(mergeQueueService.detectSlaBreaches()).thenReturn(List.of());
 
         List<DevtownMcpTools.Problem> problems = tools.listProblems(60);
 
@@ -269,7 +269,7 @@ class DevtownMcpToolsTest {
         when(tracker.stalledCases(60)).thenReturn(List.of());
         when(commitmentStore.findExpiredBefore(any(Instant.class))).thenReturn(List.of());
         when(tracker.recentEvents(100, null)).thenReturn(List.of(failedEvent));
-        when(mergeQueueService.queuedPrs()).thenReturn(List.of());
+        when(mergeQueueService.detectSlaBreaches()).thenReturn(List.of());
 
         List<DevtownMcpTools.Problem> problems = tools.listProblems(60);
 
@@ -534,14 +534,20 @@ class DevtownMcpToolsTest {
     void getMergeQueueMetrics_emptyQueue_returnsZeros() {
         when(mergeQueueService.queuedPrs()).thenReturn(List.of());
         when(mergeQueueService.activeBatches()).thenReturn(Map.<String, BatchRecord>of());
+        when(mergeQueueService.completedBatches(any())).thenReturn(List.of());
+        when(mergeQueueService.aggregateFailureRate()).thenReturn(0.0);
 
         DevtownMcpTools.MergeQueueMetrics metrics = tools.getMergeQueueMetrics();
 
         assertThat(metrics.queueDepth()).isZero();
         assertThat(metrics.activeBatches()).isZero();
         assertThat(metrics.oldestWaitMinutes()).isZero();
+        assertThat(metrics.avgWaitMinutes()).isZero();
         assertThat(metrics.avgTrustScore()).isZero();
         assertThat(metrics.countsByLane()).isEmpty();
+        assertThat(metrics.throughput24h()).isZero();
+        assertThat(metrics.failureRate()).isZero();
+        assertThat(metrics.batchSizeDistribution()).isEmpty();
     }
 
     @Test
@@ -551,16 +557,25 @@ class DevtownMcpToolsTest {
         QueuedPr pr1 = new QueuedPr(1, "casehubio/devtown", "sha1", "alice", 0.6, PriorityLane.NORMAL, old, java.util.Set.of());
         QueuedPr pr2 = new QueuedPr(2, "casehubio/devtown", "sha2", "bob", 0.8, PriorityLane.HIGH, recent, java.util.Set.of());
 
+        BatchRecord completedBatch = new BatchRecord("batch-done", UUID.randomUUID(),
+            List.of(10, 11), "casehubio/devtown", Instant.now().minus(2, ChronoUnit.HOURS),
+            Instant.now().minus(1, ChronoUnit.HOURS), true);
+
         when(mergeQueueService.queuedPrs()).thenReturn(List.of(pr1, pr2));
         when(mergeQueueService.activeBatches()).thenReturn(Map.<String, BatchRecord>of());
+        when(mergeQueueService.completedBatches(any())).thenReturn(List.of(completedBatch));
+        when(mergeQueueService.aggregateFailureRate()).thenReturn(0.25);
 
         DevtownMcpTools.MergeQueueMetrics metrics = tools.getMergeQueueMetrics();
 
         assertThat(metrics.queueDepth()).isEqualTo(2);
         assertThat(metrics.oldestWaitMinutes()).isGreaterThanOrEqualTo(59);
+        assertThat(metrics.avgWaitMinutes()).isGreaterThanOrEqualTo(34);
         assertThat(metrics.avgTrustScore()).isCloseTo(0.7, org.assertj.core.data.Offset.offset(0.01));
-        assertThat(metrics.countsByLane()).containsEntry("NORMAL", 1);
-        assertThat(metrics.countsByLane()).containsEntry("HIGH", 1);
+        assertThat(metrics.countsByLane()).containsEntry("NORMAL", 1).containsEntry("HIGH", 1);
+        assertThat(metrics.throughput24h()).isEqualTo(1);
+        assertThat(metrics.failureRate()).isCloseTo(0.25, org.assertj.core.data.Offset.offset(0.01));
+        assertThat(metrics.batchSizeDistribution()).containsEntry(2, 1);
     }
 
     // ==================== Merge Queue Write Tools ====================
@@ -641,31 +656,26 @@ class DevtownMcpToolsTest {
     // ==================== QUEUE_SLA_BREACH in listProblems ====================
 
     @Test
-    void listProblems_detectsQueueSlaBreaches() throws Exception {
-        // Set SLA threshold (not injected by @InjectMocks)
-        java.lang.reflect.Field slaField = DevtownMcpTools.class.getDeclaredField("queueSlaMinutes");
-        slaField.setAccessible(true);
-        slaField.setInt(tools, 120);
-
-        // PR queued 180 minutes ago — exceeds 120-minute SLA
+    void listProblems_detectsQueueSlaBreaches() {
+        // Mock service-level SLA detection
         Instant longAgo = Instant.now().minus(180, ChronoUnit.MINUTES);
-        QueuedPr breachPr = new QueuedPr(77, "casehubio/devtown", "sha-old", "dave", 0.5, PriorityLane.NORMAL, longAgo, java.util.Set.of());
-
-        // PR queued 10 minutes ago — within SLA
-        Instant recent = Instant.now().minus(10, ChronoUnit.MINUTES);
-        QueuedPr okPr = new QueuedPr(78, "casehubio/devtown", "sha-new", "eve", 0.8, PriorityLane.HIGH, recent, java.util.Set.of());
+        QueuedPr breachPr = new QueuedPr(77, "casehubio/devtown", "sha-old", "dave",
+            0.5, PriorityLane.CRITICAL, longAgo, java.util.Set.of());
+        var breach = new MergeQueueService.SlaBreach(
+            breachPr,
+            java.time.Duration.ofMinutes(180),
+            java.time.Duration.ofHours(1));
 
         when(tracker.stalledCases(60)).thenReturn(List.of());
         when(commitmentStore.findExpiredBefore(any(Instant.class))).thenReturn(List.of());
         when(tracker.recentEvents(100, null)).thenReturn(List.of());
-        when(mergeQueueService.queuedPrs()).thenReturn(List.of(breachPr, okPr));
+        when(mergeQueueService.detectSlaBreaches()).thenReturn(List.of(breach));
 
         List<DevtownMcpTools.Problem> problems = tools.listProblems(60);
 
         assertThat(problems).hasSize(1);
         assertThat(problems.get(0).category()).isEqualTo("queue_sla_breach");
-        assertThat(problems.get(0).severity()).isEqualTo("warning");
-        assertThat(problems.get(0).description()).contains("PR #77");
+        assertThat(problems.get(0).description()).contains("PR #77").contains("CRITICAL");
         assertThat(problems.get(0).actorId()).isEqualTo("dave");
     }
 

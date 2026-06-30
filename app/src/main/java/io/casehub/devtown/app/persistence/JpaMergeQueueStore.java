@@ -247,6 +247,33 @@ public class JpaMergeQueueStore implements MergeQueueStore {
         return (double) failed / recent.size();
     }
 
+    @Override
+    public List<BatchRecord> completedBatchesSince(Instant since) {
+        return em.createQuery(
+            "SELECT b FROM BatchEntity b WHERE b.completedAt IS NOT NULL " +
+            "AND b.completedAt >= :since ORDER BY b.completedAt DESC",
+            BatchEntity.class)
+            .setParameter("since", since)
+            .getResultList()
+            .stream()
+            .map(this::toBatchRecord)
+            .toList();
+    }
+
+    @Override
+    public double recentBatchFailureRate(int window) {
+        List<BatchEntity> recent = em.createQuery(
+            "SELECT b FROM BatchEntity b WHERE b.completedAt IS NOT NULL " +
+            "ORDER BY b.completedAt DESC",
+            BatchEntity.class)
+            .setMaxResults(window)
+            .getResultList();
+
+        if (recent.isEmpty()) return 0.0;
+        long failed = recent.stream().filter(b -> Boolean.FALSE.equals(b.succeeded)).count();
+        return (double) failed / recent.size();
+    }
+
     // ── Converters ─────────────────────────────────────────────────────────
 
     private QueueEntry toQueueEntry(QueuedPrEntity entity) {

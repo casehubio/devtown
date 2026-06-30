@@ -247,6 +247,11 @@ public class MergeQueueService implements MergeQueueAdmissionPort {
     /**
      * Dequeue a PR by composite identifier (prNumber, repository).
      *
+     * <p>Atomically transitions the entry from QUEUED to DEQUEUED and returns
+     * the entry (including its WorkItem ID) from the same transaction. If the
+     * entry is not in QUEUED state (absent, IN_BATCH, or already terminal),
+     * returns false without side effects.
+     *
      * @return true if a QUEUED entry was dequeued
      */
     public boolean dequeue(int prNumber, String repository) {
@@ -285,6 +290,35 @@ public class MergeQueueService implements MergeQueueAdmissionPort {
 
     public Map<String, BatchRecord> activeBatches() {
         return store.activeBatches();
+    }
+
+    public record SlaBreach(QueuedPr pr, Duration waited, Duration sla) {}
+
+    public List<SlaBreach> detectSlaBreaches() {
+        Preferences prefs = resolvePreferences();
+        Instant now = Instant.now();
+        List<SlaBreach> breaches = new ArrayList<>();
+        for (QueueEntry entry : store.queued()) {
+            QueuedPr pr = entry.pr();
+            String slaDuration = prefs.getOrDefault(
+                MergeQueuePreferenceKeys.slaKeyFor(pr.lane())).value();
+            Duration sla = Duration.parse(slaDuration);
+            Duration waited = Duration.between(pr.enqueuedAt(), now);
+            if (waited.compareTo(sla) > 0) {
+                breaches.add(new SlaBreach(pr, waited, sla));
+            }
+        }
+        return breaches;
+    }
+
+    public List<BatchRecord> completedBatches(Duration window) {
+        return store.completedBatchesSince(Instant.now().minus(window));
+    }
+
+    public double aggregateFailureRate() {
+        Preferences prefs = resolvePreferences();
+        int window = prefs.getOrDefault(MergeQueuePreferenceKeys.FAILURE_RATE_WINDOW).value();
+        return store.recentBatchFailureRate(window);
     }
 
     // ── Internal ────────────────────────────────────────────────────────────

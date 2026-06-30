@@ -32,7 +32,7 @@ public class MergeBatchCaseHub extends YamlCaseHub {
             .findFirst().orElseThrow();
         def.getWorkers().add(Worker.builder()
             .name("bisection-splitter")
-            .capabilities(splitterCap)
+            .capabilityName(splitterCap.name())
             .function(this::adaptBisectionSplit)
             .build());
 
@@ -41,7 +41,7 @@ public class MergeBatchCaseHub extends YamlCaseHub {
             .findFirst().orElseThrow();
         def.getWorkers().add(Worker.builder()
             .name("pr-reject-and-notify")
-            .capabilities(rejectCap)
+            .capabilityName(rejectCap.name())
             .function(this::adaptRejectAndNotify)
             .build());
     }

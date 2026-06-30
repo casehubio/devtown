@@ -1,5 +1,6 @@
 package io.casehub.devtown.app;
 
+import io.casehub.devtown.app.governance.MergeQueueStateEvent;
 import io.casehub.devtown.domain.queue.MergeQueuePreferenceKeys;
 import io.casehub.devtown.domain.queue.PriorityLane;
 import io.casehub.devtown.merge.AdmissionResult;
@@ -18,6 +19,7 @@ import io.casehub.platform.api.preferences.SettingsScope;
 import io.casehub.work.runtime.service.WorkItemService;
 import io.casehub.work.api.WorkItemCreateRequest;
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.event.Event;
 import jakarta.enterprise.inject.Instance;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
@@ -63,6 +65,9 @@ public class MergeQueueService implements MergeQueueAdmissionPort {
 
     @Inject
     Instance<WorkItemService> workItemServiceInstance;
+
+    @Inject
+    Event<MergeQueueStateEvent> queueEvent;
 
     // ── Public API ──────────────────────────────────────────────────────────
 
@@ -118,6 +123,7 @@ public class MergeQueueService implements MergeQueueAdmissionPort {
         if (inserted) {
             LOG.infof("Enqueued PR #%d from %s (trust=%.2f, lane=%s)",
                 pr.number(), pr.repository(), pr.trustScore(), pr.lane());
+            queueEvent.fireAsync(MergeQueueStateEvent.enqueue(pr.repository(), pr.number()));
             formAndDispatchBatches();
         } else {
             LOG.debugf("Duplicate enqueue for PR #%d from %s — no-op",
@@ -166,6 +172,7 @@ public class MergeQueueService implements MergeQueueAdmissionPort {
 
             store.recordBatch(formed.batch().id(), caseId, formed.prNumbers(), formed.repository());
             caseIds.add(caseId);
+            queueEvent.fireAsync(MergeQueueStateEvent.batchFormed(formed.repository(), formed.batch().id()));
             LOG.infof("Dispatched batch %s (%d PRs from %s) as case %s",
                 formed.batch().id(), formed.batch().size(), formed.repository(), caseId);
         }
@@ -242,6 +249,7 @@ public class MergeQueueService implements MergeQueueAdmissionPort {
             batch.batchId(), caseId, entries.size(), batchSucceeded, rejectedPrNumbers);
 
         store.completeBatch(batch.batchId(), batchSucceeded);
+        queueEvent.fireAsync(MergeQueueStateEvent.batchCompleted(batch.repository(), batch.batchId()));
     }
 
     /**
@@ -269,6 +277,7 @@ public class MergeQueueService implements MergeQueueAdmissionPort {
             }
         }
 
+        queueEvent.fireAsync(MergeQueueStateEvent.dequeue(repository, prNumber));
         return true;
     }
 

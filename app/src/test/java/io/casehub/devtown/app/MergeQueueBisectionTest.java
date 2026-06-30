@@ -78,7 +78,7 @@ class MergeQueueBisectionTest {
             .findFirst().orElseThrow();
         def.getWorkers().add(Worker.builder()
             .name("batch-ci-runner")
-            .capabilities(ciCap)
+            .capabilityName(ciCap.name())
             .function(input -> tipTestBehavior.get().apply(input))
             .build());
     }

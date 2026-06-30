@@ -29,7 +29,7 @@ public class PrReviewCaseHub extends YamlCaseHub {
             .findFirst().orElseThrow();
         def.getWorkers().add(Worker.builder()
             .name("merge-executor")
-            .capabilities(mergeCap)
+            .capabilityName(mergeCap.name())
             .function(this::adaptMerge)
             .build());
     }

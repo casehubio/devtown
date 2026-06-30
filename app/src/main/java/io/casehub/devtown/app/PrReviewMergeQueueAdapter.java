@@ -42,7 +42,7 @@ public class PrReviewMergeQueueAdapter {
 
         def.getWorkers().add(Worker.builder()
             .name("merge-queue-enqueue")
-            .capabilities(enqueueCapability)
+            .capabilityName(enqueueCapability.name())
             .function(this::enqueue)
             .build());
     }

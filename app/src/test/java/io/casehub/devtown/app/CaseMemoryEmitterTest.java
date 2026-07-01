@@ -2,20 +2,18 @@ package io.casehub.devtown.app;
 
 import io.casehub.devtown.domain.memory.DevtownMemoryDomain;
 import io.casehub.devtown.domain.memory.DevtownMemoryKeys;
-import io.casehub.devtown.domain.memory.ModulePathNormalizer;
 import io.casehub.devtown.domain.memory.ReviewOutcome;
 import io.casehub.devtown.review.PrPayload;
 import io.casehub.devtown.review.ReviewCompletedEvent;
-import io.casehub.platform.api.memory.CaseMemoryStore;
-import io.casehub.platform.api.memory.MemoryAttributeKeys;
-import io.casehub.platform.api.memory.MemoryInput;
+import io.casehub.memory.CaseMemoryStore;
+import io.casehub.memory.MemoryAttributeKeys;
+import io.casehub.memory.MemoryInput;
 import jakarta.enterprise.inject.Instance;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;

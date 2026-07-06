@@ -1,0 +1,7 @@
+package io.casehub.devtown.app.spi;
+
+import io.casehub.persistence.memory.InMemoryReactiveSubCaseGroupRepository;
+import jakarta.enterprise.context.ApplicationScoped;
+
+@ApplicationScoped
+public class DevtownReactiveSubCaseGroupRepositoryIn extends InMemoryReactiveSubCaseGroupRepository {}

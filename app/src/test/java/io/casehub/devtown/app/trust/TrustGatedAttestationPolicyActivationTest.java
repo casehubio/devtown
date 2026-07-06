@@ -10,8 +10,7 @@ import io.casehub.ledger.api.model.LedgerEntryType;
 import io.casehub.ledger.api.spi.LedgerEntryRepository;
 import io.casehub.ledger.api.spi.TrustScoreSource;
 import io.casehub.ledger.model.WorkerDecisionEntry;
-// TODO: uncomment after engine-ledger SNAPSHOT published
-// import io.casehub.ledger.routing.TrustGatedAttestationPolicy;
+import io.casehub.ledger.routing.TrustGatedAttestationPolicy;
 import io.casehub.platform.api.identity.ActorType;
 import io.casehub.qhorus.api.message.MessageType;
 import io.casehub.qhorus.api.spi.CommitmentAttestationPolicy;
@@ -43,8 +42,7 @@ class TrustGatedAttestationPolicyActivationTest {
 
     @Test
     void policyIsTrustGated() {
-        // TODO: uncomment after engine-ledger SNAPSHOT published
-        // assertThat(attestationPolicy).isInstanceOf(TrustGatedAttestationPolicy.class);
+        assertThat(attestationPolicy).isInstanceOf(TrustGatedAttestationPolicy.class);
     }
 
     @Test

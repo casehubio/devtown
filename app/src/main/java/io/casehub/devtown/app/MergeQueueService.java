@@ -5,7 +5,7 @@ import io.casehub.devtown.domain.queue.MergeQueuePreferenceKeys;
 import io.casehub.devtown.domain.queue.PriorityLane;
 import io.casehub.devtown.merge.AdmissionResult;
 import io.casehub.devtown.merge.BatchRecord;
-import io.casehub.devtown.merge.MergeQueueAdmissionPort;
+import io.casehub.devtown.merge.MergeQueuePort;
 import io.casehub.devtown.merge.MergeQueueStore;
 import io.casehub.devtown.merge.QueueEntry;
 import io.casehub.devtown.merge.QueueEntryStatus;
@@ -47,7 +47,7 @@ import org.jboss.logging.Logger;
  * A batch never mixes PRs from different repositories.
  */
 @ApplicationScoped
-public class MergeQueueService implements MergeQueueAdmissionPort {
+public class MergeQueueService implements MergeQueuePort {
 
     private static final Logger LOG = Logger.getLogger(MergeQueueService.class);
 

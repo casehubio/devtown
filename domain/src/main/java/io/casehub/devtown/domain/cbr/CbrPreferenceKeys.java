@@ -1,5 +1,6 @@
 package io.casehub.devtown.domain.cbr;
 
+import io.casehub.devtown.domain.preferences.BooleanPreference;
 import io.casehub.devtown.domain.preferences.DoublePreference;
 import io.casehub.devtown.domain.preferences.IntPreference;
 import io.casehub.platform.api.preferences.PreferenceKey;
@@ -25,6 +26,14 @@ public final class CbrPreferenceKeys {
         new PreferenceKey<>(NS, "min-threshold", DoublePreference.of(0.3), DoublePreference::parse);
     public static final PreferenceKey<IntPreference> TIME_WINDOW_DAYS =
         new PreferenceKey<>(NS, "time-window-days", IntPreference.of(180), IntPreference::parse);
+
+    // Hard gates — pre-filter before scoring (default: all disabled)
+    public static final PreferenceKey<IntPreference> GATE_MIN_MODULE_OVERLAP =
+        new PreferenceKey<>(NS, "gate-min-module-overlap", IntPreference.of(0), IntPreference::parse);
+    public static final PreferenceKey<DoublePreference> GATE_MIN_CHANGE_SIZE_RATIO =
+        new PreferenceKey<>(NS, "gate-min-change-size-ratio", DoublePreference.of(0.0), DoublePreference::parse);
+    public static final PreferenceKey<BooleanPreference> GATE_SAME_REPO =
+        new PreferenceKey<>(NS, "gate-same-repo", BooleanPreference.of(true), BooleanPreference::parse);
 
     private CbrPreferenceKeys() {}
 }

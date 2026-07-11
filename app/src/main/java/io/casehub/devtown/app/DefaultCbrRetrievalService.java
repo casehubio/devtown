@@ -2,6 +2,7 @@ package io.casehub.devtown.app;
 
 import io.casehub.devtown.domain.cbr.CbrPreferenceKeys;
 import io.casehub.devtown.domain.cbr.PrFeatureVector;
+import io.casehub.devtown.domain.cbr.SimilarityGate;
 import io.casehub.devtown.domain.cbr.SimilarityMetric;
 import io.casehub.devtown.domain.cbr.SimilarityScore;
 import io.casehub.devtown.domain.cbr.WeightedJaccardSimilarity;
@@ -56,6 +57,7 @@ public class DefaultCbrRetrievalService implements CbrRetrievalService {
             Instant since = Instant.now().minus(Duration.ofDays(timeWindowDays));
 
             SimilarityMetric metric = buildMetric(prefs);
+            SimilarityGate gate = buildGate(prefs);
 
             List<Memory> caseVectors = store.scan(new MemoryScanRequest(
                 tenantId,
@@ -66,9 +68,11 @@ public class DefaultCbrRetrievalService implements CbrRetrievalService {
                 null));
 
             return caseVectors.stream()
-                .filter(m -> repo.equals(m.attributes().get(DevtownMemoryKeys.PR_REPO)))
                 .filter(m -> m.createdAt().isAfter(since))
-                .map(m -> scoreCandidate(m, query, metric, tenantId))
+                .map(m -> toCandidateVector(m))
+                .filter(cv -> cv != null)
+                .filter(cv -> gate.passes(query, cv.vector))
+                .map(cv -> scoreCandidate(cv, query, metric, tenantId))
                 .filter(scored -> scored != null)
                 .filter(scored -> scored.similarity().score() >= minThreshold)
                 .sorted(Comparator.comparing(Precedent::similarity).reversed())
@@ -80,20 +84,31 @@ public class DefaultCbrRetrievalService implements CbrRetrievalService {
         }
     }
 
-    private Precedent scoreCandidate(Memory memory, PrFeatureVector query,
-                                      SimilarityMetric metric, String tenantId) {
+    private record CandidateVector(UUID caseId, PrFeatureVector vector, String contributor) {}
+
+    private CandidateVector toCandidateVector(Memory memory) {
         try {
             PrFeatureVector stored = PrFeatureVector.fromAttributes(memory.attributes());
-            SimilarityScore score = metric.compute(query, stored);
             UUID caseId = UUID.fromString(memory.caseId());
+            return new CandidateVector(caseId, stored, stored.contributor());
+        } catch (Exception e) {
+            LOG.debugf(e, "Failed to parse candidate memory=%s", memory.memoryId());
+            return null;
+        }
+    }
 
-            Map<String, String> capabilityOutcomes = enrichOutcomes(caseId, stored.contributor(), tenantId);
+    private Precedent scoreCandidate(CandidateVector cv, PrFeatureVector query,
+                                      SimilarityMetric metric, String tenantId) {
+        try {
+            SimilarityScore score = metric.compute(query, cv.vector);
+
+            Map<String, String> capabilityOutcomes = enrichOutcomes(cv.caseId, cv.contributor, tenantId);
             if (capabilityOutcomes.isEmpty()) return null;
 
             String aggregate = aggregateOutcome(capabilityOutcomes);
-            return new Precedent(caseId, score, stored, aggregate, capabilityOutcomes);
+            return new Precedent(cv.caseId, score, cv.vector, aggregate, capabilityOutcomes);
         } catch (Exception e) {
-            LOG.debugf(e, "Failed to score candidate memory=%s", memory.memoryId());
+            LOG.debugf(e, "Failed to score candidate case=%s", cv.caseId);
             return null;
         }
     }
@@ -131,6 +146,14 @@ public class DefaultCbrRetrievalService implements CbrRetrievalService {
         boolean allApproved = capabilityOutcomes.values().stream()
             .allMatch(o -> "COMPLETED".equals(o));
         return allApproved ? "approved" : "flagged";
+    }
+
+    private SimilarityGate buildGate(Preferences prefs) {
+        return new SimilarityGate(
+            prefs.getOrDefault(CbrPreferenceKeys.GATE_MIN_MODULE_OVERLAP).value(),
+            prefs.getOrDefault(CbrPreferenceKeys.GATE_MIN_CHANGE_SIZE_RATIO).value(),
+            prefs.getOrDefault(CbrPreferenceKeys.GATE_SAME_REPO).value()
+        );
     }
 
     private SimilarityMetric buildMetric(Preferences prefs) {

@@ -8,6 +8,7 @@ public final class DevtownMemoryDomain {
     public static final String CONTRIBUTOR_PREFIX = "contributor:";
     public static final String REVIEWER_PREFIX = "reviewer:";
     public static final String MODULE_PREFIX = "module:";
+    public static final String CASE_VECTOR_PREFIX = "case-vector:";
 
     private DevtownMemoryDomain() {}
 }

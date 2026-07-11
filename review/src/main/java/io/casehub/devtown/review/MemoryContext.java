@@ -10,21 +10,30 @@ import java.util.Set;
 
 public record MemoryContext(
     List<Memory> contributorHistory,
-    List<Memory> codeAreaHistory
+    List<Memory> codeAreaHistory,
+    List<Precedent> precedents
 ) {
-    public static final MemoryContext EMPTY = new MemoryContext(List.of(), List.of());
+    public static final MemoryContext EMPTY = new MemoryContext(List.of(), List.of(), List.of());
 
     private static final Set<String> SAFE_OUTCOMES = Set.of("approved", "passed");
 
     public Map<String, Object> toContextMap() {
         return Map.of(
             "contributorHistory", toEntryList(contributorHistory),
-            "codeAreaHistory", toEntryList(codeAreaHistory)
+            "codeAreaHistory", toEntryList(codeAreaHistory),
+            "precedents", precedents.stream().map(p -> Map.<String, Object>of(
+                "caseId", p.caseId().toString(),
+                "similarity", p.similarity().score(),
+                "breakdown", p.similarity().breakdown(),
+                "outcome", p.outcome(),
+                "capabilityOutcomes", p.capabilityOutcomes()
+            )).toList()
         );
     }
 
     public boolean hasRiskSignals() {
-        return hasRisk(contributorHistory) || hasRisk(codeAreaHistory);
+        return hasRisk(contributorHistory) || hasRisk(codeAreaHistory)
+            || precedents.stream().anyMatch(p -> "failed".equals(p.outcome()));
     }
 
     private static boolean hasRisk(List<Memory> memories) {

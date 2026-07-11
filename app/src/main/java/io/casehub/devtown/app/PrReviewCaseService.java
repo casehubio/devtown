@@ -3,6 +3,7 @@ package io.casehub.devtown.app;
 import io.casehub.devtown.app.mcp.PrReviewCaseTracker;
 import io.casehub.devtown.domain.CiStatusClient;
 import io.casehub.devtown.domain.CombinedCiStatus;
+import io.casehub.devtown.domain.cbr.PrFeatureVector;
 import io.casehub.devtown.domain.preferences.PrReviewPreferenceKeys;
 import io.casehub.devtown.domain.queue.MergeQueuePreferenceKeys;
 import io.casehub.devtown.review.LifecycleResult;
@@ -37,6 +38,9 @@ public class PrReviewCaseService implements PrReviewApplicationService {
 
     @Inject
     CaseMemoryRecaller memoryRecaller;
+
+    @Inject
+    FeatureVectorEmitter featureVectorEmitter;
 
     @Inject
     PrReviewCaseTracker caseTracker;
@@ -92,6 +96,11 @@ public class PrReviewCaseService implements PrReviewApplicationService {
         }
 
         UUID caseId = caseHub.startCase(initialContext).toCompletableFuture().join();
+
+        var vector = PrFeatureVector.from(
+            pr.repo(), pr.prNumber(), pr.contributor(), pr.linesChanged(), pr.changedPaths());
+        featureVectorEmitter.emit(caseId, principal.tenancyId(), vector);
+
         caseTracker.register(caseId, principal.tenancyId(), pr);
         return new PrReviewOutcome(VERDICT_CASE_OPENED, List.of());
     }

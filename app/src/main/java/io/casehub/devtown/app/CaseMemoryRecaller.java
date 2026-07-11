@@ -1,9 +1,12 @@
 package io.casehub.devtown.app;
 
+import io.casehub.devtown.domain.cbr.PrFeatureVector;
 import io.casehub.devtown.domain.memory.DevtownMemoryDomain;
 import io.casehub.devtown.domain.memory.MemoryRecallKeys;
 import io.casehub.devtown.domain.memory.ModulePathNormalizer;
+import io.casehub.devtown.review.CbrRetrievalService;
 import io.casehub.devtown.review.MemoryContext;
+import io.casehub.devtown.review.Precedent;
 import io.casehub.devtown.review.PrPayload;
 import io.casehub.platform.api.identity.CurrentPrincipal;
 import io.casehub.neocortex.memory.CaseMemoryStore;
@@ -40,14 +43,17 @@ public class CaseMemoryRecaller {
     private final Instance<CaseMemoryStore> store;
     private final CurrentPrincipal principal;
     private final PreferenceProvider preferenceProvider;
+    private final Instance<CbrRetrievalService> cbrService;
 
     @Inject
     public CaseMemoryRecaller(final Instance<CaseMemoryStore> store,
                               final CurrentPrincipal principal,
-                              final PreferenceProvider preferenceProvider) {
+                              final PreferenceProvider preferenceProvider,
+                              final Instance<CbrRetrievalService> cbrService) {
         this.store = store;
         this.principal = principal;
         this.preferenceProvider = preferenceProvider;
+        this.cbrService = cbrService;
     }
 
     public MemoryContext recall(final PrPayload pr) {
@@ -97,11 +103,27 @@ public class CaseMemoryRecaller {
                     .withOrder(MemoryOrder.CHRONOLOGICAL)
                 );
 
-            return new MemoryContext(contributorHistory, codeAreaHistory);
+            List<Precedent> precedents = retrievePrecedents(pr, tenantId);
+
+            return new MemoryContext(contributorHistory, codeAreaHistory, precedents);
         } catch (Exception e) {
             LOG.warnf(e, "Memory recall failed for contributor=%s — proceeding without memory",
                 pr.contributor());
             return MemoryContext.EMPTY;
+        }
+    }
+
+    private List<Precedent> retrievePrecedents(PrPayload pr, String tenantId) {
+        if (!cbrService.isResolvable()) return List.of();
+        try {
+            var vector = PrFeatureVector.from(
+                pr.repo(), pr.prNumber(), pr.contributor(),
+                pr.linesChanged(), pr.changedPaths());
+            return cbrService.get().findSimilar(vector, pr.repo(), tenantId);
+        } catch (Exception e) {
+            LOG.warnf(e, "CBR retrieval failed for contributor=%s — proceeding without precedents",
+                pr.contributor());
+            return List.of();
         }
     }
 }

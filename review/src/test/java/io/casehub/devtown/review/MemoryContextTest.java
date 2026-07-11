@@ -25,7 +25,7 @@ class MemoryContextTest {
     @Test
     void emptyContextMapHasEmptyLists() {
         Map<String, Object> map = MemoryContext.EMPTY.toContextMap();
-        assertThat(map).containsKeys("contributorHistory", "codeAreaHistory");
+        assertThat(map).containsKeys("contributorHistory", "codeAreaHistory", "precedents");
         assertThat((List<?>) map.get("contributorHistory")).isEmpty();
         assertThat((List<?>) map.get("codeAreaHistory")).isEmpty();
     }
@@ -33,42 +33,42 @@ class MemoryContextTest {
     @Test
     void completedWithApprovedUppercaseIsNotRisk() {
         Memory m = memory(ReviewOutcome.COMPLETED.name(), "APPROVED");
-        MemoryContext ctx = new MemoryContext(List.of(m), List.of());
+        MemoryContext ctx = new MemoryContext(List.of(m), List.of(), List.of());
         assertThat(ctx.hasRiskSignals()).isFalse();
     }
 
     @Test
     void completedWithPassedIsNotRisk() {
         Memory m = memory(ReviewOutcome.COMPLETED.name(), "passed");
-        MemoryContext ctx = new MemoryContext(List.of(m), List.of());
+        MemoryContext ctx = new MemoryContext(List.of(m), List.of(), List.of());
         assertThat(ctx.hasRiskSignals()).isFalse();
     }
 
     @Test
     void completedWithApprovedLowercaseIsNotRisk() {
         Memory m = memory(ReviewOutcome.COMPLETED.name(), "approved");
-        MemoryContext ctx = new MemoryContext(List.of(m), List.of());
+        MemoryContext ctx = new MemoryContext(List.of(m), List.of(), List.of());
         assertThat(ctx.hasRiskSignals()).isFalse();
     }
 
     @Test
     void completedWithFindingsPresentIsRisk() {
         Memory m = memory(ReviewOutcome.COMPLETED.name(), "FINDINGS_PRESENT");
-        MemoryContext ctx = new MemoryContext(List.of(m), List.of());
+        MemoryContext ctx = new MemoryContext(List.of(m), List.of(), List.of());
         assertThat(ctx.hasRiskSignals()).isTrue();
     }
 
     @Test
     void failedWithAnyDetailIsRisk() {
         Memory m = memory(ReviewOutcome.FAILED.name(), "some detail");
-        MemoryContext ctx = new MemoryContext(List.of(m), List.of());
+        MemoryContext ctx = new MemoryContext(List.of(m), List.of(), List.of());
         assertThat(ctx.hasRiskSignals()).isTrue();
     }
 
     @Test
     void declinedWithAnyDetailIsNotRisk() {
         Memory m = memory(ReviewOutcome.DECLINED.name(), "outside scope");
-        MemoryContext ctx = new MemoryContext(List.of(m), List.of());
+        MemoryContext ctx = new MemoryContext(List.of(m), List.of(), List.of());
         assertThat(ctx.hasRiskSignals()).isFalse();
     }
 
@@ -80,7 +80,7 @@ class MemoryContextTest {
             Map.of(MemoryAttributeKeys.OUTCOME, ReviewOutcome.COMPLETED.name(),
                    DevtownMemoryKeys.CAPABILITY, "security-review"),
             Instant.parse("2026-06-01T10:00:00Z"));
-        MemoryContext ctx = new MemoryContext(List.of(m), List.of());
+        MemoryContext ctx = new MemoryContext(List.of(m), List.of(), List.of());
         assertThat(ctx.hasRiskSignals()).isTrue();
     }
 
@@ -101,7 +101,7 @@ class MemoryContextTest {
             Instant.parse("2026-06-01T10:00:00Z")
         );
 
-        MemoryContext ctx = new MemoryContext(List.of(m), List.of());
+        MemoryContext ctx = new MemoryContext(List.of(m), List.of(), List.of());
         Map<String, Object> map = ctx.toContextMap();
 
         @SuppressWarnings("unchecked")
@@ -118,7 +118,7 @@ class MemoryContextTest {
     @Test
     void codeAreaHistoryAppearsInContextMap() {
         Memory m = memory(ReviewOutcome.COMPLETED.name(), "passed");
-        MemoryContext ctx = new MemoryContext(List.of(), List.of(m));
+        MemoryContext ctx = new MemoryContext(List.of(), List.of(m), List.of());
         Map<String, Object> map = ctx.toContextMap();
 
         @SuppressWarnings("unchecked")

@@ -47,7 +47,11 @@ class CaseMemoryRecallerPreferenceTest {
         var principal = new io.casehub.platform.testing.FixedCurrentPrincipal();
         principal.setTenancyId(TenancyConstants.DEFAULT_TENANT_ID);
 
-        recaller = new CaseMemoryRecaller(storeInstance, principal, LIMIT_ONE);
+        @SuppressWarnings("unchecked")
+        Instance<io.casehub.devtown.review.CbrRetrievalService> cbrInstance = mock(Instance.class);
+        when(cbrInstance.isResolvable()).thenReturn(false);
+
+        recaller = new CaseMemoryRecaller(storeInstance, principal, LIMIT_ONE, cbrInstance);
     }
 
     @Test

@@ -1,0 +1,145 @@
+package io.casehub.devtown.app;
+
+import io.casehub.devtown.domain.cbr.CbrPreferenceKeys;
+import io.casehub.devtown.domain.cbr.PrFeatureVector;
+import io.casehub.devtown.domain.cbr.SimilarityMetric;
+import io.casehub.devtown.domain.cbr.SimilarityScore;
+import io.casehub.devtown.domain.cbr.WeightedJaccardSimilarity;
+import io.casehub.devtown.domain.memory.DevtownMemoryDomain;
+import io.casehub.devtown.domain.memory.DevtownMemoryKeys;
+import io.casehub.devtown.review.CbrRetrievalService;
+import io.casehub.devtown.review.Precedent;
+import io.casehub.neocortex.memory.CaseMemoryStore;
+import io.casehub.neocortex.memory.Memory;
+import io.casehub.neocortex.memory.MemoryAttributeKeys;
+import io.casehub.neocortex.memory.MemoryQuery;
+import io.casehub.neocortex.memory.MemoryScanRequest;
+import io.casehub.platform.api.preferences.PreferenceProvider;
+import io.casehub.platform.api.preferences.Preferences;
+import io.casehub.platform.api.preferences.SettingsScope;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+import org.jboss.logging.Logger;
+
+import java.time.Duration;
+import java.time.Instant;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+
+@ApplicationScoped
+public class DefaultCbrRetrievalService implements CbrRetrievalService {
+
+    private static final Logger LOG = Logger.getLogger(DefaultCbrRetrievalService.class);
+    private static final SettingsScope CBR_SCOPE =
+        SettingsScope.of("casehubio", "devtown", "cbr");
+    private final CaseMemoryStore store;
+    private final PreferenceProvider preferenceProvider;
+
+    @Inject
+    public DefaultCbrRetrievalService(CaseMemoryStore store,
+                                       PreferenceProvider preferenceProvider) {
+        this.store = store;
+        this.preferenceProvider = preferenceProvider;
+    }
+
+    @Override
+    public List<Precedent> findSimilar(PrFeatureVector query, String repo, String tenantId) {
+        try {
+            Preferences prefs = preferenceProvider.resolve(CBR_SCOPE);
+            int kLimit = prefs.getOrDefault(CbrPreferenceKeys.K_LIMIT).value();
+            double minThreshold = prefs.getOrDefault(CbrPreferenceKeys.MIN_THRESHOLD).value();
+            int timeWindowDays = prefs.getOrDefault(CbrPreferenceKeys.TIME_WINDOW_DAYS).value();
+            Instant since = Instant.now().minus(Duration.ofDays(timeWindowDays));
+
+            SimilarityMetric metric = buildMetric(prefs);
+
+            List<Memory> caseVectors = store.scan(new MemoryScanRequest(
+                tenantId,
+                DevtownMemoryDomain.SOFTWARE_REVIEW.name(),
+                DevtownMemoryKeys.ENTITY_TYPE,
+                "case-vector",
+                1000,
+                null));
+
+            return caseVectors.stream()
+                .filter(m -> repo.equals(m.attributes().get(DevtownMemoryKeys.PR_REPO)))
+                .filter(m -> m.createdAt().isAfter(since))
+                .map(m -> scoreCandidate(m, query, metric, tenantId))
+                .filter(scored -> scored != null)
+                .filter(scored -> scored.similarity().score() >= minThreshold)
+                .sorted(Comparator.comparing(Precedent::similarity).reversed())
+                .limit(kLimit)
+                .toList();
+        } catch (Exception e) {
+            LOG.warnf(e, "CBR retrieval failed for repo=%s — returning empty precedents", repo);
+            return List.of();
+        }
+    }
+
+    private Precedent scoreCandidate(Memory memory, PrFeatureVector query,
+                                      SimilarityMetric metric, String tenantId) {
+        try {
+            PrFeatureVector stored = PrFeatureVector.fromAttributes(memory.attributes());
+            SimilarityScore score = metric.compute(query, stored);
+            UUID caseId = UUID.fromString(memory.caseId());
+
+            Map<String, String> capabilityOutcomes = enrichOutcomes(caseId, stored.contributor(), tenantId);
+            if (capabilityOutcomes.isEmpty()) return null;
+
+            String aggregate = aggregateOutcome(capabilityOutcomes);
+            return new Precedent(caseId, score, stored, aggregate, capabilityOutcomes);
+        } catch (Exception e) {
+            LOG.debugf(e, "Failed to score candidate memory=%s", memory.memoryId());
+            return null;
+        }
+    }
+
+    private Map<String, String> enrichOutcomes(UUID caseId, String contributor, String tenantId) {
+        try {
+            List<Memory> outcomeFacts = store.query(
+                MemoryQuery.forEntity(
+                    DevtownMemoryDomain.CONTRIBUTOR_PREFIX + contributor,
+                    DevtownMemoryDomain.SOFTWARE_REVIEW,
+                    tenantId)
+                .withCaseId(caseId.toString())
+                .withLimit(20));
+
+            var outcomes = new LinkedHashMap<String, String>();
+            for (var fact : outcomeFacts) {
+                String capability = fact.attributes().get(DevtownMemoryKeys.CAPABILITY);
+                String outcome = fact.attributes().get(MemoryAttributeKeys.OUTCOME);
+                if (capability != null && outcome != null) {
+                    outcomes.put(capability, outcome);
+                }
+            }
+            return outcomes;
+        } catch (Exception e) {
+            LOG.debugf(e, "Failed to enrich outcomes for case=%s", caseId);
+            return Map.of();
+        }
+    }
+
+    private String aggregateOutcome(Map<String, String> capabilityOutcomes) {
+        boolean anyFailed = capabilityOutcomes.values().stream()
+            .anyMatch(o -> "FAILED".equals(o));
+        if (anyFailed) return "failed";
+
+        boolean allApproved = capabilityOutcomes.values().stream()
+            .allMatch(o -> "COMPLETED".equals(o));
+        return allApproved ? "approved" : "flagged";
+    }
+
+    private SimilarityMetric buildMetric(Preferences prefs) {
+        return new WeightedJaccardSimilarity(
+            prefs.getOrDefault(CbrPreferenceKeys.WEIGHT_FILE_PATHS).value(),
+            prefs.getOrDefault(CbrPreferenceKeys.WEIGHT_MODULES).value(),
+            prefs.getOrDefault(CbrPreferenceKeys.WEIGHT_LANGUAGES).value(),
+            prefs.getOrDefault(CbrPreferenceKeys.WEIGHT_CHANGE_SIZE).value(),
+            prefs.getOrDefault(CbrPreferenceKeys.WEIGHT_CONTRIBUTOR).value()
+        );
+    }
+}

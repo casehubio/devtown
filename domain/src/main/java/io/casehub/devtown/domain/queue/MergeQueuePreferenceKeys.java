@@ -35,6 +35,14 @@ public final class MergeQueuePreferenceKeys {
         new PreferenceKey<>("devtown.merge-queue", "target-branch",
             StringPreference.of("main"), StringPreference::parse);
 
+    public static final PreferenceKey<StringPreference> MERGE_READY_LABEL =
+        new PreferenceKey<>("devtown.merge-queue", "merge-ready-label",
+            StringPreference.of("merge-ready"), StringPreference::parse);
+
+    public static final PreferenceKey<BooleanPreference> DEQUEUE_ON_UNLABEL =
+        new PreferenceKey<>("devtown.merge-queue", "dequeue-on-unlabel",
+            BooleanPreference.of(false), BooleanPreference::parse);
+
     public static final PreferenceKey<StringPreference> SLA_CRITICAL =
         new PreferenceKey<>("devtown.merge-queue.sla", "CRITICAL",
             StringPreference.of("PT1H"), StringPreference::parse);

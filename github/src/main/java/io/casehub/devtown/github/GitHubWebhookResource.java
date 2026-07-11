@@ -1,9 +1,13 @@
 package io.casehub.devtown.github;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.casehub.devtown.merge.MergeQueueAdmissionPort;
+import io.casehub.devtown.domain.queue.MergeQueuePreferenceKeys;
+import io.casehub.devtown.merge.MergeQueuePort;
 import io.casehub.devtown.review.LifecycleResult;
 import io.casehub.devtown.review.PrReviewApplicationService;
+import io.casehub.platform.api.preferences.PreferenceProvider;
+import io.casehub.platform.api.preferences.Preferences;
+import io.casehub.platform.api.preferences.SettingsScope;
 import jakarta.annotation.security.PermitAll;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.Consumes;
@@ -31,10 +35,16 @@ public class GitHubWebhookResource {
     PrReviewApplicationService service;
 
     @Inject
-    MergeQueueAdmissionPort admissionPort;
+    MergeQueuePort mergeQueuePort;
+
+    @Inject
+    PreferenceProvider preferenceProvider;
 
     @ConfigProperty(name = "devtown.github.webhook-secret", defaultValue = "")
     String webhookSecret;
+
+    private static final SettingsScope MERGE_QUEUE_SCOPE =
+        SettingsScope.of("devtown", "merge-queue");
 
     @POST
     public Response receive(String body,
@@ -73,6 +83,7 @@ public class GitHubWebhookResource {
             case "closed" -> handleClosed(event);
             case "reopened" -> handleReopened(event);
             case "labeled" -> handleLabeled(event);
+            case "unlabeled" -> handleUnlabeled(event);
             default -> ok(Map.of("status", "ignored", "action", event.action()));
         };
     }
@@ -112,7 +123,8 @@ public class GitHubWebhookResource {
     }
 
     private Response handleLabeled(GitHubPullRequestEvent event) {
-        if (event.label() == null || !"merge-ready".equals(event.label().name())) {
+        String mergeReadyLabel = resolveMergeReadyLabel();
+        if (event.label() == null || !mergeReadyLabel.equals(event.label().name())) {
             return ok(Map.of("status", "ignored", "action", "labeled",
                              "reason", "not-merge-ready"));
         }
@@ -120,7 +132,7 @@ public class GitHubWebhookResource {
             return ok(Map.of("status", "ignored", "reason", "draft"));
         }
 
-        var result = admissionPort.admit(
+        var result = mergeQueuePort.admit(
             event.number(),
             event.repository().full_name(),
             event.pull_request().head().sha(),
@@ -132,6 +144,30 @@ public class GitHubWebhookResource {
             case ALREADY_QUEUED -> "already-queued";
         };
         return ok(Map.of("status", "accepted", "action", action));
+    }
+
+    private Response handleUnlabeled(GitHubPullRequestEvent event) {
+        Preferences prefs = preferenceProvider.resolve(MERGE_QUEUE_SCOPE);
+        boolean dequeueOnUnlabel = prefs.getOrDefault(MergeQueuePreferenceKeys.DEQUEUE_ON_UNLABEL).value();
+        if (!dequeueOnUnlabel) {
+            return ok(Map.of("status", "ignored", "action", "unlabeled",
+                             "reason", "dequeue-on-unlabel-disabled"));
+        }
+
+        String mergeReadyLabel = prefs.getOrDefault(MergeQueuePreferenceKeys.MERGE_READY_LABEL).value();
+        if (event.label() == null || !mergeReadyLabel.equals(event.label().name())) {
+            return ok(Map.of("status", "ignored", "action", "unlabeled",
+                             "reason", "not-merge-ready"));
+        }
+
+        boolean removed = mergeQueuePort.dequeue(event.number(), event.repository().full_name());
+        String action = removed ? "merge-queue-dequeued" : "not-queued";
+        return ok(Map.of("status", "accepted", "action", action));
+    }
+
+    private String resolveMergeReadyLabel() {
+        Preferences prefs = preferenceProvider.resolve(MERGE_QUEUE_SCOPE);
+        return prefs.getOrDefault(MergeQueuePreferenceKeys.MERGE_READY_LABEL).value();
     }
 
     private Response handleCheckSuite(String body) throws Exception {

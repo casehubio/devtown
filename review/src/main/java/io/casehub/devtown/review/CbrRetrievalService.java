@@ -1,6 +1,7 @@
 package io.casehub.devtown.review;
 
 import io.casehub.devtown.domain.cbr.PrFeatureVector;
+import io.casehub.devtown.domain.cbr.Precedent;
 
 import java.util.List;
 

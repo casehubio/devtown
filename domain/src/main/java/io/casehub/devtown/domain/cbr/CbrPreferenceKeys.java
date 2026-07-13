@@ -34,6 +34,11 @@ public final class CbrPreferenceKeys {
         new PreferenceKey<>(NS, "gate-min-change-size-ratio", DoublePreference.of(0.0), DoublePreference::parse);
     public static final PreferenceKey<BooleanPreference> GATE_SAME_REPO =
         new PreferenceKey<>(NS, "gate-same-repo", BooleanPreference.of(true), BooleanPreference::parse);
+    public static final PreferenceKey<IntPreference>     PRECEDENT_ACTIVATION_MIN_FINDINGS =
+            new PreferenceKey<>(NS, "precedent-activation-min-findings", IntPreference.of(2), IntPreference::parse);
+    public static final PreferenceKey<DoublePreference>  PRECEDENT_ACTIVATION_MIN_FRACTION =
+            new PreferenceKey<>(NS, "precedent-activation-min-fraction", DoublePreference.of(0.4), DoublePreference::parse);
+
 
     private CbrPreferenceKeys() {}
 }

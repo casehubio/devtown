@@ -15,8 +15,8 @@
  */
 package io.casehub.devtown.review;
 
+import io.casehub.api.context.CaseContext;
 import io.casehub.api.model.Binding;
-import io.casehub.worker.api.Capability;
 import io.casehub.api.model.CaseDefinition;
 import io.casehub.api.model.ContextChangeTrigger;
 import io.casehub.api.model.Goal;
@@ -25,11 +25,12 @@ import io.casehub.api.model.GoalKind;
 import io.casehub.api.model.HumanTaskTarget;
 import io.casehub.api.model.OutcomeAction;
 import io.casehub.api.model.OutcomePolicy;
-import io.casehub.api.context.CaseContext;
 import io.casehub.api.model.evaluator.LambdaExpressionEvaluator;
 import io.casehub.devtown.domain.AgentQualification;
 import io.casehub.devtown.domain.FailurePolicy;
 import io.casehub.devtown.domain.ReviewDomain;
+import io.casehub.worker.api.Capability;
+
 import java.time.Duration;
 import java.util.List;
 import java.util.Map;
@@ -66,9 +67,11 @@ public final class PrReviewCaseDefinition {
         var prApproved = Goal.builder()
             .name("pr-approved").kind(GoalKind.SUCCESS)
             .condition(ctx ->
-                (Boolean.FALSE.equals(ctx.getPath("codeAnalysis.securitySensitive")) ||
+                ((Boolean.FALSE.equals(ctx.getPath("codeAnalysis.securitySensitive")) &&
+                    ctx.get("securityReview") == null) ||
                     "APPROVED".equals(ctx.getPath("securityReview.outcome"))) &&
-                (Boolean.FALSE.equals(ctx.getPath("codeAnalysis.architectureCrossing")) ||
+                ((Boolean.FALSE.equals(ctx.getPath("codeAnalysis.architectureCrossing")) &&
+                    ctx.get("architectureReview") == null) ||
                     "APPROVED".equals(ctx.getPath("architectureReview.outcome"))) &&
                 "APPROVED".equals(ctx.getPath("styleCheck.outcome")) &&
                 "APPROVED".equals(ctx.getPath("testCoverage.outcome")) &&
@@ -78,7 +81,8 @@ public final class PrReviewCaseDefinition {
         var securityVerified = Goal.builder()
             .name("security-verified").kind(GoalKind.SUCCESS)
             .condition(ctx ->
-                Boolean.FALSE.equals(ctx.getPath("codeAnalysis.securitySensitive")) ||
+                (Boolean.FALSE.equals(ctx.getPath("codeAnalysis.securitySensitive")) &&
+                    ctx.get("securityReview") == null) ||
                 "APPROVED".equals(ctx.getPath("securityReview.outcome")))
             .build();
 
@@ -167,6 +171,32 @@ public final class PrReviewCaseDefinition {
             ctx -> Boolean.TRUE.equals(ctx.getPath("codeAnalysis.complete")) &&
                    ctx.get("performanceAnalysis") == null,
             perfAnalysisCap));
+
+        // ── Precedent-triggered capability activation ──
+
+        def.getBindings().add(Binding.builder().name("precedent-security-review").on(trigger)
+            .when(new LambdaExpressionEvaluator(ctx ->
+                Boolean.TRUE.equals(ctx.getPath("codeAnalysis.complete")) &&
+                !Boolean.TRUE.equals(ctx.getPath("codeAnalysis.securitySensitive")) &&
+                precedentActivates(ctx, ReviewDomain.SECURITY_REVIEW) &&
+                ctx.get("securityReview") == null))
+            .contextWrite(Map.of("securityReview", Map.of("activationSource", "precedent")))
+            .capability(securityReviewCap)
+            .conflictResolverStrategy(DEEP_MERGE)
+            .outcomePolicy(REROUTE_POLICY)
+            .build());
+
+        def.getBindings().add(Binding.builder().name("precedent-architecture-review").on(trigger)
+            .when(new LambdaExpressionEvaluator(ctx ->
+                Boolean.TRUE.equals(ctx.getPath("codeAnalysis.complete")) &&
+                !Boolean.TRUE.equals(ctx.getPath("codeAnalysis.architectureCrossing")) &&
+                precedentActivates(ctx, ReviewDomain.ARCHITECTURE_REVIEW) &&
+                ctx.get("architectureReview") == null))
+            .contextWrite(Map.of("architectureReview", Map.of("activationSource", "precedent")))
+            .capability(archReviewCap)
+            .conflictResolverStrategy(DEEP_MERGE)
+            .outcomePolicy(REROUTE_POLICY)
+            .build());
 
         // ── Human gate ──
 
@@ -260,9 +290,11 @@ public final class PrReviewCaseDefinition {
                 return ctx.get("merge_sha") == null &&
                     ctx.get("enqueueResult") == null &&
                     !"merged".equals(ctx.getPath("pr.status")) &&
-                    (Boolean.FALSE.equals(ctx.getPath("codeAnalysis.securitySensitive")) ||
+                    ((Boolean.FALSE.equals(ctx.getPath("codeAnalysis.securitySensitive")) &&
+                        ctx.get("securityReview") == null) ||
                         "APPROVED".equals(ctx.getPath("securityReview.outcome"))) &&
-                    (Boolean.FALSE.equals(ctx.getPath("codeAnalysis.architectureCrossing")) ||
+                    ((Boolean.FALSE.equals(ctx.getPath("codeAnalysis.architectureCrossing")) &&
+                        ctx.get("architectureReview") == null) ||
                         "APPROVED".equals(ctx.getPath("architectureReview.outcome"))) &&
                     "APPROVED".equals(ctx.getPath("styleCheck.outcome")) &&
                     "APPROVED".equals(ctx.getPath("testCoverage.outcome")) &&
@@ -283,9 +315,11 @@ public final class PrReviewCaseDefinition {
                     "APPROVED".equals(ctx.getPath("humanApproval.outcome"));
                 return ctx.get("merge_sha") == null &&
                     !"merged".equals(ctx.getPath("pr.status")) &&
-                    (Boolean.FALSE.equals(ctx.getPath("codeAnalysis.securitySensitive")) ||
+                    ((Boolean.FALSE.equals(ctx.getPath("codeAnalysis.securitySensitive")) &&
+                        ctx.get("securityReview") == null) ||
                         "APPROVED".equals(ctx.getPath("securityReview.outcome"))) &&
-                    (Boolean.FALSE.equals(ctx.getPath("codeAnalysis.architectureCrossing")) ||
+                    ((Boolean.FALSE.equals(ctx.getPath("codeAnalysis.architectureCrossing")) &&
+                        ctx.get("architectureReview") == null) ||
                         "APPROVED".equals(ctx.getPath("architectureReview.outcome"))) &&
                     "APPROVED".equals(ctx.getPath("styleCheck.outcome")) &&
                     "APPROVED".equals(ctx.getPath("testCoverage.outcome")) &&
@@ -332,6 +366,13 @@ public final class PrReviewCaseDefinition {
                 .build())
             .build());
     }
+
+    @SuppressWarnings("unchecked")
+    private static boolean precedentActivates(CaseContext ctx, String capability) {
+        var activations = (List<String>) ctx.getPath("memory.precedentActivations");
+        return activations != null && activations.contains(capability);
+    }
+
 
     private static Capability cap(String name, String inputSchema, String outputSchema) {
         return Capability.of(name, inputSchema, outputSchema);

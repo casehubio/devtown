@@ -1,10 +1,5 @@
 package io.casehub.devtown.app;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
-
 import io.casehub.devtown.domain.cbr.PrFeatureVector;
 import io.casehub.devtown.domain.memory.DevtownMemoryDomain;
 import io.casehub.devtown.domain.memory.DevtownMemoryKeys;
@@ -15,15 +10,18 @@ import io.casehub.neocortex.memory.MemoryQuery;
 import io.casehub.neocortex.memory.MemoryScanRequest;
 import io.casehub.platform.api.preferences.PreferenceProvider;
 import io.casehub.platform.api.preferences.Preferences;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.time.Instant;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 class DefaultCbrRetrievalServiceTest {
 
@@ -140,6 +138,49 @@ class DefaultCbrRetrievalServiceTest {
         assertThat(results).hasSize(1);
         assertThat(results.get(0).outcome()).isEqualTo("failed");
     }
+
+    @Test
+    void aggregateOutcome_findingsPresentIsFlagged() {
+        var query = PrFeatureVector.from("repo", 1, "alice", 100,
+                                         List.of("core/src/main/java/Foo.java"));
+
+        UUID id1 = UUID.randomUUID();
+        var v1 = PrFeatureVector.from("repo", 2, "bob", 100,
+                                      List.of("core/src/main/java/Foo.java"));
+
+        when(store.scan(any(MemoryScanRequest.class))).thenReturn(List.of(
+                buildCaseVectorMemory(id1, "repo", "bob", v1)));
+        when(store.query(any(MemoryQuery.class))).thenReturn(List.of(
+                buildOutcomeMemory(id1, "code-analysis", "COMPLETED", "approved"),
+                buildOutcomeMemory(id1, "security-review", "COMPLETED", "FINDINGS_PRESENT")));
+
+        var results = service.findSimilar(query, "repo", "tenant-1");
+        assertThat(results).hasSize(1);
+        assertThat(results.get(0).outcome()).isEqualTo("flagged");
+    }
+
+    @Test
+    void enrichOutcomesIncludesDetail() {
+        var query = PrFeatureVector.from("repo", 1, "alice", 100,
+                                         List.of("core/src/main/java/Foo.java"));
+
+        UUID id1 = UUID.randomUUID();
+        var v1 = PrFeatureVector.from("repo", 2, "bob", 100,
+                                      List.of("core/src/main/java/Foo.java"));
+
+        when(store.scan(any(MemoryScanRequest.class))).thenReturn(List.of(
+                buildCaseVectorMemory(id1, "repo", "bob", v1)));
+        when(store.query(any(MemoryQuery.class))).thenReturn(List.of(
+                buildOutcomeMemory(id1, "security-review", "COMPLETED", "FINDINGS_PRESENT")));
+
+        var results = service.findSimilar(query, "repo", "tenant-1");
+        assertThat(results).hasSize(1);
+        var securityOutcome = results.get(0).capabilityOutcomes().get("security-review");
+        assertThat(securityOutcome.outcome()).isEqualTo("COMPLETED");
+        assertThat(securityOutcome.detail()).isEqualTo("FINDINGS_PRESENT");
+        assertThat(securityOutcome.hadFindings()).isTrue();
+    }
+
 
     @Test
     void failOpenReturnsEmptyOnScanException() {

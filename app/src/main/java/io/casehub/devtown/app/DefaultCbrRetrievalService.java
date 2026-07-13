@@ -1,7 +1,9 @@
 package io.casehub.devtown.app;
 
+import io.casehub.devtown.domain.cbr.CapabilityOutcome;
 import io.casehub.devtown.domain.cbr.CbrPreferenceKeys;
 import io.casehub.devtown.domain.cbr.PrFeatureVector;
+import io.casehub.devtown.domain.cbr.Precedent;
 import io.casehub.devtown.domain.cbr.SimilarityGate;
 import io.casehub.devtown.domain.cbr.SimilarityMetric;
 import io.casehub.devtown.domain.cbr.SimilarityScore;
@@ -9,7 +11,6 @@ import io.casehub.devtown.domain.cbr.WeightedJaccardSimilarity;
 import io.casehub.devtown.domain.memory.DevtownMemoryDomain;
 import io.casehub.devtown.domain.memory.DevtownMemoryKeys;
 import io.casehub.devtown.review.CbrRetrievalService;
-import io.casehub.devtown.review.Precedent;
 import io.casehub.neocortex.memory.CaseMemoryStore;
 import io.casehub.neocortex.memory.Memory;
 import io.casehub.neocortex.memory.MemoryAttributeKeys;
@@ -25,7 +26,6 @@ import org.jboss.logging.Logger;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -34,62 +34,60 @@ import java.util.UUID;
 @ApplicationScoped
 public class DefaultCbrRetrievalService implements CbrRetrievalService {
 
-    private static final Logger LOG = Logger.getLogger(DefaultCbrRetrievalService.class);
-    private static final SettingsScope CBR_SCOPE =
-        SettingsScope.of("casehubio", "devtown", "cbr");
-    private final CaseMemoryStore store;
-    private final PreferenceProvider preferenceProvider;
+    private static final Logger             LOG       = Logger.getLogger(DefaultCbrRetrievalService.class);
+    private static final SettingsScope      CBR_SCOPE =
+            SettingsScope.of("casehubio", "devtown", "cbr");
+    private final        CaseMemoryStore    store;
+    private final        PreferenceProvider preferenceProvider;
 
     @Inject
     public DefaultCbrRetrievalService(CaseMemoryStore store,
-                                       PreferenceProvider preferenceProvider) {
-        this.store = store;
+                                      PreferenceProvider preferenceProvider) {
+        this.store              = store;
         this.preferenceProvider = preferenceProvider;
     }
 
     @Override
     public List<Precedent> findSimilar(PrFeatureVector query, String repo, String tenantId) {
         try {
-            Preferences prefs = preferenceProvider.resolve(CBR_SCOPE);
-            int kLimit = prefs.getOrDefault(CbrPreferenceKeys.K_LIMIT).value();
-            double minThreshold = prefs.getOrDefault(CbrPreferenceKeys.MIN_THRESHOLD).value();
-            int timeWindowDays = prefs.getOrDefault(CbrPreferenceKeys.TIME_WINDOW_DAYS).value();
-            Instant since = Instant.now().minus(Duration.ofDays(timeWindowDays));
+            Preferences prefs          = preferenceProvider.resolve(CBR_SCOPE);
+            int         kLimit         = prefs.getOrDefault(CbrPreferenceKeys.K_LIMIT).value();
+            double      minThreshold   = prefs.getOrDefault(CbrPreferenceKeys.MIN_THRESHOLD).value();
+            int         timeWindowDays = prefs.getOrDefault(CbrPreferenceKeys.TIME_WINDOW_DAYS).value();
+            Instant     since          = Instant.now().minus(Duration.ofDays(timeWindowDays));
 
             SimilarityMetric metric = buildMetric(prefs);
-            SimilarityGate gate = buildGate(prefs);
+            SimilarityGate   gate   = buildGate(prefs);
 
             List<Memory> caseVectors = store.scan(new MemoryScanRequest(
-                tenantId,
-                DevtownMemoryDomain.SOFTWARE_REVIEW.name(),
-                DevtownMemoryKeys.ENTITY_TYPE,
-                "case-vector",
-                1000,
-                null));
+                    tenantId,
+                    DevtownMemoryDomain.SOFTWARE_REVIEW.name(),
+                    DevtownMemoryKeys.ENTITY_TYPE,
+                    "case-vector",
+                    1000,
+                    null));
 
             return caseVectors.stream()
-                .filter(m -> m.createdAt().isAfter(since))
-                .map(m -> toCandidateVector(m))
-                .filter(cv -> cv != null)
-                .filter(cv -> gate.passes(query, cv.vector))
-                .map(cv -> scoreCandidate(cv, query, metric, tenantId))
-                .filter(scored -> scored != null)
-                .filter(scored -> scored.similarity().score() >= minThreshold)
-                .sorted(Comparator.comparing(Precedent::similarity).reversed())
-                .limit(kLimit)
-                .toList();
+                              .filter(m -> m.createdAt().isAfter(since))
+                              .map(m -> toCandidateVector(m))
+                              .filter(cv -> cv != null)
+                              .filter(cv -> gate.passes(query, cv.vector))
+                              .map(cv -> scoreCandidate(cv, query, metric, tenantId))
+                              .filter(scored -> scored != null)
+                              .filter(scored -> scored.similarity().score() >= minThreshold)
+                              .sorted(Comparator.comparing(Precedent::similarity).reversed())
+                              .limit(kLimit)
+                              .toList();
         } catch (Exception e) {
             LOG.warnf(e, "CBR retrieval failed for repo=%s — returning empty precedents", repo);
             return List.of();
         }
     }
 
-    private record CandidateVector(UUID caseId, PrFeatureVector vector, String contributor) {}
-
     private CandidateVector toCandidateVector(Memory memory) {
         try {
             PrFeatureVector stored = PrFeatureVector.fromAttributes(memory.attributes());
-            UUID caseId = UUID.fromString(memory.caseId());
+            UUID            caseId = UUID.fromString(memory.caseId());
             return new CandidateVector(caseId, stored, stored.contributor());
         } catch (Exception e) {
             LOG.debugf(e, "Failed to parse candidate memory=%s", memory.memoryId());
@@ -98,12 +96,12 @@ public class DefaultCbrRetrievalService implements CbrRetrievalService {
     }
 
     private Precedent scoreCandidate(CandidateVector cv, PrFeatureVector query,
-                                      SimilarityMetric metric, String tenantId) {
+                                     SimilarityMetric metric, String tenantId) {
         try {
             SimilarityScore score = metric.compute(query, cv.vector);
 
-            Map<String, String> capabilityOutcomes = enrichOutcomes(cv.caseId, cv.contributor, tenantId);
-            if (capabilityOutcomes.isEmpty()) return null;
+            Map<String, CapabilityOutcome> capabilityOutcomes = enrichOutcomes(cv.caseId, cv.contributor, tenantId);
+            if (capabilityOutcomes.isEmpty()) {return null;}
 
             String aggregate = aggregateOutcome(capabilityOutcomes);
             return new Precedent(cv.caseId, score, cv.vector, aggregate, capabilityOutcomes);
@@ -113,22 +111,23 @@ public class DefaultCbrRetrievalService implements CbrRetrievalService {
         }
     }
 
-    private Map<String, String> enrichOutcomes(UUID caseId, String contributor, String tenantId) {
+    private Map<String, CapabilityOutcome> enrichOutcomes(UUID caseId, String contributor, String tenantId) {
         try {
             List<Memory> outcomeFacts = store.query(
-                MemoryQuery.forEntity(
-                    DevtownMemoryDomain.CONTRIBUTOR_PREFIX + contributor,
-                    DevtownMemoryDomain.SOFTWARE_REVIEW,
-                    tenantId)
-                .withCaseId(caseId.toString())
-                .withLimit(20));
+                    MemoryQuery.forEntity(
+                                       DevtownMemoryDomain.CONTRIBUTOR_PREFIX + contributor,
+                                       DevtownMemoryDomain.SOFTWARE_REVIEW,
+                                       tenantId)
+                               .withCaseId(caseId.toString())
+                               .withLimit(20));
 
-            var outcomes = new LinkedHashMap<String, String>();
+            var outcomes = new LinkedHashMap<String, CapabilityOutcome>();
             for (var fact : outcomeFacts) {
                 String capability = fact.attributes().get(DevtownMemoryKeys.CAPABILITY);
-                String outcome = fact.attributes().get(MemoryAttributeKeys.OUTCOME);
+                String outcome    = fact.attributes().get(MemoryAttributeKeys.OUTCOME);
+                String detail     = fact.attributes().get(DevtownMemoryKeys.OUTCOME_DETAIL);
                 if (capability != null && outcome != null) {
-                    outcomes.put(capability, outcome);
+                    outcomes.put(capability, new CapabilityOutcome(outcome, detail));
                 }
             }
             return outcomes;
@@ -138,31 +137,32 @@ public class DefaultCbrRetrievalService implements CbrRetrievalService {
         }
     }
 
-    private String aggregateOutcome(Map<String, String> capabilityOutcomes) {
+    private String aggregateOutcome(Map<String, CapabilityOutcome> capabilityOutcomes) {
         boolean anyFailed = capabilityOutcomes.values().stream()
-            .anyMatch(o -> "FAILED".equals(o));
-        if (anyFailed) return "failed";
-
-        boolean allApproved = capabilityOutcomes.values().stream()
-            .allMatch(o -> "COMPLETED".equals(o));
-        return allApproved ? "approved" : "flagged";
+                                              .anyMatch(co -> "FAILED".equals(co.outcome()));
+        if (anyFailed) {return "failed";}
+        boolean anyFindings = capabilityOutcomes.values().stream()
+                                                .anyMatch(CapabilityOutcome::hadFindings);
+        return anyFindings ? "flagged" : "approved";
     }
 
     private SimilarityGate buildGate(Preferences prefs) {
         return new SimilarityGate(
-            prefs.getOrDefault(CbrPreferenceKeys.GATE_MIN_MODULE_OVERLAP).value(),
-            prefs.getOrDefault(CbrPreferenceKeys.GATE_MIN_CHANGE_SIZE_RATIO).value(),
-            prefs.getOrDefault(CbrPreferenceKeys.GATE_SAME_REPO).value()
+                prefs.getOrDefault(CbrPreferenceKeys.GATE_MIN_MODULE_OVERLAP).value(),
+                prefs.getOrDefault(CbrPreferenceKeys.GATE_MIN_CHANGE_SIZE_RATIO).value(),
+                prefs.getOrDefault(CbrPreferenceKeys.GATE_SAME_REPO).value()
         );
     }
 
     private SimilarityMetric buildMetric(Preferences prefs) {
         return new WeightedJaccardSimilarity(
-            prefs.getOrDefault(CbrPreferenceKeys.WEIGHT_FILE_PATHS).value(),
-            prefs.getOrDefault(CbrPreferenceKeys.WEIGHT_MODULES).value(),
-            prefs.getOrDefault(CbrPreferenceKeys.WEIGHT_LANGUAGES).value(),
-            prefs.getOrDefault(CbrPreferenceKeys.WEIGHT_CHANGE_SIZE).value(),
-            prefs.getOrDefault(CbrPreferenceKeys.WEIGHT_CONTRIBUTOR).value()
+                prefs.getOrDefault(CbrPreferenceKeys.WEIGHT_FILE_PATHS).value(),
+                prefs.getOrDefault(CbrPreferenceKeys.WEIGHT_MODULES).value(),
+                prefs.getOrDefault(CbrPreferenceKeys.WEIGHT_LANGUAGES).value(),
+                prefs.getOrDefault(CbrPreferenceKeys.WEIGHT_CHANGE_SIZE).value(),
+                prefs.getOrDefault(CbrPreferenceKeys.WEIGHT_CONTRIBUTOR).value()
         );
     }
+
+    private record CandidateVector(UUID caseId, PrFeatureVector vector, String contributor) {}
 }

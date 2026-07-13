@@ -58,8 +58,10 @@ spec:
       kind: success
       condition: >-
         .pr.status == "merged" or
-        ((.codeAnalysis.securitySensitive == false or .securityReview.outcome == "APPROVED") and
-         (.codeAnalysis.architectureCrossing == false or .architectureReview.outcome == "APPROVED") and
+        (((.codeAnalysis.securitySensitive == false and .securityReview == null) or
+          .securityReview.outcome == "APPROVED") and
+         ((.codeAnalysis.architectureCrossing == false and .architectureReview == null) or
+          .architectureReview.outcome == "APPROVED") and
          .styleCheck.outcome == "APPROVED" and
          .testCoverage.outcome == "APPROVED" and
          .performanceAnalysis.outcome == "APPROVED")
@@ -68,7 +70,7 @@ spec:
       kind: success
       condition: >-
         .pr.status == "merged" or
-        .codeAnalysis.securitySensitive == false or
+        (.codeAnalysis.securitySensitive == false and .securityReview == null) or
         .securityReview.outcome == "APPROVED"
 
     - name: ci-passing
@@ -191,6 +193,44 @@ spec:
       on: { contextChange: {} }
       when: ".codeAnalysis.complete == true and .performanceAnalysis == null"
       capability: performance-analysis
+      conflictResolverStrategy: DEEP_MERGE
+      outcomePolicy:
+        onDecline: REROUTE
+        onFailure: REROUTE
+        onExpired: REROUTE
+        maxRerouteAttempts: 2
+
+    ## ── Precedent-triggered capability activation ──
+
+    - name: precedent-security-review
+      on: { contextChange: {} }
+      when: >-
+        .codeAnalysis.complete == true and
+        .codeAnalysis.securitySensitive == false and
+        (.memory.precedentActivations // [] | any(. == "security-review")) and
+        .securityReview == null
+      contextWrite:
+        securityReview:
+          activationSource: precedent
+      capability: security-review
+      conflictResolverStrategy: DEEP_MERGE
+      outcomePolicy:
+        onDecline: REROUTE
+        onFailure: REROUTE
+        onExpired: REROUTE
+        maxRerouteAttempts: 2
+
+    - name: precedent-architecture-review
+      on: { contextChange: {} }
+      when: >-
+        .codeAnalysis.complete == true and
+        .codeAnalysis.architectureCrossing == false and
+        (.memory.precedentActivations // [] | any(. == "architecture-review")) and
+        .architectureReview == null
+      contextWrite:
+        architectureReview:
+          activationSource: precedent
+      capability: architecture-review
       conflictResolverStrategy: DEEP_MERGE
       outcomePolicy:
         onDecline: REROUTE
@@ -342,8 +382,8 @@ spec:
         .merge_sha == null and
         .enqueueResult == null and
         .pr.status != "merged" and
-        (.codeAnalysis.securitySensitive == false or .securityReview.outcome == "APPROVED") and
-        (.codeAnalysis.architectureCrossing == false or .architectureReview.outcome == "APPROVED") and
+        ((.codeAnalysis.securitySensitive == false and .securityReview == null) or .securityReview.outcome == "APPROVED") and
+        ((.codeAnalysis.architectureCrossing == false and .architectureReview == null) or .architectureReview.outcome == "APPROVED") and
         .styleCheck.outcome == "APPROVED" and
         .testCoverage.outcome == "APPROVED" and
         .performanceAnalysis.outcome == "APPROVED" and
@@ -362,8 +402,8 @@ spec:
       when: >-
         .merge_sha == null and
         .pr.status != "merged" and
-        (.codeAnalysis.securitySensitive == false or .securityReview.outcome == "APPROVED") and
-        (.codeAnalysis.architectureCrossing == false or .architectureReview.outcome == "APPROVED") and
+        ((.codeAnalysis.securitySensitive == false and .securityReview == null) or .securityReview.outcome == "APPROVED") and
+        ((.codeAnalysis.architectureCrossing == false and .architectureReview == null) or .architectureReview.outcome == "APPROVED") and
         .styleCheck.outcome == "APPROVED" and
         .testCoverage.outcome == "APPROVED" and
         .performanceAnalysis.outcome == "APPROVED" and

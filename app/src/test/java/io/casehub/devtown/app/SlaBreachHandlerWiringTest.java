@@ -16,7 +16,7 @@ import io.casehub.work.api.BreachedTask;
 import io.casehub.work.api.SlaBreachContext;
 import io.casehub.work.api.spi.SlaBreachPolicy;
 import io.casehub.work.runtime.event.SlaBreachEvent;
-import io.casehub.workadapter.PlanItemCallerRef;
+import io.casehub.work.engine.PlanItemCallerRef;
 import io.quarkus.test.junit.QuarkusTest;
 import jakarta.enterprise.event.Event;
 import jakarta.inject.Inject;

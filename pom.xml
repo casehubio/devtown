@@ -61,10 +61,10 @@
         <version>${project.version}</version>
       </dependency>
 
-      <!-- casehub-engine-work-adapter (WorkAdapterPlanItemEntity in Hibernate packages) -->
+      <!-- casehub-work-engine-adapter (WorkAdapterPlanItemEntity in Hibernate packages) -->
       <dependency>
         <groupId>io.casehub</groupId>
-        <artifactId>casehub-engine-work-adapter</artifactId>
+        <artifactId>casehub-work-engine-adapter</artifactId>
         <version>${project.version}</version>
       </dependency>
 

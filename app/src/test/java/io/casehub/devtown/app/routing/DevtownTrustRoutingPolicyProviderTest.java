@@ -1,5 +1,7 @@
 package io.casehub.devtown.app.routing;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import io.casehub.api.spi.routing.TrustPhase;
 import io.casehub.api.spi.routing.TrustRoutingPolicy;
 import io.casehub.devtown.domain.AgentQualification;
@@ -10,8 +12,6 @@ import io.casehub.platform.api.preferences.PreferenceProvider;
 import org.junit.jupiter.api.Test;
 
 import java.util.Map;
-
-import static org.assertj.core.api.Assertions.assertThat;
 
 class DevtownTrustRoutingPolicyProviderTest {
 
@@ -165,6 +165,53 @@ class DevtownTrustRoutingPolicyProviderTest {
         var                provider = new DevtownTrustRoutingPolicyProvider(EMPTY, registry);
         TrustRoutingPolicy policy   = provider.forCapability("unknown-capability");
         assertThat(policy.evidentialCheckPhases()).isEmpty();
+    }
+// === CBR weight: per-capability defaults ===
+
+    @Test
+    void securityReviewCbrWeightIsPointTwo() {
+        var                provider = new DevtownTrustRoutingPolicyProvider(EMPTY, registry);
+        TrustRoutingPolicy policy   = provider.forCapability(ReviewDomain.SECURITY_REVIEW);
+        assertThat(policy.cbrWeight()).isEqualTo(0.2);
+    }
+
+    @Test
+    void architectureReviewCbrWeightIsPointTwo() {
+        var                provider = new DevtownTrustRoutingPolicyProvider(EMPTY, registry);
+        TrustRoutingPolicy policy   = provider.forCapability(ReviewDomain.ARCHITECTURE_REVIEW);
+        assertThat(policy.cbrWeight()).isEqualTo(0.2);
+    }
+
+    @Test
+    void styleReviewCbrWeightIsPointTwo() {
+        var                provider = new DevtownTrustRoutingPolicyProvider(EMPTY, registry);
+        TrustRoutingPolicy policy   = provider.forCapability(ReviewDomain.STYLE_REVIEW);
+        assertThat(policy.cbrWeight()).isEqualTo(0.2);
+    }
+
+    @Test
+    void mergeExecutorCbrWeightIsZero() {
+        var                provider = new DevtownTrustRoutingPolicyProvider(EMPTY, registry);
+        TrustRoutingPolicy policy   = provider.forCapability(AgentQualification.MERGE_EXECUTOR);
+        assertThat(policy.cbrWeight()).isEqualTo(0.0);
+    }
+
+    @Test
+    void unknownCapabilityCbrWeightIsZero() {
+        var                provider = new DevtownTrustRoutingPolicyProvider(EMPTY, registry);
+        TrustRoutingPolicy policy   = provider.forCapability("unknown-capability");
+        assertThat(policy.cbrWeight()).isEqualTo(0.0);
+    }
+
+    @Test
+    void cbrWeightOverriddenByPreference() {
+        var provider = new DevtownTrustRoutingPolicyProvider(
+                scope -> new MapPreferences(Map.of(
+                        "casehubio.devtown.trust-routing.cbr-weight", "0.35"
+                                                  )),
+                registry);
+        TrustRoutingPolicy policy = provider.forCapability(ReviewDomain.SECURITY_REVIEW);
+        assertThat(policy.cbrWeight()).isEqualTo(0.35);
     }
 
 

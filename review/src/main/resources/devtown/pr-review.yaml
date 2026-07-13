@@ -112,6 +112,17 @@ spec:
         - review-rejected
         - review-abandoned
 
+  ## ─── CBR ─────────────────────────────────────────────────────────────
+  cbr:
+    timing: case-lifetime
+    topK: 5
+    minSimilarity: 0.3
+    features:
+      repo: ".pr.repo"
+      lines-changed: ".pr.linesChanged"
+      contributor: ".pr.contributor"
+      changed-paths: "[.pr.changedPaths[]]"
+
   ## ─── Bindings ────────────────────────────────────────────────────────
   bindings:
 

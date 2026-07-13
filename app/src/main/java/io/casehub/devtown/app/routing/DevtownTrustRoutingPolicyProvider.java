@@ -30,7 +30,7 @@ public class DevtownTrustRoutingPolicyProvider implements TrustRoutingPolicyProv
                                   .withFloor(DevtownTrustDimension.PRECISION, "precision")
                                   .withFloor(DevtownTrustDimension.SCOPE_CALIBRATION, "scope-calibration");
 
-    static final Map<String, Set<TrustPhase>> EVIDENTIAL_CHECK_PHASES = Map.of(
+    static final         Map<String, Set<TrustPhase>> EVIDENTIAL_CHECK_PHASES = Map.of(
             ReviewDomain.SECURITY_REVIEW,
             Set.of(TrustPhase.BELOW_THRESHOLD, TrustPhase.QUALITY_FAILED, TrustPhase.BOOTSTRAP),
             ReviewDomain.ARCHITECTURE_REVIEW,
@@ -38,15 +38,15 @@ public class DevtownTrustRoutingPolicyProvider implements TrustRoutingPolicyProv
             AgentQualification.MERGE_EXECUTOR,
             Set.of(TrustPhase.BELOW_THRESHOLD, TrustPhase.QUALITY_FAILED,
                    TrustPhase.BOOTSTRAP, TrustPhase.BORDERLINE)
-                                                                              );
+                                                                                      );
+    private static final Map<String, Double>          CBR_WEIGHT_DEFAULTS     = Map.of(
+            ReviewDomain.SECURITY_REVIEW, 0.2,
+            ReviewDomain.ARCHITECTURE_REVIEW, 0.2,
+            ReviewDomain.STYLE_REVIEW, 0.2);
+
 
     private final PreferenceProvider preferenceProvider;
     private final CapabilityRegistry capabilityRegistry;
-
-    @Override
-    public String id() {
-        return "devtown";
-    }
 
     @Inject
     public DevtownTrustRoutingPolicyProvider(
@@ -54,6 +54,11 @@ public class DevtownTrustRoutingPolicyProvider implements TrustRoutingPolicyProv
             final CapabilityRegistry capabilityRegistry) {
         this.preferenceProvider = preferenceProvider;
         this.capabilityRegistry = capabilityRegistry;
+    }
+
+    @Override
+    public String id() {
+        return "devtown";
     }
 
     @Override
@@ -85,8 +90,13 @@ public class DevtownTrustRoutingPolicyProvider implements TrustRoutingPolicyProv
         final Set<TrustPhase> evidentialPhases =
                 EVIDENTIAL_CHECK_PHASES.getOrDefault(capabilityName, Set.of());
 
+        final DoublePreference cbrWeightPref = prefs.get(KEYS.cbrWeight());
+        final double cbrWeight = cbrWeightPref != null
+                                 ? cbrWeightPref.value()
+                                 : CBR_WEIGHT_DEFAULTS.getOrDefault(capabilityName, 0.0);
+
         return new TrustRoutingPolicy(threshold, minimumObservations, borderlineMargin,
                                       blendFactor, Map.copyOf(qualityFloors), routingPolicy.fallbackType().isPresent(),
-                                      TrustRoutingPolicy.DEFAULT.fallbackBinding(), evidentialPhases);
+                                      TrustRoutingPolicy.DEFAULT.fallbackBinding(), evidentialPhases, cbrWeight);
     }
 }

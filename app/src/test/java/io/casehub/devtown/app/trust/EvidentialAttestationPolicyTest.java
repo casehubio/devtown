@@ -49,10 +49,10 @@ class EvidentialAttestationPolicyTest {
 
     private static final TrustRoutingPolicy SECURITY_POLICY = new TrustRoutingPolicy(
             0.70, 10, 0.05, 0.6, Map.of(), true, null,
-            Set.of(TrustPhase.BELOW_THRESHOLD, TrustPhase.QUALITY_FAILED, TrustPhase.BOOTSTRAP));
+            Set.of(TrustPhase.BELOW_THRESHOLD, TrustPhase.QUALITY_FAILED, TrustPhase.BOOTSTRAP), 0.0);
 
     private static final TrustRoutingPolicy STYLE_POLICY = new TrustRoutingPolicy(
-            0.50, 5, 0.0, 0.6, Map.of(), false, null, Set.of());
+            0.50, 5, 0.0, 0.6, Map.of(), false, null, Set.of(), 0.0);
 
     @BeforeEach
     void setUp() {
@@ -240,7 +240,7 @@ class EvidentialAttestationPolicyTest {
         TrustRoutingPolicy mergePolicy = new TrustRoutingPolicy(
                 0.80, 15, 0.05, 0.6, Map.of(), true, null,
                 Set.of(TrustPhase.BELOW_THRESHOLD, TrustPhase.QUALITY_FAILED,
-                       TrustPhase.BOOTSTRAP, TrustPhase.BORDERLINE));
+                       TrustPhase.BOOTSTRAP, TrustPhase.BORDERLINE), 0.0);
         String mergeExecutor = "merge-executor";
         CommitmentContext ctx = context(mergeExecutor);
         when(delegate.attestationFor(MessageType.DONE, AGENT_ID, ctx))
@@ -277,7 +277,7 @@ class EvidentialAttestationPolicyTest {
         // depends on the policy's qualityFloors map. Let me use a policy with floors.
         TrustRoutingPolicy withFloors = new TrustRoutingPolicy(
                 0.70, 10, 0.05, 0.6, Map.of("review-thoroughness", 0.5), true, null,
-                Set.of(TrustPhase.BELOW_THRESHOLD, TrustPhase.QUALITY_FAILED, TrustPhase.BOOTSTRAP));
+                Set.of(TrustPhase.BELOW_THRESHOLD, TrustPhase.QUALITY_FAILED, TrustPhase.BOOTSTRAP), 0.0);
         when(policyProvider.forCapability(SECURITY_REVIEW)).thenReturn(withFloors);
 
         Optional<AttestationOutcome> result = policy.attestationFor(MessageType.DONE, AGENT_ID, ctx);

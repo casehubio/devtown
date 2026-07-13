@@ -23,7 +23,7 @@ class GovernanceEventBridgeTest {
 
         bridge.onOpen(session);
 
-        var event = new CaseLifecycleEvent(
+        var event = CaseLifecycleEvent.of(
             UUID.randomUUID(), "default", "CASE_COMPLETED", "CASE_STATE_CHANGED",
             "COMPLETED", "actor-1", "user", "trace-123"
         );
@@ -50,7 +50,7 @@ class GovernanceEventBridgeTest {
         bridge.onClose(session);
 
         // Fire an event — session should NOT receive it
-        var event = new CaseLifecycleEvent(
+        var event = CaseLifecycleEvent.of(
             UUID.randomUUID(), "default", "CASE_COMPLETED", "CASE_STATE_CHANGED",
             "COMPLETED", "actor-1", "user", "trace-123"
         );
@@ -72,7 +72,7 @@ class GovernanceEventBridgeTest {
 
         // Fire an event — session should NOT receive it
         when(session.isOpen()).thenReturn(false);
-        var event = new CaseLifecycleEvent(
+        var event = CaseLifecycleEvent.of(
             UUID.randomUUID(), "default", "CASE_COMPLETED", "CASE_STATE_CHANGED",
             "COMPLETED", "actor-1", "user", "trace-123"
         );

@@ -39,7 +39,7 @@ class MergeDecisionObserverTest {
         String tenancyId = "test-tenant";
         seedCaseInstance(caseId, tenancyId, "casehubio/devtown", "42", "abc123def");
 
-        CaseLifecycleEvent event = new CaseLifecycleEvent(
+        CaseLifecycleEvent event = CaseLifecycleEvent.of(
                 caseId, tenancyId, "COMPLETE", "CASE_COMPLETED",
                 "COMPLETED", "system", "ORCHESTRATOR", "trace-1");
 
@@ -78,7 +78,7 @@ class MergeDecisionObserverTest {
         String tenancyId = "test-tenant";
         seedCaseInstance(caseId, tenancyId, "casehubio/engine", "99", "def456");
 
-        CaseLifecycleEvent event = new CaseLifecycleEvent(
+        CaseLifecycleEvent event = CaseLifecycleEvent.of(
                 caseId, tenancyId, "CANCEL", "CASE_CANCELLED",
                 "CANCELLED", "system", "ORCHESTRATOR", "trace-2");
 
@@ -103,7 +103,7 @@ class MergeDecisionObserverTest {
         String tenancyId = "test-tenant";
         seedCaseInstance(caseId, tenancyId, "casehubio/ledger", "7", "fff000");
 
-        CaseLifecycleEvent event = new CaseLifecycleEvent(
+        CaseLifecycleEvent event = CaseLifecycleEvent.of(
                 caseId, tenancyId, "FAULT", "CASE_FAULTED",
                 "FAULTED", "system", "ORCHESTRATOR", "trace-3");
 

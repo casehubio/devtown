@@ -50,6 +50,13 @@ public final class MergeQueuePreferenceKeys {
     public static final PreferenceKey<IntPreference>     BATCH_RETENTION_DAYS =
             new PreferenceKey<>("devtown.merge-queue", "batch-retention-days",
                                 IntPreference.of(30), IntPreference::parse);
+    public static final PreferenceKey<DoublePreference>  FAILURE_RATE_ALERT_THRESHOLD =
+            new PreferenceKey<>("devtown.merge-queue", "failure-rate-alert-threshold",
+                                DoublePreference.of(0.5), DoublePreference::parse);
+
+    public static final PreferenceKey<IntPreference> FAILURE_RATE_ALERT_MIN_BATCHES =
+            new PreferenceKey<>("devtown.merge-queue", "failure-rate-alert-min-batches",
+                                IntPreference.of(10), IntPreference::parse);
 
 
     public static final PreferenceKey<StringPreference> SLA_CRITICAL =

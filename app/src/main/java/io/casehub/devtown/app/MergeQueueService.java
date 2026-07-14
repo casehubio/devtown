@@ -69,6 +69,9 @@ public class MergeQueueService implements MergeQueuePort {
 
     @Inject
     Event<MergeQueueStateEvent> queueEvent;
+    @Inject
+    Event<FailureRateAlertEvent> failureRateAlert;
+
 
     // ── Public API ──────────────────────────────────────────────────────────
 
@@ -351,6 +354,27 @@ public class MergeQueueService implements MergeQueuePort {
                         })
                         .sorted(java.util.Comparator.comparingDouble(RepositoryFailureRate::failureRate).reversed())
                         .toList();
+    }
+
+    public List<FailureRateAlertEvent> evaluateFailureRateAlerts() {
+        Preferences prefs      = resolvePreferences();
+        double      threshold  = prefs.getOrDefault(MergeQueuePreferenceKeys.FAILURE_RATE_ALERT_THRESHOLD).value();
+        int         minBatches = prefs.getOrDefault(MergeQueuePreferenceKeys.FAILURE_RATE_ALERT_MIN_BATCHES).value();
+
+        return failureRateByRepository().stream()
+                                        .filter(r -> r.total() >= minBatches)
+                                        .filter(r -> r.failureRate() >= threshold)
+                                        .map(r -> {
+                                            var alert = new FailureRateAlertEvent(
+                                                    r.repository(), r.total(), r.failed(), r.failureRate(), threshold);
+                                            LOG.warnf("Sustained high batch failure rate for %s: %.0f%% (%d/%d batches, threshold=%.0f%%)",
+                                                      r.repository(), r.failureRate() * 100, r.failed(), r.total(), threshold * 100);
+                                            if (failureRateAlert != null) {
+                                                failureRateAlert.fireAsync(alert);
+                                            }
+                                            return alert;
+                                        })
+                                        .toList();
     }
 
 

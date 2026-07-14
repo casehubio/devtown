@@ -248,6 +248,14 @@ public class DevtownMcpTools {
         return mergeQueueService.failureRateByRepository();
     }
 
+    @Tool(
+            name = "evaluate_failure_rate_alerts",
+            description = "Check per-repository batch failure rates against configured thresholds and fire alerts for repos exceeding them"
+    )
+    public List<io.casehub.devtown.app.FailureRateAlertEvent> evaluateFailureRateAlerts() {
+        return mergeQueueService.evaluateFailureRateAlerts();
+    }
+
 
     // ==================== Write Tools ====================
 

@@ -1,20 +1,21 @@
 package io.casehub.devtown.app;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
-
 import io.casehub.devtown.merge.BatchRecord;
 import io.casehub.devtown.merge.MergeQueueStore;
 import io.casehub.platform.api.preferences.PreferenceProvider;
 import io.casehub.platform.api.preferences.Preferences;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
 import java.lang.reflect.Field;
 import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 class MergeQueueFailureRateTest {
 
@@ -94,5 +95,43 @@ class MergeQueueFailureRateTest {
         ));
         var rates = service.failureRateByRepository();
         assertThat(rates.get(0).failureRate()).isEqualTo(0.0);
+    }
+
+    @Test
+    void alertEvaluation_aboveThresholdAndMinBatches_fires() {
+        when(store.completedBatchesSince(any())).thenReturn(List.of(
+                batch("repo-a", false), batch("repo-a", false),
+                batch("repo-a", false), batch("repo-a", false),
+                batch("repo-a", false), batch("repo-a", true),
+                batch("repo-a", true), batch("repo-a", true),
+                batch("repo-a", true), batch("repo-a", true)
+                                                                   ));
+        var alerts = service.evaluateFailureRateAlerts();
+        assertThat(alerts).hasSize(1);
+        assertThat(alerts.get(0).repository()).isEqualTo("repo-a");
+        assertThat(alerts.get(0).failureRate()).isEqualTo(0.5);
+    }
+
+    @Test
+    void alertEvaluation_belowMinBatches_noAlert() {
+        when(store.completedBatchesSince(any())).thenReturn(List.of(
+                batch("repo-a", false), batch("repo-a", false),
+                batch("repo-a", false)
+                                                                   ));
+        var alerts = service.evaluateFailureRateAlerts();
+        assertThat(alerts).isEmpty();
+    }
+
+    @Test
+    void alertEvaluation_belowThreshold_noAlert() {
+        when(store.completedBatchesSince(any())).thenReturn(List.of(
+                batch("repo-a", false), batch("repo-a", true),
+                batch("repo-a", true), batch("repo-a", true),
+                batch("repo-a", true), batch("repo-a", true),
+                batch("repo-a", true), batch("repo-a", true),
+                batch("repo-a", true), batch("repo-a", true)
+                                                                   ));
+        var alerts = service.evaluateFailureRateAlerts();
+        assertThat(alerts).isEmpty();
     }
 }

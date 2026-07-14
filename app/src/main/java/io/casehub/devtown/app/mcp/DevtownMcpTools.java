@@ -64,6 +64,10 @@ public class DevtownMcpTools {
     MergeQueueService mergeQueueService;
     @Inject
     io.casehub.devtown.app.trust.EvidentialViolationStore violationStore;
+    @Inject
+    io.casehub.devtown.app.CbrWeightOverrideStore         cbrWeightOverrides;
+    @Inject
+    jakarta.enterprise.inject.Instance<io.casehub.devtown.review.CbrRetrievalService> cbrRetrievalService;
 
 
     @ConfigProperty(name = "devtown.policy.human-approval-threshold", defaultValue = "500")
@@ -443,5 +447,36 @@ public class DevtownMcpTools {
                                  .orElse(List.of());
         }
         return violationStore.all();
+    }
+
+    @Tool(
+            name = "find_similar_cases",
+            description = "Find cases similar to a PR using CBR similarity search — returns ranked precedents with similarity scores and capability outcomes"
+    )
+    public List<io.casehub.devtown.domain.cbr.Precedent> findSimilarCases(
+            @ToolArg(name = "repo", description = "GitHub repo slug (e.g. casehubio/devtown)") String repo,
+            @ToolArg(name = "prNumber", description = "PR number") int prNumber,
+            @ToolArg(name = "contributor", description = "PR author username") String contributor,
+            @ToolArg(name = "linesChanged", description = "Total lines changed") int linesChanged,
+            @ToolArg(name = "changedPaths", description = "Comma-separated list of changed file paths") String changedPaths
+                                                                         ) {
+        if (!cbrRetrievalService.isResolvable()) {
+            return List.of();
+        }
+        var vector = io.casehub.devtown.domain.cbr.PrFeatureVector.from(
+                repo, prNumber, contributor, linesChanged,
+                List.of(changedPaths.split(",")));
+        return cbrRetrievalService.get().findSimilar(vector, repo, principal.tenancyId());
+    }
+
+    @Tool(
+            name = "get_cbr_weight_status",
+            description = "Show current CBR similarity weights — base preferences plus any dynamic adjustments from outcome feedback"
+    )
+    public java.util.Map<String, Object> getCbrWeightStatus() {
+        return java.util.Map.of(
+                "overrides", cbrWeightOverrides.currentOverrides(),
+                "sampleCount", cbrWeightOverrides.sampleCount()
+                               );
     }
 }

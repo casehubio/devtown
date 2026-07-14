@@ -44,6 +44,7 @@ class EvidentialAttestationPolicyTest {
     private final EvidentialChecker checker = mock(EvidentialChecker.class);
     private final TrustScoreSource scoreSource = mock(TrustScoreSource.class);
     private final TrustRoutingPolicyProvider policyProvider = mock(TrustRoutingPolicyProvider.class);
+    private final EvidentialViolationStore violationStore = new EvidentialViolationStore();
 
     private EvidentialAttestationPolicy policy;
 
@@ -56,7 +57,7 @@ class EvidentialAttestationPolicyTest {
 
     @BeforeEach
     void setUp() {
-        policy = new EvidentialAttestationPolicy(delegate, checker, scoreSource, policyProvider);
+        policy = new EvidentialAttestationPolicy(delegate, checker, scoreSource, policyProvider, violationStore);
     }
 
     // ── DONE + QUALIFIED agent → no evidential checks ──
@@ -98,6 +99,7 @@ class EvidentialAttestationPolicyTest {
         assertThat(result).isPresent();
         assertThat(result.get().verdict()).isEqualTo(AttestationVerdict.SOUND);
         assertThat(result.get().confidence()).isEqualTo(0.35);
+        assertThat(violationStore.size()).isEqualTo(0);
     }
 
     // ── DONE + BELOW_THRESHOLD + violations → FLAGGED at 0.8 ──
@@ -123,6 +125,13 @@ class EvidentialAttestationPolicyTest {
         assertThat(result.get().confidence()).isEqualTo(0.8);
         assertThat(result.get().attestorId()).isEqualTo("system");
         assertThat(result.get().attestorType()).isEqualTo(ActorType.SYSTEM);
+
+        assertThat(violationStore.size()).isEqualTo(1);
+        var record = violationStore.get(ctx.artefactUuid().toString()).orElseThrow();
+        assertThat(record.actorId()).isEqualTo(AGENT_ID);
+        assertThat(record.capabilityTag()).isEqualTo(SECURITY_REVIEW);
+        assertThat(record.violations()).isNotEmpty();
+        assertThat(record.violations()).allMatch(v -> "V2".equals(v.variantId()));
     }
 
     // ── BOOTSTRAP + configured → runs checks ──
@@ -289,6 +298,6 @@ class EvidentialAttestationPolicyTest {
     private static CommitmentContext context(String capabilityTag) {
         return new CommitmentContext(
                 UUID.randomUUID().toString(), UUID.randomUUID(), "test-channel",
-                UUID.randomUUID(), capabilityTag, null, null, null);
+                UUID.randomUUID(), capabilityTag, UUID.randomUUID(), null, null);
     }
 }

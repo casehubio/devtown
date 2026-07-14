@@ -8,15 +8,15 @@ import io.casehub.devtown.app.ledger.IncidentFeedbackService;
 import io.casehub.devtown.domain.IncidentFeedback;
 import io.casehub.devtown.domain.IncidentFeedbackResult;
 import io.casehub.devtown.domain.IncidentSeverity;
+import io.casehub.devtown.domain.memory.DevtownMemoryDomain;
+import io.casehub.devtown.domain.memory.ModulePathNormalizer;
 import io.casehub.devtown.domain.queue.PriorityLane;
 import io.casehub.devtown.queue.QueuedPr;
 import io.casehub.ledger.runtime.service.LedgerProvExportService;
-import io.casehub.platform.api.identity.CurrentPrincipal;
 import io.casehub.neocortex.memory.CaseMemoryStore;
 import io.casehub.neocortex.memory.MemoryOrder;
 import io.casehub.neocortex.memory.MemoryQuery;
-import io.casehub.devtown.domain.memory.DevtownMemoryDomain;
-import io.casehub.devtown.domain.memory.ModulePathNormalizer;
+import io.casehub.platform.api.identity.CurrentPrincipal;
 import io.quarkiverse.mcp.server.Tool;
 import io.quarkiverse.mcp.server.ToolArg;
 import io.quarkiverse.mcp.server.WrapBusinessError;
@@ -24,6 +24,7 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.inject.Instance;
 import jakarta.inject.Inject;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
+
 import java.time.Instant;
 import java.util.HashMap;
 import java.util.List;
@@ -61,6 +62,9 @@ public class DevtownMcpTools {
 
     @Inject
     MergeQueueService mergeQueueService;
+    @Inject
+    io.casehub.devtown.app.trust.EvidentialViolationStore violationStore;
+
 
     @ConfigProperty(name = "devtown.policy.human-approval-threshold", defaultValue = "500")
     int humanApprovalThreshold;
@@ -407,5 +411,20 @@ public class DevtownMcpTools {
         IncidentFeedback feedback = new IncidentFeedback(
                 repository, prNumber, incidentId, sev, description, reviewCapability, parsedCaseId);
         return incidentFeedbackService.recordFeedback(feedback);
+    }
+
+    @Tool(
+            name = "get_evidential_violations",
+            description = "List evidential benchmark violations from FLAGGED attestations — shows which checks failed and why"
+    )
+    public List<io.casehub.devtown.app.trust.EvidentialViolationStore.ViolationRecord> getEvidentialViolations(
+            @ToolArg(name = "commitmentId", description = "Optional — filter by commitment UUID", required = false) String commitmentId
+                                                                                                              ) {
+        if (commitmentId != null) {
+            return violationStore.get(commitmentId)
+                                 .map(List::of)
+                                 .orElse(List.of());
+        }
+        return violationStore.all();
     }
 }

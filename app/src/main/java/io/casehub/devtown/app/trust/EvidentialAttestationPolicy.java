@@ -18,13 +18,13 @@ import jakarta.annotation.Priority;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.inject.Alternative;
 import jakarta.inject.Inject;
+import org.jboss.logging.Logger;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.OptionalDouble;
-import java.util.Set;
-import org.jboss.logging.Logger;
 
 @Alternative
 @Priority(2)
@@ -38,17 +38,20 @@ public class EvidentialAttestationPolicy implements CommitmentAttestationPolicy 
     private final EvidentialChecker checker;
     private final TrustScoreSource scoreSource;
     private final TrustRoutingPolicyProvider policyProvider;
+    private final EvidentialViolationStore violationStore;
 
     @Inject
     public EvidentialAttestationPolicy(
             final TrustGatedAttestationPolicy delegate,
             final EvidentialChecker checker,
             final TrustScoreSource scoreSource,
-            final TrustRoutingPolicyProvider policyProvider) {
+            final TrustRoutingPolicyProvider policyProvider,
+            final EvidentialViolationStore violationStore) {
         this.delegate = delegate;
         this.checker = checker;
         this.scoreSource = scoreSource;
         this.policyProvider = policyProvider;
+        this.violationStore = violationStore;
     }
 
     public TrustGatedAttestationPolicy delegate() {
@@ -92,6 +95,11 @@ public class EvidentialAttestationPolicy implements CommitmentAttestationPolicy 
 
             LOG.warnf("Evidential check failed for %s on %s: %d violations — %s",
                     resolvedActorId, capabilityTag, violations.size(), summarize(violations));
+
+            if (context.artefactUuid() != null) {
+                violationStore.record(context.artefactUuid().toString(), resolvedActorId,
+                        capabilityTag, violations);
+            }
 
             return Optional.of(new AttestationOutcome(
                     AttestationVerdict.FLAGGED, EVIDENTIAL_FAILURE_CONFIDENCE,

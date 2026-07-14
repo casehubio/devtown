@@ -34,16 +34,16 @@ public final class CbrPreferenceKeys {
         new PreferenceKey<>(NS, "gate-min-change-size-ratio", DoublePreference.of(0.0), DoublePreference::parse);
     public static final PreferenceKey<BooleanPreference> GATE_SAME_REPO =
         new PreferenceKey<>(NS, "gate-same-repo", BooleanPreference.of(true), BooleanPreference::parse);
-    public static final PreferenceKey<IntPreference>     PRECEDENT_ACTIVATION_MIN_FINDINGS =
-            new PreferenceKey<>(NS, "precedent-activation-min-findings", IntPreference.of(2), IntPreference::parse);
+    public static final PreferenceKey<DoublePreference> PRECEDENT_ACTIVATION_MIN_EVIDENCE =
+            new PreferenceKey<>(NS, "precedent-activation-min-evidence", DoublePreference.of(2.0), DoublePreference::parse);
     public static final PreferenceKey<DoublePreference>  PRECEDENT_ACTIVATION_MIN_FRACTION =
             new PreferenceKey<>(NS, "precedent-activation-min-fraction", DoublePreference.of(0.4), DoublePreference::parse);
-    public static final PreferenceKey<IntPreference>     SECURITY_REVIEW_MIN_FINDINGS      =
-            new PreferenceKey<>(NS, "precedent-activation.security-review.min-findings", IntPreference.of(2), IntPreference::parse);
+    public static final PreferenceKey<DoublePreference> SECURITY_REVIEW_MIN_EVIDENCE =
+            new PreferenceKey<>(NS, "precedent-activation.security-review.min-evidence", DoublePreference.of(2.0), DoublePreference::parse);
     public static final PreferenceKey<DoublePreference>  SECURITY_REVIEW_MIN_FRACTION      =
             new PreferenceKey<>(NS, "precedent-activation.security-review.min-fraction", DoublePreference.of(0.3), DoublePreference::parse);
-    public static final PreferenceKey<IntPreference>     ARCHITECTURE_REVIEW_MIN_FINDINGS  =
-            new PreferenceKey<>(NS, "precedent-activation.architecture-review.min-findings", IntPreference.of(2), IntPreference::parse);
+    public static final PreferenceKey<DoublePreference> ARCHITECTURE_REVIEW_MIN_EVIDENCE =
+            new PreferenceKey<>(NS, "precedent-activation.architecture-review.min-evidence", DoublePreference.of(2.0), DoublePreference::parse);
     public static final PreferenceKey<DoublePreference>  ARCHITECTURE_REVIEW_MIN_FRACTION  =
             new PreferenceKey<>(NS, "precedent-activation.architecture-review.min-fraction", DoublePreference.of(0.4), DoublePreference::parse);
 

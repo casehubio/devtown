@@ -137,14 +137,14 @@ public class CaseMemoryRecaller {
         Preferences cbrPrefs = preferenceProvider.resolve(
                 SettingsScope.of("casehubio", "devtown", "cbr"));
         var defaultThreshold = new ActivationThreshold(
-                cbrPrefs.getOrDefault(CbrPreferenceKeys.PRECEDENT_ACTIVATION_MIN_FINDINGS).value(),
+                cbrPrefs.getOrDefault(CbrPreferenceKeys.PRECEDENT_ACTIVATION_MIN_EVIDENCE).value(),
                 cbrPrefs.getOrDefault(CbrPreferenceKeys.PRECEDENT_ACTIVATION_MIN_FRACTION).value());
         var overrides = Map.of(
                 ReviewDomain.SECURITY_REVIEW, new ActivationThreshold(
-                        cbrPrefs.getOrDefault(CbrPreferenceKeys.SECURITY_REVIEW_MIN_FINDINGS).value(),
+                        cbrPrefs.getOrDefault(CbrPreferenceKeys.SECURITY_REVIEW_MIN_EVIDENCE).value(),
                         cbrPrefs.getOrDefault(CbrPreferenceKeys.SECURITY_REVIEW_MIN_FRACTION).value()),
                 ReviewDomain.ARCHITECTURE_REVIEW, new ActivationThreshold(
-                        cbrPrefs.getOrDefault(CbrPreferenceKeys.ARCHITECTURE_REVIEW_MIN_FINDINGS).value(),
+                        cbrPrefs.getOrDefault(CbrPreferenceKeys.ARCHITECTURE_REVIEW_MIN_EVIDENCE).value(),
                         cbrPrefs.getOrDefault(CbrPreferenceKeys.ARCHITECTURE_REVIEW_MIN_FRACTION).value()));
         return PrecedentActivationPolicy.evaluate(precedents,
                                                   capability -> overrides.getOrDefault(capability, defaultThreshold));}

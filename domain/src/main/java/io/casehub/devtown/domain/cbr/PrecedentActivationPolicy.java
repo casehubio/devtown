@@ -13,29 +13,33 @@ public final class PrecedentActivationPolicy {
     public static Set<String> evaluate(List<Precedent> precedents,
                                        java.util.function.Function<String, ActivationThreshold> thresholds) {
         if (precedents.isEmpty()) {return Set.of();}
-        Map<String, Long> counts = countFindings(precedents);
-        Set<String>       result = new LinkedHashSet<>();
-        for (var entry : counts.entrySet()) {
+        Map<String, Double> weighted = weightedFindings(precedents);
+        double totalWeight = precedents.stream()
+                                       .mapToDouble(p -> p.similarity().score())
+                                       .sum();
+        Set<String> result = new LinkedHashSet<>();
+        for (var entry : weighted.entrySet()) {
             String              capability = entry.getKey();
-            long                count      = entry.getValue();
+            double              evidence   = entry.getValue();
             ActivationThreshold t          = thresholds.apply(capability);
-            if (count >= t.minFindings() &&
-                (double) count / precedents.size() >= t.minFraction()) {
+            if (evidence >= t.minEvidence() &&
+                (totalWeight > 0 && evidence / totalWeight >= t.minFraction())) {
                 result.add(capability);
             }
         }
         return Set.copyOf(result);
     }
 
-    private static Map<String, Long> countFindings(List<Precedent> precedents) {
-        var counts = new HashMap<String, Long>();
+    private static Map<String, Double> weightedFindings(List<Precedent> precedents) {
+        var weighted = new HashMap<String, Double>();
         for (var precedent : precedents) {
+            double weight = precedent.similarity().score();
             for (var entry : precedent.capabilityOutcomes().entrySet()) {
                 if (entry.getValue().hadFindings()) {
-                    counts.merge(entry.getKey(), 1L, Long::sum);
+                    weighted.merge(entry.getKey(), weight, Double::sum);
                 }
             }
         }
-        return counts;
+        return weighted;
     }
 }

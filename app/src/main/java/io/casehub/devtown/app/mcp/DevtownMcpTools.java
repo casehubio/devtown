@@ -240,6 +240,15 @@ public class DevtownMcpTools {
         return governanceQuery.mergeQueueMetrics();
     }
 
+    @Tool(
+            name = "get_failure_rates_by_repository",
+            description = "Per-repository batch failure rates from completed merge queue batches within the configured window"
+    )
+    public List<io.casehub.devtown.app.MergeQueueService.RepositoryFailureRate> getFailureRatesByRepository() {
+        return mergeQueueService.failureRateByRepository();
+    }
+
+
     // ==================== Write Tools ====================
 
     @Tool(

@@ -331,6 +331,29 @@ public class MergeQueueService implements MergeQueuePort {
         return store.recentBatchFailureRate(window);
     }
 
+    public record RepositoryFailureRate(String repository, int total, int failed, double failureRate) {}
+
+    public List<RepositoryFailureRate> failureRateByRepository() {
+        Preferences prefs  = resolvePreferences();
+        int         window = prefs.getOrDefault(MergeQueuePreferenceKeys.FAILURE_RATE_WINDOW).value();
+        var completed = store.completedBatchesSince(
+                Instant.now().minus(java.time.Duration.ofDays(window)));
+        return completed.stream()
+                        .collect(java.util.stream.Collectors.groupingBy(BatchRecord::repository))
+                        .entrySet().stream()
+                        .map(e -> {
+                            int total = e.getValue().size();
+                            int failed = (int) e.getValue().stream()
+                                                .filter(b -> Boolean.FALSE.equals(b.succeeded()))
+                                                .count();
+                            double rate = total > 0 ? (double) failed / total : 0.0;
+                            return new RepositoryFailureRate(e.getKey(), total, failed, rate);
+                        })
+                        .sorted(java.util.Comparator.comparingDouble(RepositoryFailureRate::failureRate).reversed())
+                        .toList();
+    }
+
+
     // ── Internal ────────────────────────────────────────────────────────────
 
     /**

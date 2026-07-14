@@ -207,6 +207,54 @@ public class DevtownMcpTools {
     }
 
     @Tool(
+            name = "search_memory_by_contributor",
+            description = "Search case memory for a contributor's review history — outcomes, patterns, and prior decisions"
+    )
+    public List<PriorDecision> searchMemoryByContributor(
+            @ToolArg(name = "contributor", description = "Contributor username") String contributor,
+            @ToolArg(name = "limit", description = "Max results (default 20)", required = false) Integer limit
+                                                        ) {
+        if (!memoryStoreInstance.isResolvable()) {return List.of();}
+        int max = limit != null ? limit : 20;
+        var memories = memoryStoreInstance.get().query(
+                MemoryQuery.forEntity(
+                                   DevtownMemoryDomain.CONTRIBUTOR_PREFIX + contributor,
+                                   DevtownMemoryDomain.SOFTWARE_REVIEW,
+                                   principal.tenancyId())
+                           .withLimit(max)
+                           .withOrder(MemoryOrder.CHRONOLOGICAL));
+        return memories.stream()
+                       .map(m -> new PriorDecision(
+                               null, m.attributes().getOrDefault("repo", "unknown"), 0,
+                               m.attributes().getOrDefault("capability", "unknown"),
+                               m.text(), m.createdAt()))
+                       .toList();
+    }
+
+    @Tool(
+            name = "search_memory_by_capability",
+            description = "Search case memory for all entries related to a specific review capability across contributors"
+    )
+    public List<PriorDecision> searchMemoryByCapability(
+            @ToolArg(name = "capability", description = "Capability name (e.g. security-review, architecture-review)") String capability,
+            @ToolArg(name = "limit", description = "Max results (default 20)", required = false) Integer limit
+                                                       ) {
+        if (!memoryStoreInstance.isResolvable()) {return List.of();}
+        int max = limit != null ? limit : 20;
+        var memories = memoryStoreInstance.get().scan(
+                new io.casehub.neocortex.memory.MemoryScanRequest(
+                        principal.tenancyId(),
+                        DevtownMemoryDomain.SOFTWARE_REVIEW.name(),
+                        "capability", capability, max, null));
+        return memories.stream()
+                       .map(m -> new PriorDecision(
+                               null, m.attributes().getOrDefault("repo", "unknown"), 0,
+                               capability, m.text(), m.createdAt()))
+                       .toList();
+    }
+
+
+    @Tool(
         name = "export_prov",
         description = "Export PROV-DM provenance record for a case (PROV-JSON-LD format)"
     )

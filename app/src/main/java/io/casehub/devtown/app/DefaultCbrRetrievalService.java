@@ -37,14 +37,17 @@ public class DefaultCbrRetrievalService implements CbrRetrievalService {
     private static final Logger             LOG       = Logger.getLogger(DefaultCbrRetrievalService.class);
     private static final SettingsScope      CBR_SCOPE =
             SettingsScope.of("casehubio", "devtown", "cbr");
-    private final        CaseMemoryStore    store;
-    private final        PreferenceProvider preferenceProvider;
+    private final        CaseMemoryStore         store;
+    private final        PreferenceProvider      preferenceProvider;
+    private final        CbrWeightOverrideStore  weightOverrides;
 
     @Inject
     public DefaultCbrRetrievalService(CaseMemoryStore store,
-                                      PreferenceProvider preferenceProvider) {
+                                      PreferenceProvider preferenceProvider,
+                                      CbrWeightOverrideStore weightOverrides) {
         this.store              = store;
         this.preferenceProvider = preferenceProvider;
+        this.weightOverrides    = weightOverrides;
     }
 
     @Override
@@ -156,11 +159,16 @@ public class DefaultCbrRetrievalService implements CbrRetrievalService {
 
     private SimilarityMetric buildMetric(Preferences prefs) {
         return new WeightedJaccardSimilarity(
-                prefs.getOrDefault(CbrPreferenceKeys.WEIGHT_FILE_PATHS).value(),
-                prefs.getOrDefault(CbrPreferenceKeys.WEIGHT_MODULES).value(),
-                prefs.getOrDefault(CbrPreferenceKeys.WEIGHT_LANGUAGES).value(),
-                prefs.getOrDefault(CbrPreferenceKeys.WEIGHT_CHANGE_SIZE).value(),
-                prefs.getOrDefault(CbrPreferenceKeys.WEIGHT_CONTRIBUTOR).value()
+                weightOverrides.resolveWeight("filePaths",
+                                              prefs.getOrDefault(CbrPreferenceKeys.WEIGHT_FILE_PATHS).value()),
+                weightOverrides.resolveWeight("modules",
+                                              prefs.getOrDefault(CbrPreferenceKeys.WEIGHT_MODULES).value()),
+                weightOverrides.resolveWeight("languages",
+                                              prefs.getOrDefault(CbrPreferenceKeys.WEIGHT_LANGUAGES).value()),
+                weightOverrides.resolveWeight("changeSize",
+                                              prefs.getOrDefault(CbrPreferenceKeys.WEIGHT_CHANGE_SIZE).value()),
+                weightOverrides.resolveWeight("contributor",
+                                              prefs.getOrDefault(CbrPreferenceKeys.WEIGHT_CONTRIBUTOR).value())
         );
     }
 

@@ -38,7 +38,7 @@ class DefaultCbrRetrievalServiceTest {
             var key = inv.getArgument(0, io.casehub.platform.api.preferences.PreferenceKey.class);
             return key.defaultValue();
         });
-        service = new DefaultCbrRetrievalService(store, prefs);
+        service = new DefaultCbrRetrievalService(store, prefs, new CbrWeightOverrideStore());
     }
 
     @Test

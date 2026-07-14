@@ -4,6 +4,7 @@ import io.casehub.devtown.merge.AdmissionResult;
 import io.casehub.devtown.merge.MergeQueuePort;
 import io.casehub.devtown.review.LifecycleResult;
 import io.casehub.devtown.review.PrPayload;
+import io.casehub.devtown.review.SupersedeResult;
 import io.casehub.devtown.review.PrReviewApplicationService;
 import io.casehub.devtown.review.PrReviewOutcome;
 import io.casehub.platform.api.preferences.MapPreferences;
@@ -81,6 +82,12 @@ class GitHubWebhookResourceTest {
             lastCheckRunCompletedAt = completedAt;
             return signalCheckRunResult;
         }
+
+        @Override
+        public SupersedeResult supersedePr(String repo, int oldPrNumber, PrPayload replacement) {
+            return SupersedeResult.noActiveCase();
+        }
+
     }
 
     static class RecordingPort implements MergeQueuePort {

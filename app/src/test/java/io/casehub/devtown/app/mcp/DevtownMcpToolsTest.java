@@ -1,5 +1,7 @@
 package io.casehub.devtown.app.mcp;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.casehub.api.engine.CaseHubRuntime;
 import io.casehub.api.model.event.CaseEventLogRecord;
 import io.casehub.api.model.event.CaseHubEventType;
@@ -12,13 +14,10 @@ import io.casehub.devtown.review.PrPayload;
 import io.casehub.ledger.runtime.service.LedgerProvExportService;
 import io.casehub.ledger.runtime.service.TrustGateService;
 import io.casehub.ledger.runtime.service.federation.TrustExportService;
+import io.casehub.neocortex.memory.CaseMemoryStore;
 import io.casehub.platform.api.identity.CurrentPrincipal;
 import io.casehub.platform.api.identity.TenancyConstants;
-import io.casehub.neocortex.memory.CaseMemoryStore;
-import io.casehub.qhorus.api.message.Commitment;
 import io.casehub.qhorus.api.store.CommitmentStore;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import jakarta.enterprise.inject.Instance;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -35,8 +34,14 @@ import java.util.concurrent.CompletableFuture;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.argThat;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 class DevtownMcpToolsTest {
 
@@ -75,6 +80,9 @@ class DevtownMcpToolsTest {
 
     @Mock
     CurrentPrincipal principal;
+    @Mock
+    io.casehub.devtown.review.PrReviewApplicationService reviewService;
+
 
     @InjectMocks
     DevtownMcpTools tools;
@@ -654,6 +662,47 @@ class DevtownMcpToolsTest {
         assertThat(problems.get(0).category()).isEqualTo("queue_sla_breach");
         assertThat(problems.get(0).description()).contains("PR #77").contains("CRITICAL");
         assertThat(problems.get(0).actorId()).isEqualTo("dave");
+    }
+
+
+    @Test
+    void supersedePr_activeCase_returnsSuperseded() {
+        UUID oldCaseId = UUID.randomUUID();
+        UUID newCaseId = UUID.randomUUID();
+        var  outcome   = new io.casehub.devtown.review.PrReviewOutcome("case-opened", List.of());
+        var  result    = new io.casehub.devtown.review.SupersedeResult(oldCaseId, newCaseId, outcome);
+        when(reviewService.supersedePr(anyString(), anyInt(), any(PrPayload.class))).thenReturn(result);
+
+        var toolResult = tools.supersedePr("casehubio/devtown", 42, 43, "newsha", "main", 100, "bob", "src/A.java,src/B.java");
+
+        assertThat(toolResult.status()).isEqualTo("superseded");
+        assertThat(toolResult.supersededCaseId()).isEqualTo(oldCaseId);
+        assertThat(toolResult.replacementCaseId()).isEqualTo(newCaseId);
+    }
+
+    @Test
+    void supersedePr_noActiveCase_returnsNoActiveCase() {
+        when(reviewService.supersedePr(anyString(), anyInt(), any(PrPayload.class)))
+                .thenReturn(io.casehub.devtown.review.SupersedeResult.noActiveCase());
+
+        var toolResult = tools.supersedePr("casehubio/devtown", 42, 43, "newsha", "main", 100, "bob", "src/A.java");
+
+        assertThat(toolResult.status()).isEqualTo("no-active-case");
+        assertThat(toolResult.supersededCaseId()).isNull();
+        assertThat(toolResult.replacementCaseId()).isNull();
+    }
+
+    @Test
+    void supersedePr_alreadyTerminal_returnsAlreadyTerminal() {
+        UUID oldCaseId = UUID.randomUUID();
+        when(reviewService.supersedePr(anyString(), anyInt(), any(PrPayload.class)))
+                .thenReturn(io.casehub.devtown.review.SupersedeResult.alreadyTerminal(oldCaseId));
+
+        var toolResult = tools.supersedePr("casehubio/devtown", 42, 43, "newsha", "main", 100, "bob", "src/A.java");
+
+        assertThat(toolResult.status()).isEqualTo("already-terminal");
+        assertThat(toolResult.supersededCaseId()).isEqualTo(oldCaseId);
+        assertThat(toolResult.replacementCaseId()).isNull();
     }
 
     // Helper to create CaseEventLogRecord

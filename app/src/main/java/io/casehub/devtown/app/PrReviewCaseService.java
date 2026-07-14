@@ -10,6 +10,7 @@ import io.casehub.devtown.review.LifecycleResult;
 import io.casehub.devtown.review.PrPayload;
 import io.casehub.devtown.review.PrReviewApplicationService;
 import io.casehub.devtown.review.PrReviewOutcome;
+import io.casehub.devtown.review.SupersedeResult;
 import io.casehub.platform.api.identity.CurrentPrincipal;
 import io.casehub.platform.api.preferences.PreferenceProvider;
 import io.casehub.platform.api.preferences.Preferences;
@@ -18,13 +19,14 @@ import jakarta.annotation.Priority;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.inject.Alternative;
 import jakarta.inject.Inject;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
+
 import java.time.Instant;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 @ApplicationScoped
 @Alternative
@@ -190,4 +192,25 @@ public class PrReviewCaseService implements PrReviewApplicationService {
 
         return LifecycleResult.UPDATED;
     }
+
+    @Override
+    public SupersedeResult supersedePr(String repo, int oldPrNumber, PrPayload replacement) {
+        var active = caseTracker.findActiveCaseByPr(repo, oldPrNumber);
+        if (active.isEmpty()) {return SupersedeResult.noActiveCase();}
+        var oldCase = active.get();
+        if (oldCase.status().isTerminal()) {
+            return SupersedeResult.alreadyTerminal(oldCase.caseId());
+        }
+
+        PrReviewOutcome reviewOutcome = startReview(replacement);
+        var             newCase       = caseTracker.findActiveCaseByPr(replacement.repo(), replacement.prNumber());
+        if (newCase.isEmpty()) {return SupersedeResult.noActiveCase();}
+
+        UUID newCaseId = newCase.get().caseId();
+        caseHub.signal(oldCase.caseId(), "pr.status", "superseded");
+        caseTracker.supersede(oldCase.caseId(), newCaseId);
+
+        return new SupersedeResult(oldCase.caseId(), newCaseId, reviewOutcome);
+    }
+
 }

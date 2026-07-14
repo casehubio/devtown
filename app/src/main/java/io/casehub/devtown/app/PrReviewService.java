@@ -4,6 +4,7 @@ import io.casehub.devtown.review.LifecycleResult;
 import io.casehub.devtown.review.PrPayload;
 import io.casehub.devtown.review.PrReviewApplicationService;
 import io.casehub.devtown.review.PrReviewOutcome;
+import io.casehub.devtown.review.SupersedeResult;
 import io.quarkus.arc.DefaultBean;
 import jakarta.enterprise.context.ApplicationScoped;
 
@@ -43,6 +44,12 @@ public class PrReviewService implements PrReviewApplicationService {
     public LifecycleResult signalCheckRun(String repo, int prNumber, String headSha, String checkName, String conclusion, Instant completedAt) {
         return LifecycleResult.NO_ACTIVE_CASE;
     }
+
+    @Override
+    public SupersedeResult supersedePr(String repo, int oldPrNumber, PrPayload replacement) {
+        return SupersedeResult.noActiveCase();
+    }
+
 
     private List<String> analyzeSecurityDirectly(PrPayload pr) {
         return List.of("security-analysis-complete");

@@ -5,33 +5,47 @@ import java.util.Comparator;
 import java.util.List;
 
 public class DefaultBatchCompositionPolicy implements BatchCompositionPolicy {
+    private static final double HIGH_RISK_THRESHOLD = 0.5;
+
 
     @Override
     public List<Batch> formBatches(List<QueuedPr> queue, BatchFormationContext ctx) {
-        if (queue.isEmpty()) return List.of();
+        if (queue.isEmpty()) {return List.of();}
 
         List<QueuedPr> sorted = queue.stream()
-            .sorted(Comparator.comparingDouble(
-                (QueuedPr pr) -> QueuePriorityCalculator.score(pr, ctx.now(), ctx.decayRatePerHour()))
-                .reversed())
-            .toList();
+                                     .sorted(Comparator.comparingDouble(
+                                                               (QueuedPr pr) -> QueuePriorityCalculator.score(pr, ctx.now(), ctx.decayRatePerHour()))
+                                                       .reversed())
+                                     .toList();
 
         List<QueuedPr> ordered = DependencyResolver.resolve(sorted);
 
-        List<Batch> batches = new ArrayList<>();
-        List<QueuedPr> currentBatch = new ArrayList<>();
+        List<Batch>    batches                 = new ArrayList<>();
+        List<QueuedPr> currentBatch            = new ArrayList<>();
+        boolean        currentBatchHasHighRisk = false;
 
         for (QueuedPr pr : ordered) {
+            boolean prIsHighRisk = pr.riskScore() > HIGH_RISK_THRESHOLD;
+
+            if (prIsHighRisk && currentBatchHasHighRisk && !currentBatch.isEmpty()) {
+                batches.add(buildBatch(currentBatch, ctx));
+                currentBatch            = new ArrayList<>();
+                currentBatchHasHighRisk = false;
+            }
+
             currentBatch.add(pr);
+            if (prIsHighRisk) {currentBatchHasHighRisk = true;}
+
             double minTrust = currentBatch.stream()
-                .mapToDouble(QueuedPr::trustScore).min().orElse(1.0);
+                                          .mapToDouble(QueuedPr::trustScore).min().orElse(1.0);
             int trustMax = Math.max(1, (int) Math.floor(minTrust * ctx.maxBatchSize()));
             int adaptiveMax = Math.max(ctx.minBatchSize(),
-                (int) Math.floor(trustMax * (1.0 - ctx.recentFailureRate())));
+                                       (int) Math.floor(trustMax * (1.0 - ctx.recentFailureRate())));
 
             if (currentBatch.size() >= adaptiveMax) {
                 batches.add(buildBatch(currentBatch, ctx));
-                currentBatch = new ArrayList<>();
+                currentBatch            = new ArrayList<>();
+                currentBatchHasHighRisk = false;
             }
         }
         if (!currentBatch.isEmpty()) {

@@ -68,6 +68,8 @@ public class DevtownMcpTools {
     io.casehub.devtown.app.CbrWeightOverrideStore         cbrWeightOverrides;
     @Inject
     jakarta.enterprise.inject.Instance<io.casehub.devtown.review.CbrRetrievalService> cbrRetrievalService;
+    @Inject
+    io.casehub.devtown.review.PrReviewApplicationService                              reviewService;
 
 
     @ConfigProperty(name = "devtown.policy.human-approval-threshold", defaultValue = "500")
@@ -101,6 +103,9 @@ public class DevtownMcpTools {
     public record EnqueueResult(int prNumber, String lane, String status) {}
 
     public record DequeueResult(int prNumber, boolean removed, String status) {}
+
+    public record SupersedeToolResult(UUID supersededCaseId, UUID replacementCaseId, String status) {}
+
 
     // ==================== Read Tools ====================
 
@@ -461,6 +466,34 @@ public class DevtownMcpTools {
         boolean removed = mergeQueueService.dequeue(prNumber, repo);
         return new DequeueResult(prNumber, removed, removed ? "REMOVED" : "NOT_FOUND");
     }
+
+    @Tool(
+            name = "supersede_pr",
+            description = "Supersede a PR case — marks the old case as SUPERSEDED, opens a new review case for the replacement PR, and links them with supersededBy/supersedes audit trail"
+    )
+    public SupersedeToolResult supersedePr(
+            @ToolArg(name = "repo", description = "Repository full name (e.g. casehubio/devtown)", required = true) String repo,
+            @ToolArg(name = "old_pr_number", description = "PR number being superseded", required = true) int oldPrNumber,
+            @ToolArg(name = "new_pr_number", description = "Replacement PR number", required = true) int newPrNumber,
+            @ToolArg(name = "head_sha", description = "Head SHA of the replacement PR", required = true) String headSha,
+            @ToolArg(name = "base_ref", description = "Base branch (e.g. main)", required = true) String baseRef,
+            @ToolArg(name = "lines_changed", description = "Lines changed in the replacement PR", required = true) int linesChanged,
+            @ToolArg(name = "contributor", description = "Author of the replacement PR", required = true) String contributor,
+            @ToolArg(name = "changed_paths", description = "Comma-separated list of changed file paths", required = true) String changedPaths
+                                          ) {
+        var replacement = new io.casehub.devtown.review.PrPayload(
+                repo, newPrNumber, headSha, baseRef, linesChanged, contributor,
+                java.util.Arrays.asList(changedPaths.split(","))
+        );
+
+        var result = reviewService.supersedePr(repo, oldPrNumber, replacement);
+        if (!result.succeeded()) {
+            String status = result.supersededCaseId() != null ? "already-terminal" : "no-active-case";
+            return new SupersedeToolResult(result.supersededCaseId(), null, status);
+        }
+        return new SupersedeToolResult(result.supersededCaseId(), result.replacementCaseId(), "superseded");
+    }
+
 
     @Tool(
         name = "report_incident",

@@ -5,10 +5,11 @@ public enum CaseTrackingStatus {
     WAITING,
     COMPLETED,
     FAULTED,
-    CANCELLED;
+    CANCELLED,
+    SUPERSEDED;
 
     public boolean isTerminal() {
-        return this == COMPLETED || this == FAULTED || this == CANCELLED;
+        return this == COMPLETED || this == FAULTED || this == CANCELLED || this == SUPERSEDED;
     }
 
     public static CaseTrackingStatus fromCaseStatus(String caseStatus) {

@@ -4,6 +4,8 @@ import io.casehub.devtown.review.PrPayload;
 import io.casehub.engine.common.spi.event.CaseLifecycleEvent;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.event.ObservesAsync;
+import org.jboss.logging.Logger;
+
 import java.time.Instant;
 import java.util.ArrayDeque;
 import java.util.Deque;
@@ -11,7 +13,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
-import org.jboss.logging.Logger;
 
 @ApplicationScoped
 public class PrReviewCaseTracker {
@@ -72,6 +73,41 @@ public class PrReviewCaseTracker {
     public void updateHeadSha(UUID caseId, String newSha) {
         cases.computeIfPresent(caseId, (id, existing) -> existing.withHeadSha(newSha));
     }
+
+    public boolean supersede(UUID oldCaseId, UUID newCaseId) {
+        CaseInfo oldCase = cases.get(oldCaseId);
+        if (oldCase == null || oldCase.status().isTerminal()) {
+            return false;
+        }
+
+        Instant now = Instant.now();
+        cases.computeIfPresent(oldCaseId, (id, existing) ->
+                                                  existing.status().isTerminal() ? existing
+                                                                                 : existing.withStatus(CaseTrackingStatus.SUPERSEDED, now).withSupersededBy(newCaseId));
+        cases.computeIfPresent(newCaseId, (id, existing) ->
+                                                  existing.withSupersedes(oldCaseId));
+
+        CaseInfo updated = cases.get(oldCaseId);
+        if (updated == null || updated.status() != CaseTrackingStatus.SUPERSEDED) {
+            return false;
+        }
+
+        prIndex.remove(oldCase.payload().repo() + "#" + oldCase.payload().prNumber(), oldCaseId);
+
+        addEvent(new TrackedEvent(
+                now, oldCaseId, oldCase.payload().repo(), oldCase.payload().prNumber(),
+                "case.superseded", "SUPERSEDED", null
+        ));
+
+        LOG.infof("Superseded case=%s (PR #%d) by case=%s", oldCaseId, oldCase.payload().prNumber(), newCaseId);
+        return true;}
+
+    public List<CaseInfo> supersededCases() {
+        return cases.values().stream()
+                    .filter(c -> c.status() == CaseTrackingStatus.SUPERSEDED)
+                    .toList();
+    }
+
 
     public void addEvent(TrackedEvent event) {
         synchronized (eventBuffer) {

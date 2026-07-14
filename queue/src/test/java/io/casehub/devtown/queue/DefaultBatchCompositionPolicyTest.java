@@ -1,14 +1,14 @@
 package io.casehub.devtown.queue;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
 import io.casehub.devtown.domain.queue.PriorityLane;
+import org.junit.jupiter.api.Test;
 
 import java.time.Instant;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
-import org.junit.jupiter.api.Test;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 class DefaultBatchCompositionPolicyTest {
 
@@ -159,5 +159,80 @@ class DefaultBatchCompositionPolicyTest {
         // Total PRs across all batches equals input
         int totalPrs = result.stream().mapToInt(Batch::size).sum();
         assertThat(totalPrs).isEqualTo(7);
+    }
+
+    private QueuedPr prWithRisk(int number, double trust, double risk) {
+        return new QueuedPr(number, "casehubio/devtown", "sha" + number, "author" + number, trust,
+                            PriorityLane.NORMAL, NOW, Set.of(), risk);
+    }
+
+    @Test
+    void highRiskPrs_notGroupedTogether() {
+        // Two high-risk PRs (risk > 0.5) should not end up in the same batch
+        var prs = List.of(
+                prWithRisk(1, 0.8, 0.7),
+                prWithRisk(2, 0.8, 0.8),
+                prWithRisk(3, 0.8, 0.1),
+                prWithRisk(4, 0.8, 0.0)
+                         );
+        var result = policy.formBatches(prs, ctx(10, 1, 0.0));
+
+        // High-risk PRs should be in separate batches
+        for (Batch batch : result) {
+            long highRiskCount = batch.prs().stream().filter(p -> p.riskScore() > 0.5).count();
+            assertThat(highRiskCount).as("batch %s should contain at most 1 high-risk PR", batch.id())
+                                     .isLessThanOrEqualTo(1);
+        }
+    }
+
+    @Test
+    void neutralRiskScore_unchangesBatchFormation() {
+        // All risk scores 0.0 (neutral) — should batch exactly like before
+        var prs = List.of(
+                prWithRisk(1, 0.8, 0.0),
+                prWithRisk(2, 0.8, 0.0),
+                prWithRisk(3, 0.8, 0.0)
+                         );
+        var result = policy.formBatches(prs, ctx(10, 1, 0.0));
+
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0).prs()).hasSize(3);
+    }
+
+    @Test
+    void singleHighRiskPr_mixedWithLowRisk_allowedInSameBatch() {
+        // One high-risk among low-risk is fine — it's only multiple high-risk that splits
+        var prs = List.of(
+                prWithRisk(1, 0.8, 0.9),
+                prWithRisk(2, 0.8, 0.0),
+                prWithRisk(3, 0.8, 0.1)
+                         );
+        var result = policy.formBatches(prs, ctx(10, 1, 0.0));
+
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0).prs()).hasSize(3);
+    }
+
+    @Test
+    void riskScore_validation_rejectsOutOfRange() {
+        org.assertj.core.api.Assertions.assertThatThrownBy(
+                () -> new QueuedPr(1, "repo", "sha", "auth", 0.5, PriorityLane.NORMAL, NOW, Set.of(), 1.5)
+                                                          ).isInstanceOf(IllegalArgumentException.class);
+
+        org.assertj.core.api.Assertions.assertThatThrownBy(
+                () -> new QueuedPr(1, "repo", "sha", "auth", 0.5, PriorityLane.NORMAL, NOW, Set.of(), -0.1)
+                                                          ).isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void withRiskScore_createsNewInstanceWithUpdatedRisk() {
+        var pr = pr(1, 0.8);
+        assertThat(pr.riskScore()).isEqualTo(0.0);
+
+        var risked = pr.withRiskScore(0.7);
+        assertThat(risked.riskScore()).isEqualTo(0.7);
+        assertThat(risked.number()).isEqualTo(1);
+        assertThat(risked.trustScore()).isEqualTo(0.8);
+        assertThat(pr.riskScore()).isEqualTo(0.0); // original unchanged
     }
 }

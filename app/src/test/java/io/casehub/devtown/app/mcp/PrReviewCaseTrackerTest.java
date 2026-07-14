@@ -200,4 +200,125 @@ class PrReviewCaseTrackerTest {
         assertThat(updated.tenancyId()).isEqualTo("tenant-1");
         assertThat(updated.status()).isEqualTo(CaseTrackingStatus.RUNNING);
     }
+
+    @Test
+    void supersede_marksOldCaseAsSuperseded() {
+        tracker.register(caseId, "tenant-1", payload);
+        UUID      newCaseId  = UUID.randomUUID();
+        PrPayload newPayload = new PrPayload("casehubio/devtown", 456, "def456", "main", 30, "bob", List.of("src/New.java"));
+        tracker.register(newCaseId, "tenant-1", newPayload);
+
+        boolean result = tracker.supersede(caseId, newCaseId);
+
+        assertThat(result).isTrue();
+        CaseInfo old = tracker.getCase(caseId);
+        assertThat(old.status()).isEqualTo(CaseTrackingStatus.SUPERSEDED);
+        assertThat(old.status().isTerminal()).isTrue();
+    }
+
+    @Test
+    void supersede_setsSupersededByOnOldCase() {
+        tracker.register(caseId, "tenant-1", payload);
+        UUID      newCaseId  = UUID.randomUUID();
+        PrPayload newPayload = new PrPayload("casehubio/devtown", 456, "def456", "main", 30, "bob", List.of());
+        tracker.register(newCaseId, "tenant-1", newPayload);
+
+        tracker.supersede(caseId, newCaseId);
+
+        assertThat(tracker.getCase(caseId).supersededBy()).isEqualTo(newCaseId);
+    }
+
+    @Test
+    void supersede_setsSupersedesOnNewCase() {
+        tracker.register(caseId, "tenant-1", payload);
+        UUID      newCaseId  = UUID.randomUUID();
+        PrPayload newPayload = new PrPayload("casehubio/devtown", 456, "def456", "main", 30, "bob", List.of());
+        tracker.register(newCaseId, "tenant-1", newPayload);
+
+        tracker.supersede(caseId, newCaseId);
+
+        assertThat(tracker.getCase(newCaseId).supersedes()).isEqualTo(caseId);
+    }
+
+    @Test
+    void supersede_removesOldPrFromIndex() {
+        tracker.register(caseId, "tenant-1", payload);
+        UUID      newCaseId  = UUID.randomUUID();
+        PrPayload newPayload = new PrPayload("casehubio/devtown", 456, "def456", "main", 30, "bob", List.of());
+        tracker.register(newCaseId, "tenant-1", newPayload);
+
+        tracker.supersede(caseId, newCaseId);
+
+        assertThat(tracker.findActiveCaseByPr("casehubio/devtown", 123)).isEmpty();
+    }
+
+    @Test
+    void supersede_excludesOldCaseFromActiveCases() {
+        tracker.register(caseId, "tenant-1", payload);
+        UUID      newCaseId  = UUID.randomUUID();
+        PrPayload newPayload = new PrPayload("casehubio/devtown", 456, "def456", "main", 30, "bob", List.of());
+        tracker.register(newCaseId, "tenant-1", newPayload);
+
+        tracker.supersede(caseId, newCaseId);
+
+        assertThat(tracker.activeCases()).hasSize(1);
+        assertThat(tracker.activeCases().get(0).caseId()).isEqualTo(newCaseId);
+    }
+
+    @Test
+    void supersede_withUnknownOldCase_returnsFalse() {
+        UUID unknownId = UUID.randomUUID();
+        UUID newCaseId = UUID.randomUUID();
+
+        boolean result = tracker.supersede(unknownId, newCaseId);
+
+        assertThat(result).isFalse();
+    }
+
+    @Test
+    void supersede_withAlreadyTerminalOldCase_returnsFalse() {
+        tracker.register(caseId, "tenant-1", payload);
+        tracker.updateStatus(caseId, "COMPLETED", Instant.now());
+        UUID newCaseId = UUID.randomUUID();
+
+        boolean result = tracker.supersede(caseId, newCaseId);
+
+        assertThat(result).isFalse();
+        assertThat(tracker.getCase(caseId).status()).isEqualTo(CaseTrackingStatus.COMPLETED);
+    }
+
+    @Test
+    void supersede_addsEventToBuffer() {
+        tracker.register(caseId, "tenant-1", payload);
+        UUID      newCaseId  = UUID.randomUUID();
+        PrPayload newPayload = new PrPayload("casehubio/devtown", 456, "def456", "main", 30, "bob", List.of());
+        tracker.register(newCaseId, "tenant-1", newPayload);
+
+        tracker.supersede(caseId, newCaseId);
+
+        List<TrackedEvent> events = tracker.recentEvents(10, null);
+        assertThat(events).anySatisfy(e -> {
+            assertThat(e.caseId()).isEqualTo(caseId);
+            assertThat(e.eventType()).isEqualTo("case.superseded");
+        });
+    }
+
+    @Test
+    void findSupersedeCases_returnsOnlySupersededCases() {
+        UUID      id1 = UUID.randomUUID();
+        UUID      id2 = UUID.randomUUID();
+        UUID      id3 = UUID.randomUUID();
+        PrPayload p1  = new PrPayload("r", 1, "a", "main", 10, "x", List.of());
+        PrPayload p2  = new PrPayload("r", 2, "b", "main", 10, "x", List.of());
+        PrPayload p3  = new PrPayload("r", 3, "c", "main", 10, "x", List.of());
+        tracker.register(id1, "t", p1);
+        tracker.register(id2, "t", p2);
+        tracker.register(id3, "t", p3);
+
+        tracker.supersede(id1, id2);
+
+        List<CaseInfo> superseded = tracker.supersededCases();
+        assertThat(superseded).hasSize(1);
+        assertThat(superseded.get(0).caseId()).isEqualTo(id1);
+    }
 }

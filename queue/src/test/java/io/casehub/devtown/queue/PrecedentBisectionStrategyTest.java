@@ -36,7 +36,7 @@ class PrecedentBisectionStrategyTest {
             pr(4, 0.8, 0.7)
         );
 
-        var result = strategy.split(prs, BATCH_ID, "main", 1, "precedent", "normal");
+        var result = strategy.split(prs, "casehubio/devtown", BATCH_ID, "main", 1, "precedent", "normal");
 
         assertThat(result.left().prs()).hasSize(2);
         assertThat(result.right().prs()).hasSize(2);
@@ -60,7 +60,7 @@ class PrecedentBisectionStrategyTest {
             pr(4, 0.8, 0.5)
         );
 
-        var result = strategy.split(prs, BATCH_ID, "main", 1, "precedent", "normal");
+        var result = strategy.split(prs, "casehubio/devtown", BATCH_ID, "main", 1, "precedent", "normal");
 
         assertThat(result.left().prs().get(0).number()).isEqualTo(3);
     }
@@ -69,7 +69,7 @@ class PrecedentBisectionStrategyTest {
     void noRiskData_fallsBackToBinarySplit() {
         var prs = List.of(pr(1, 0.8), pr(2, 0.3), pr(3, 0.9), pr(4, 0.5));
 
-        var result = strategy.split(prs, BATCH_ID, "main", 1, "precedent", "normal");
+        var result = strategy.split(prs, "casehubio/devtown", BATCH_ID, "main", 1, "precedent", "normal");
 
         assertThat(result.left().prs()).hasSize(2);
         assertThat(result.right().prs()).hasSize(2);
@@ -81,7 +81,7 @@ class PrecedentBisectionStrategyTest {
     void allZeroRisk_fallsBackToBinarySplit() {
         var prs = List.of(pr(1, 0.8, 0.0), pr(2, 0.8, 0.0), pr(3, 0.8, 0.0));
 
-        var result = strategy.split(prs, BATCH_ID, "main", 1, "precedent", "normal");
+        var result = strategy.split(prs, "casehubio/devtown", BATCH_ID, "main", 1, "precedent", "normal");
 
         assertThat(result.left().prs()).hasSize(1);
         assertThat(result.right().prs()).hasSize(2);
@@ -92,7 +92,7 @@ class PrecedentBisectionStrategyTest {
     void oddSizedBatch_largerHalfIsLowerRisk() {
         var prs = List.of(pr(1, 0.8, 0.9), pr(2, 0.8, 0.5), pr(3, 0.8, 0.1));
 
-        var result = strategy.split(prs, BATCH_ID, "main", 1, "precedent", "normal");
+        var result = strategy.split(prs, "casehubio/devtown", BATCH_ID, "main", 1, "precedent", "normal");
 
         assertThat(result.left().prs()).hasSize(1);
         assertThat(result.right().prs()).hasSize(2);
@@ -103,7 +103,7 @@ class PrecedentBisectionStrategyTest {
     void batchOfTwo_splitsIntoSingletons() {
         var prs = List.of(pr(1, 0.8, 0.9), pr(2, 0.8, 0.1));
 
-        var result = strategy.split(prs, BATCH_ID, "main", 1, "precedent", "normal");
+        var result = strategy.split(prs, "casehubio/devtown", BATCH_ID, "main", 1, "precedent", "normal");
 
         assertThat(result.left().prs()).hasSize(1);
         assertThat(result.right().prs()).hasSize(1);
@@ -114,7 +114,7 @@ class PrecedentBisectionStrategyTest {
     void batchOfOne_throws() {
         var prs = List.of(pr(1, 0.8, 0.5));
 
-        assertThatThrownBy(() -> strategy.split(prs, BATCH_ID, "main", 1, "precedent", "normal"))
+        assertThatThrownBy(() -> strategy.split(prs, "casehubio/devtown", BATCH_ID, "main", 1, "precedent", "normal"))
             .isInstanceOf(IllegalArgumentException.class);
     }
 
@@ -122,7 +122,7 @@ class PrecedentBisectionStrategyTest {
     void sliceMetadata_isCorrect() {
         var prs = List.of(pr(1, 0.8, 0.9), pr(2, 0.8, 0.1));
 
-        var result = strategy.split(prs, BATCH_ID, "main", 2, "precedent", "HIGH");
+        var result = strategy.split(prs, "casehubio/devtown", BATCH_ID, "main", 2, "precedent", "HIGH");
 
         assertThat(result.left().parentBatchId()).isEqualTo(BATCH_ID);
         assertThat(result.left().targetBranch()).isEqualTo("main");
@@ -140,7 +140,7 @@ class PrecedentBisectionStrategyTest {
             pr(4, 0.8, 0.03)
         );
 
-        var result = strategy.split(prs, BATCH_ID, "main", 1, "precedent", "normal");
+        var result = strategy.split(prs, "casehubio/devtown", BATCH_ID, "main", 1, "precedent", "normal");
 
         assertThat(result.left().prs().get(0).number())
             .as("highest-risk PR should be in left half for earliest bisection")

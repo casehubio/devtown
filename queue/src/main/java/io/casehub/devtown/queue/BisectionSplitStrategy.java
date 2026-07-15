@@ -4,7 +4,7 @@ import java.util.List;
 
 public interface BisectionSplitStrategy {
 
-    SplitResult split(List<QueuedPr> prs, String batchId,
+    SplitResult split(List<QueuedPr> prs, String repository, String batchId,
                       String targetBranch, int bisectionDepth,
                       String bisectionStrategy, String riskLevel);
 }

@@ -2,6 +2,9 @@ package io.casehub.devtown.app;
 
 import io.casehub.api.engine.YamlCaseHub;
 import io.casehub.api.model.CaseDefinition;
+import io.casehub.devtown.domain.BatchBranchClient;
+import io.casehub.devtown.domain.BatchBranchOutcome;
+import io.casehub.devtown.domain.PrRef;
 import io.casehub.devtown.domain.queue.PriorityLane;
 import io.casehub.devtown.queue.BisectionSplitStrategy;
 import io.casehub.devtown.queue.QueuedPr;
@@ -22,6 +25,9 @@ public class MergeBatchCaseHub extends YamlCaseHub {
 
     @Inject
     BisectionSplitStrategy splitStrategy;
+    @Inject
+    BatchBranchClient      batchBranchClient;
+
 
     public MergeBatchCaseHub() {
         super("devtown/merge-batch.yaml");
@@ -30,17 +36,55 @@ public class MergeBatchCaseHub extends YamlCaseHub {
     @Override
     protected void augment(CaseDefinition definition) {
         definition.getWorkers().add(Worker.builder()
-            .name("bisection-splitter")
-            .capabilityName("bisection-splitter")
-            .function(this::adaptBisectionSplit)
-            .build());
+                                          .name("bisection-splitter")
+                                          .capabilityName("bisection-splitter")
+                                          .function(this::adaptBisectionSplit)
+                                          .build());
 
         definition.getWorkers().add(Worker.builder()
-            .name("pr-reject-and-notify")
-            .capabilityName("pr-reject-and-notify")
-            .function(this::adaptRejectAndNotify)
-            .build());
+                                          .name("pr-reject-and-notify")
+                                          .capabilityName("pr-reject-and-notify")
+                                          .function(this::adaptRejectAndNotify)
+                                          .build());
+
+        definition.getWorkers().add(Worker.builder()
+                                          .name("batch-ci-runner")
+                                          .capabilityName("batch-ci-runner")
+                                          .function(this::adaptBatchCiRunner)
+                                          .build());}
+
+    @SuppressWarnings("unchecked")
+    WorkerResult adaptBatchCiRunner(Map<String, Object> input) {
+        Map<String, Object> batch      = (Map<String, Object>) input.get("batch");
+        String              repository = (String) batch.get("repository");
+        if (repository == null || !repository.contains("/")) {
+            return WorkerResult.failed("batch context missing or invalid 'repository': " + repository);
+        }
+        String[] parts        = repository.split("/");
+        String   targetBranch = (String) batch.get("targetBranch");
+        String   batchId      = (String) batch.get("id");
+
+        List<Map<String, Object>> prMaps = (List<Map<String, Object>>) batch.get("prs");
+        List<PrRef> prs = prMaps.stream()
+                                .map(m -> new PrRef(
+                                        ((Number) m.get("number")).intValue(),
+                                        (String) m.get("headSha")))
+                                .toList();
+
+        return switch (batchBranchClient.createBatchBranch(parts[0], parts[1], targetBranch, batchId, prs)) {
+            case BatchBranchOutcome.Created c -> WorkerResult.of(Map.of(
+                    "status", "branch-created",
+                    "branch", c.branchName(),
+                    "tipSha", c.tipSha()));
+            case BatchBranchOutcome.MergeConflict mc -> WorkerResult.failed(
+                    "merge conflict on PR #" + mc.conflictPrNumber(),
+                    Map.of("status", "conflict",
+                           "conflictPr", mc.conflictPrNumber(),
+                           "branch", mc.branchName()));
+            case BatchBranchOutcome.Failure f -> WorkerResult.failed(f.reason());
+        };
     }
+
 
     @SuppressWarnings("unchecked")
     WorkerResult adaptBisectionSplit(Map<String, Object> input) {
@@ -49,6 +93,7 @@ public class MergeBatchCaseHub extends YamlCaseHub {
 
         Map<String, Object> batch        = (Map<String, Object>) input.get("batch");
         String              batchId      = batch != null ? (String) batch.getOrDefault("id", "unknown") : "unknown";
+        String              repository   = batch != null ? (String) batch.getOrDefault("repository", "unknown") : "unknown";
         String              targetBranch = batch != null ? (String) batch.getOrDefault("targetBranch", "main") : "main";
         int bisectionDepth = batch != null
                              ? ((Number) batch.getOrDefault("bisectionDepth", 0)).intValue()
@@ -56,17 +101,16 @@ public class MergeBatchCaseHub extends YamlCaseHub {
         String riskLevel = batch != null ? (String) batch.getOrDefault("riskLevel", "ROUTINE") : "ROUTINE";
 
         List<QueuedPr> prs = prMaps.stream()
-                                                            .map(MergeBatchCaseHub::mapToQueuedPr)
-                                                            .toList();
+                                   .map(MergeBatchCaseHub::mapToQueuedPr)
+                                   .toList();
 
         SplitResult result = splitStrategy.split(
-                prs, batchId, targetBranch, bisectionDepth + 1, strategy, riskLevel);
+                prs, repository, batchId, targetBranch, bisectionDepth + 1, strategy, riskLevel);
 
         var output = new LinkedHashMap<String, Object>();
         output.put("left", sliceToMap(result.left()));
         output.put("right", sliceToMap(result.right()));
-        return WorkerResult.of(Map.of("splitResult", output));
-    }
+        return WorkerResult.of(Map.of("splitResult", output));}
 
     WorkerResult adaptRejectAndNotify(Map<String, Object> input) {
         @SuppressWarnings("unchecked")
@@ -86,6 +130,7 @@ public class MergeBatchCaseHub extends YamlCaseHub {
     private Map<String, Object> sliceToMap(io.casehub.devtown.queue.BatchSlice slice) {
         var map = new LinkedHashMap<String, Object>();
         map.put("id", slice.id());
+        map.put("repository", slice.repository());
         map.put("targetBranch", slice.targetBranch());
         map.put("prs", slice.prs().stream().map(MergeBatchCaseHub::queuedPrToMap).toList());
         map.put("size", slice.size());
@@ -93,8 +138,7 @@ public class MergeBatchCaseHub extends YamlCaseHub {
         map.put("bisectionDepth", slice.bisectionDepth());
         map.put("bisectionStrategy", slice.bisectionStrategy());
         map.put("riskLevel", slice.riskLevel());
-        return map;
-    }
+        return map;}
 
     private static QueuedPr mapToQueuedPr(Map<String, Object> m) {
         return new QueuedPr(

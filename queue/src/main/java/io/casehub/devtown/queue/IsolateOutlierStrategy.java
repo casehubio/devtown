@@ -8,7 +8,7 @@ public class IsolateOutlierStrategy implements BisectionSplitStrategy {
     private final TrustWeightedSplitStrategy fallback = new TrustWeightedSplitStrategy();
 
     @Override
-    public SplitResult split(List<QueuedPr> prs, String batchId,
+    public SplitResult split(List<QueuedPr> prs, String repository, String batchId,
                              String targetBranch, int bisectionDepth,
                              String bisectionStrategy, String riskLevel) {
         if (prs.size() < 2) {
@@ -36,7 +36,7 @@ public class IsolateOutlierStrategy implements BisectionSplitStrategy {
         }
 
         if (outlierIndex < 0) {
-            return fallback.split(prs, batchId, targetBranch, bisectionDepth,
+            return fallback.split(prs, repository, batchId, targetBranch, bisectionDepth,
                                   bisectionStrategy, riskLevel);
         }
 
@@ -45,11 +45,11 @@ public class IsolateOutlierStrategy implements BisectionSplitStrategy {
         rest.remove(outlierIndex);
 
         var left = new BatchSlice(
-                batchId + "-L", targetBranch, List.of(outlier), 1,
+                batchId + "-L", repository, targetBranch, List.of(outlier), 1,
                 batchId, bisectionDepth, bisectionStrategy, riskLevel
         );
         var right = new BatchSlice(
-                batchId + "-R", targetBranch, List.copyOf(rest), rest.size(),
+                batchId + "-R", repository, targetBranch, List.copyOf(rest), rest.size(),
                 batchId, bisectionDepth, bisectionStrategy, riskLevel
         );
         return new SplitResult(left, right);

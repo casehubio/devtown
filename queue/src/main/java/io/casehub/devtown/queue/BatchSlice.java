@@ -4,6 +4,7 @@ import java.util.List;
 
 public record BatchSlice(
         String id,
+        String repository,
         String targetBranch,
         List<QueuedPr> prs,
         int size,

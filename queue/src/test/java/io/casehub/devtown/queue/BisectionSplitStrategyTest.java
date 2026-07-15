@@ -31,7 +31,7 @@ class BisectionSplitStrategyTest {
             var prs = List.of(pr(1, "a", "alice", 0.9), pr(2, "b", "bob", 0.3),
                               pr(3, "c", "carol", 0.8), pr(4, "d", "dave", 0.2));
 
-            var result = strategy.split(prs, BATCH_ID, TARGET, 1, STRATEGY, RISK);
+            var result = strategy.split(prs, "casehubio/devtown", BATCH_ID, TARGET, 1, STRATEGY, RISK);
 
             assertThat(result.left().prs()).hasSize(2);
             assertThat(result.right().prs()).hasSize(2);
@@ -49,7 +49,7 @@ class BisectionSplitStrategyTest {
         @Test
         void batchOfTwoProducesTwoSingletons() {
             var prs    = List.of(pr(1, "a", "alice", 0.9), pr(2, "b", "bob", 0.3));
-            var result = strategy.split(prs, BATCH_ID, TARGET, 1, STRATEGY, RISK);
+            var result = strategy.split(prs, "casehubio/devtown", BATCH_ID, TARGET, 1, STRATEGY, RISK);
             assertThat(result.left().prs()).hasSize(1);
             assertThat(result.right().prs()).hasSize(1);
         }
@@ -57,14 +57,14 @@ class BisectionSplitStrategyTest {
         @Test
         void batchOfOneThrows() {
             var prs = List.of(pr(1, "a", "alice", 0.5));
-            assertThatThrownBy(() -> strategy.split(prs, BATCH_ID, TARGET, 1, STRATEGY, RISK))
+            assertThatThrownBy(() -> strategy.split(prs, "casehubio/devtown", BATCH_ID, TARGET, 1, STRATEGY, RISK))
                     .isInstanceOf(IllegalArgumentException.class);
         }
 
         @Test
         void oddSizedBatchSplitsWithLargerRightHalf() {
             var prs    = List.of(pr(1, "a", "alice", 0.9), pr(2, "b", "bob", 0.5), pr(3, "c", "carol", 0.2));
-            var result = strategy.split(prs, BATCH_ID, TARGET, 1, STRATEGY, RISK);
+            var result = strategy.split(prs, "casehubio/devtown", BATCH_ID, TARGET, 1, STRATEGY, RISK);
             assertThat(result.left().prs()).hasSize(1);
             assertThat(result.right().prs()).hasSize(2);
         }
@@ -72,17 +72,18 @@ class BisectionSplitStrategyTest {
         @Test
         void sliceMetadataIsCorrect() {
             var prs    = List.of(pr(1, "a", "alice", 0.9), pr(2, "b", "bob", 0.3));
-            var result = strategy.split(prs, BATCH_ID, TARGET, 2, STRATEGY, RISK);
+            var result = strategy.split(prs, "casehubio/devtown", BATCH_ID, TARGET, 2, STRATEGY, RISK);
 
             assertThat(result.left().parentBatchId()).isEqualTo(BATCH_ID);
+            assertThat(result.left().repository()).isEqualTo("casehubio/devtown");
             assertThat(result.left().targetBranch()).isEqualTo(TARGET);
             assertThat(result.left().bisectionDepth()).isEqualTo(2);
             assertThat(result.left().bisectionStrategy()).isEqualTo(STRATEGY);
             assertThat(result.left().riskLevel()).isEqualTo(RISK);
             assertThat(result.left().size()).isEqualTo(1);
             assertThat(result.right().parentBatchId()).isEqualTo(BATCH_ID);
-            assertThat(result.right().size()).isEqualTo(1);
-        }
+            assertThat(result.right().repository()).isEqualTo("casehubio/devtown");
+            assertThat(result.right().size()).isEqualTo(1);}
     }
 
     @Nested
@@ -97,7 +98,7 @@ class BisectionSplitStrategyTest {
                     pr(3, "c", "carol", 0.81), pr(4, "d", "dave", 0.79),
                     pr(5, "e", "eve", 0.83), pr(6, "f", "frank", 0.05));
 
-            var result = strategy.split(prs, BATCH_ID, TARGET, 1, STRATEGY, RISK);
+            var result = strategy.split(prs, "casehubio/devtown", BATCH_ID, TARGET, 1, STRATEGY, RISK);
 
             assertThat(result.left().prs()).hasSize(1);
             assertThat(result.left().prs().get(0).trustScore()).isEqualTo(0.05);
@@ -108,7 +109,7 @@ class BisectionSplitStrategyTest {
         void noOutlierDelegatesToTrustWeightedSplit() {
             var prs = List.of(pr(1, "a", "alice", 0.7), pr(2, "b", "bob", 0.8),
                               pr(3, "c", "carol", 0.75), pr(4, "d", "dave", 0.72));
-            var result = strategy.split(prs, BATCH_ID, TARGET, 1, STRATEGY, RISK);
+            var result = strategy.split(prs, "casehubio/devtown", BATCH_ID, TARGET, 1, STRATEGY, RISK);
             assertThat(result.left().prs()).hasSize(2);
             assertThat(result.right().prs()).hasSize(2);
         }
@@ -116,7 +117,7 @@ class BisectionSplitStrategyTest {
         @Test
         void batchOfTwoProducesTwoSingletons() {
             var prs    = List.of(pr(1, "a", "alice", 0.9), pr(2, "b", "bob", 0.1));
-            var result = strategy.split(prs, BATCH_ID, TARGET, 1, STRATEGY, RISK);
+            var result = strategy.split(prs, "casehubio/devtown", BATCH_ID, TARGET, 1, STRATEGY, RISK);
             assertThat(result.left().prs()).hasSize(1);
             assertThat(result.right().prs()).hasSize(1);
         }
@@ -124,7 +125,7 @@ class BisectionSplitStrategyTest {
         @Test
         void batchOfOneThrows() {
             var prs = List.of(pr(1, "a", "alice", 0.5));
-            assertThatThrownBy(() -> strategy.split(prs, BATCH_ID, TARGET, 1, STRATEGY, RISK))
+            assertThatThrownBy(() -> strategy.split(prs, "casehubio/devtown", BATCH_ID, TARGET, 1, STRATEGY, RISK))
                     .isInstanceOf(IllegalArgumentException.class);
         }
     }
@@ -138,7 +139,7 @@ class BisectionSplitStrategyTest {
         void splitsAtPositionalMidpointRegardlessOfTrust() {
             var prs = List.of(pr(1, "a", "alice", 0.2), pr(2, "b", "bob", 0.9),
                               pr(3, "c", "carol", 0.1), pr(4, "d", "dave", 0.8));
-            var result = strategy.split(prs, BATCH_ID, TARGET, 1, STRATEGY, RISK);
+            var result = strategy.split(prs, "casehubio/devtown", BATCH_ID, TARGET, 1, STRATEGY, RISK);
 
             assertThat(result.left().prs()).hasSize(2);
             assertThat(result.right().prs()).hasSize(2);
@@ -151,7 +152,7 @@ class BisectionSplitStrategyTest {
         @Test
         void batchOfTwoProducesTwoSingletons() {
             var prs    = List.of(pr(1, "a", "alice", 0.9), pr(2, "b", "bob", 0.3));
-            var result = strategy.split(prs, BATCH_ID, TARGET, 1, STRATEGY, RISK);
+            var result = strategy.split(prs, "casehubio/devtown", BATCH_ID, TARGET, 1, STRATEGY, RISK);
             assertThat(result.left().prs()).hasSize(1);
             assertThat(result.right().prs()).hasSize(1);
         }
@@ -159,14 +160,14 @@ class BisectionSplitStrategyTest {
         @Test
         void batchOfOneThrows() {
             var prs = List.of(pr(1, "a", "alice", 0.5));
-            assertThatThrownBy(() -> strategy.split(prs, BATCH_ID, TARGET, 1, STRATEGY, RISK))
+            assertThatThrownBy(() -> strategy.split(prs, "casehubio/devtown", BATCH_ID, TARGET, 1, STRATEGY, RISK))
                     .isInstanceOf(IllegalArgumentException.class);
         }
 
         @Test
         void oddSizedBatchSplitsLeftSmallerRightLarger() {
             var prs    = List.of(pr(1, "a", "alice", 0.5), pr(2, "b", "bob", 0.5), pr(3, "c", "carol", 0.5));
-            var result = strategy.split(prs, BATCH_ID, TARGET, 1, STRATEGY, RISK);
+            var result = strategy.split(prs, "casehubio/devtown", BATCH_ID, TARGET, 1, STRATEGY, RISK);
             assertThat(result.left().prs()).hasSize(1);
             assertThat(result.right().prs()).hasSize(2);
         }

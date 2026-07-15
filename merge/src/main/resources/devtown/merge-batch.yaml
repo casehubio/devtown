@@ -20,7 +20,7 @@ spec:
 
     - name: bisection-splitter
       description: "Computes the trust-weighted bisection split"
-      inputSchema: '{ prs: .batch.prs, strategy: (.batch.bisectionStrategy // "trust-weighted") }'
+      inputSchema: '{ prs: .batch.prs, strategy: (.batch.bisectionStrategy // "trust-weighted"), batch: .batch }'
       outputSchema: "{ splitResult: . }"
 
     - name: pr-reject-and-notify

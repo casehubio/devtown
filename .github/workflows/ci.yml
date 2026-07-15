@@ -28,6 +28,17 @@ jobs:
           server-username: GITHUB_ACTOR
           server-password: GITHUB_TOKEN
 
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          registry-url: 'https://npm.pkg.github.com'
+
+      - name: Build frontend
+        working-directory: app/src/main/webui
+        run: npm install && npm run build
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GH_PAT }}
+
       - name: Build and test
         run: mvn --batch-mode verify
         env:

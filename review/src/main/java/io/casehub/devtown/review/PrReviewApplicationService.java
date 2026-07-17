@@ -3,6 +3,11 @@ package io.casehub.devtown.review;
 public interface PrReviewApplicationService {
     PrReviewOutcome startReview(PrPayload pr);
 
+    default PrReviewOutcome startReview(PrPayload pr, java.util.Map<String, Object> additionalContext) {
+        return startReview(pr);
+    }
+
+
     LifecycleResult revisePr(String repo, int prNumber, String newHeadSha, int linesChanged);
 
     LifecycleResult closePr(String repo, int prNumber, boolean merged);

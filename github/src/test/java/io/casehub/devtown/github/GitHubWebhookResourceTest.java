@@ -48,7 +48,7 @@ class GitHubWebhookResourceTest {
         @Override
         public PrReviewOutcome startReview(PrPayload pr) {
             lastStartReview = pr;
-            return new PrReviewOutcome("case-opened", List.of());
+            return new PrReviewOutcome("case-opened", List.of(), null);
         }
 
         @Override

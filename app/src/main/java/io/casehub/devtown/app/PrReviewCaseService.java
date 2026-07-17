@@ -4,9 +4,9 @@ import io.casehub.devtown.app.mcp.PrReviewCaseTracker;
 import io.casehub.devtown.domain.CiStatusClient;
 import io.casehub.devtown.domain.CombinedCiStatus;
 import io.casehub.devtown.domain.cbr.PrFeatureVector;
-import io.casehub.devtown.domain.sla.SlaEstimator;
 import io.casehub.devtown.domain.preferences.PrReviewPreferenceKeys;
 import io.casehub.devtown.domain.queue.MergeQueuePreferenceKeys;
+import io.casehub.devtown.domain.sla.SlaEstimator;
 import io.casehub.devtown.review.LifecycleResult;
 import io.casehub.devtown.review.PrPayload;
 import io.casehub.devtown.review.PrReviewApplicationService;
@@ -62,52 +62,58 @@ public class PrReviewCaseService implements PrReviewApplicationService {
 
     @Override
     public PrReviewOutcome startReview(PrPayload pr) {
+        return startReview(pr, Map.of());
+    }
+
+    @Override
+    public PrReviewOutcome startReview(PrPayload pr, Map<String, Object> additionalContext) {
         var existing = caseTracker.findActiveCaseByPr(pr.repo(), pr.prNumber());
         if (existing.isPresent()) {
             revisePr(pr.repo(), pr.prNumber(), pr.headSha(), pr.linesChanged());
-            return new PrReviewOutcome(VERDICT_CASE_OPENED, List.of());
+            return new PrReviewOutcome(VERDICT_CASE_OPENED, List.of(), null);
         }
 
         var memoryContext = memoryRecaller.recall(pr);
 
         Preferences prefs = preferenceProvider.resolve(
-            SettingsScope.of("casehubio", "devtown", "pr-review"));
+                SettingsScope.of("casehubio", "devtown", "pr-review"));
         Preferences mergeQueuePrefs = preferenceProvider.resolve(
-            SettingsScope.of("casehubio", "devtown", "merge-queue"));
+                SettingsScope.of("casehubio", "devtown", "merge-queue"));
 
         var policy = Map.<String, Object>of(
-            "humanApprovalThreshold", prefs.getOrDefault(PrReviewPreferenceKeys.HUMAN_APPROVAL_THRESHOLD).value(),
-            "securityReviewRequired", prefs.getOrDefault(PrReviewPreferenceKeys.SECURITY_REVIEW_REQUIRED).value(),
-            "requireSeniorApproval", prefs.getOrDefault(PrReviewPreferenceKeys.REQUIRE_SENIOR_APPROVAL).value(),
-            "mergeQueueEnabled", mergeQueuePrefs.getOrDefault(MergeQueuePreferenceKeys.ENABLED).value()
-        );
+                "humanApprovalThreshold", prefs.getOrDefault(PrReviewPreferenceKeys.HUMAN_APPROVAL_THRESHOLD).value(),
+                "securityReviewRequired", prefs.getOrDefault(PrReviewPreferenceKeys.SECURITY_REVIEW_REQUIRED).value(),
+                "requireSeniorApproval", prefs.getOrDefault(PrReviewPreferenceKeys.REQUIRE_SENIOR_APPROVAL).value(),
+                "mergeQueueEnabled", mergeQueuePrefs.getOrDefault(MergeQueuePreferenceKeys.ENABLED).value()
+                                           );
         var prContext = new LinkedHashMap<String, Object>(Map.of(
-            "id", String.valueOf(pr.prNumber()),
-            "repo", pr.repo(),
-            "linesChanged", pr.linesChanged(),
-            "baseRef", pr.baseRef(),
-            "headSha", pr.headSha(),
-            "contributor", pr.contributor(),
-            "changedPaths", pr.changedPaths()
-        ));
+                "id", String.valueOf(pr.prNumber()),
+                "repo", pr.repo(),
+                "linesChanged", pr.linesChanged(),
+                "baseRef", pr.baseRef(),
+                "headSha", pr.headSha(),
+                "contributor", pr.contributor(),
+                "changedPaths", pr.changedPaths()
+                                                                ));
         var initialContext = new HashMap<String, Object>();
         initialContext.put("pr", prContext);
         initialContext.put("policy", policy);
         initialContext.put("memory", memoryContext.toContextMap());
         SlaEstimator.estimate(memoryContext.precedents()).ifPresent(estimate ->
-            initialContext.put("slaEstimate", estimate.toContextMap()));
+                                                                            initialContext.put("slaEstimate", estimate.toContextMap()));
         if ("external".equals(ciMode)) {
             initialContext.put("ci", Map.of("status", "pending"));
         }
+        initialContext.putAll(additionalContext);
 
         UUID caseId = caseHub.startCase(initialContext).toCompletableFuture().join();
 
         var vector = PrFeatureVector.from(
-            pr.repo(), pr.prNumber(), pr.contributor(), pr.linesChanged(), pr.changedPaths());
+                pr.repo(), pr.prNumber(), pr.contributor(), pr.linesChanged(), pr.changedPaths());
         featureVectorEmitter.emit(caseId, principal.tenancyId(), vector);
 
         caseTracker.register(caseId, principal.tenancyId(), pr);
-        return new PrReviewOutcome(VERDICT_CASE_OPENED, List.of());
+        return new PrReviewOutcome(VERDICT_CASE_OPENED, List.of(), caseId);
     }
 
     @Override

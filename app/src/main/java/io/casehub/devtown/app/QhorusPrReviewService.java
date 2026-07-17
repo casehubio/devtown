@@ -128,7 +128,7 @@ public class QhorusPrReviewService implements PrReviewApplicationService {
             }
         }
 
-        return new PrReviewOutcome("qhorus-reviewed", allFindings);
+        return new PrReviewOutcome("qhorus-reviewed", allFindings, null);
     }
 
     @Override

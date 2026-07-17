@@ -22,7 +22,7 @@ public class PrReviewService implements PrReviewApplicationService {
         var architectureFindings = reviewArchitectureDirectly(pr);
         var allFindings = new ArrayList<String>(securityFindings);
         allFindings.addAll(architectureFindings);
-        return new PrReviewOutcome("reviewed", allFindings);
+        return new PrReviewOutcome("reviewed", allFindings, null);
     }
 
     @Override

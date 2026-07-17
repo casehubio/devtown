@@ -13,7 +13,7 @@ class SupersedeResultTest {
     void succeeded_trueWhenBothCaseIdsPresent() {
         var result = new SupersedeResult(
             UUID.randomUUID(), UUID.randomUUID(),
-            new PrReviewOutcome("APPROVED", List.of())
+            new PrReviewOutcome("APPROVED", List.of(), null)
         );
         assertThat(result.succeeded()).isTrue();
     }

@@ -669,7 +669,7 @@ class DevtownMcpToolsTest {
     void supersedePr_activeCase_returnsSuperseded() {
         UUID oldCaseId = UUID.randomUUID();
         UUID newCaseId = UUID.randomUUID();
-        var  outcome   = new io.casehub.devtown.review.PrReviewOutcome("case-opened", List.of());
+        var  outcome   = new io.casehub.devtown.review.PrReviewOutcome("case-opened", List.of(), null);
         var  result    = new io.casehub.devtown.review.SupersedeResult(oldCaseId, newCaseId, outcome);
         when(reviewService.supersedePr(anyString(), anyInt(), any(PrPayload.class))).thenReturn(result);
 

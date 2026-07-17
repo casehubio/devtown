@@ -1,0 +1,65 @@
+dsl: "0.1"
+version: "1.0.0"
+name: coordinated-change
+namespace: devtown
+title: Cross-repo coordinated change — merge all or rollback on fault
+
+spec:
+  capabilities:
+    - name: coordinated-merge
+      description: "Merges all repos in the change set sequentially"
+      inputProjection: "{ repos: .repos }"
+      outputProjection: "{ mergeResults: .mergeResults }"
+
+    - name: coordinated-rollback
+      description: "Reverts already-merged repos on failure"
+      inputProjection: "{ repos: .repos, mergeResults: .mergeResults }"
+      outputProjection: "{ rollbackResults: .rollbackResults }"
+
+  goals:
+    - name: all-repos-merged
+      kind: success
+      condition: >-
+        .mergeResults != null and
+        (.mergeResults | length > 0) and
+        (.mergeResults | all(.status == "success"))
+
+    - name: review-faulted
+      kind: failure
+      condition: '.reviewFaulted != null'
+
+    - name: merge-failed
+      kind: failure
+      condition: >-
+        .mergeResults != null and
+        (.mergeResults | any(.status == "failed"))
+
+    - name: coordination-abandoned
+      kind: failure
+      condition: '.abandoned == true'
+
+  completion:
+    success:
+      allOf: [all-repos-merged]
+    failure:
+      anyOf: [review-faulted, merge-failed, coordination-abandoned]
+
+  bindings:
+    - name: merge-all-repos
+      on: { contextChange: {} }
+      when: '.allReviewsCompleted == true and .mergeResults == null'
+      capability: coordinated-merge
+      outcomePolicy:
+        onDecline: FAULT
+        onFailure: FAULT
+
+    - name: rollback-on-merge-failure
+      on: { contextChange: {} }
+      when: >-
+        .mergeResults != null and
+        (.mergeResults | any(.status == "failed")) and
+        .rollbackResults == null
+      capability: coordinated-rollback
+      outcomePolicy:
+        onDecline: FAULT
+        onFailure: FAULT

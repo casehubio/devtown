@@ -32,7 +32,10 @@ spec:
       kind: failure
       condition: >-
         .mergeResults != null and
-        (.mergeResults | any(.status == "failed"))
+        (.mergeResults | any(.status == "failed")) and
+        ((.rollbackResults != null and (.rollbackResults | all(.status == "success")))
+          or .rollbackEscalation != null
+          or .abandoned == true)
 
     - name: coordination-abandoned
       kind: failure

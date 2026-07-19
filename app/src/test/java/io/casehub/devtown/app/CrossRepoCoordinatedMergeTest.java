@@ -249,6 +249,11 @@ class CrossRepoCoordinatedMergeTest {
             .filter(e -> e.eventType() == CaseHubEventType.SIGNAL_RECEIVED).toList();
         assertThat(signals).as("SIGNAL_RECEIVED events").isNotEmpty();
 
+        var provenanceSignals = signals.stream()
+            .filter(e -> e.metadata() != null && e.metadata().has("causedByCaseId"))
+            .toList();
+        assertThat(provenanceSignals).as("Signals should carry cross-case provenance").isNotEmpty();
+
         var workerExecs = allEvents.stream()
             .filter(e -> e.eventType() == CaseHubEventType.WORKER_EXECUTION_COMPLETED).toList();
         assertThat(workerExecs).as("WORKER_EXECUTION_COMPLETED events").isNotEmpty();
@@ -349,11 +354,17 @@ class CrossRepoCoordinatedMergeTest {
         assertThat(testRevertClient.calls()).hasSize(1);
         assertThat(testRevertClient.calls().get(0).repo()).isEqualTo("engine");
 
-        // ── Phase 5: Terminal — merge-failed goal terminates case ────
-        // NOTE: The rollback-human-escalation binding cannot fire because
-        // the merge-failed goal terminates the case before the next binding
-        // evaluation cycle. This is a design gap in coordinated-change.yaml —
-        // tracked as #164.
+        // ── Phase 5: Resolve escalation ─────────────────────────────
+        // The fact that rollbackResults was written (Phase 4b) proves #164:
+        // merge-failed did NOT terminate the case before rollback completed.
+        //
+        // rollback-human-escalation fires but WorkItem creation fails
+        // silently (#165 — casehub-work binary incompatibility). Signal
+        // rollbackEscalation directly to complete the chain.
+        caseHubRuntime.signal(parentCaseId, "rollbackEscalation",
+            Map.of("outcome", "RESOLVED")).toCompletableFuture().join();
+
+        // ── Phase 6: Terminal — merge-failed fires after escalation ──
         awaitCaseTerminal(parentCaseId);
     }
 

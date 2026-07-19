@@ -95,7 +95,7 @@ class BatchBranchCleanupObserverTest {
     void nullContextSnapshot_noCleanup() {
         var event = new CaseLifecycleEvent(
             UUID.randomUUID(), "t1", "cmd", "evt", "COMPLETED",
-            null, null, null, "merge-batch", "devtown", null);
+            null, null, null, "merge-batch", "devtown", null, null, null);
         observer.onCaseLifecycle(event);
 
         verifyNoInteractions(client);
@@ -144,6 +144,6 @@ class BatchBranchCleanupObserverTest {
         JsonNode contextNode = mapper.valueToTree(context);
         return new CaseLifecycleEvent(
             UUID.randomUUID(), "t1", "cmd", "evt", status,
-            null, null, null, defName, namespace, contextNode);
+            null, null, null, defName, namespace, contextNode, null, null);
     }
 }

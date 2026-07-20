@@ -155,6 +155,12 @@
       <scope>test</scope>
     </dependency>
     <dependency>
+      <groupId>io.casehub</groupId>
+      <artifactId>casehub-platform-subscriptions-inmem</artifactId>
+      <version>0.2-SNAPSHOT</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
       <groupId>io.rest-assured</groupId>
       <artifactId>rest-assured</artifactId>
       <scope>test</scope>
@@ -172,7 +178,7 @@
     <dependency>
       <groupId>io.casehub</groupId>
       <artifactId>casehub-neocortex-memory-inmem</artifactId>
-      <version>${casehub.version}</version>
+      <version>0.2-SNAPSHOT</version>
       <scope>test</scope>
     </dependency>
     <dependency>

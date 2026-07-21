@@ -55,7 +55,7 @@ class CbrReviewerMatchingIntegrationTest {
                 new AgentCandidate("generalist-agent", Set.of(ReviewDomain.SECURITY_REVIEW),
                         0, AgentHealth.READY, null, null));
 
-        var result = strategy.select(ctx, candidates).await().indefinitely();
+        var result = strategy.select(ctx, candidates);
 
         assertThat(result).isInstanceOf(RoutingResult.Selected.class);
         var selected = (RoutingResult.Selected) result;
@@ -89,8 +89,8 @@ class CbrReviewerMatchingIntegrationTest {
                 new AgentCandidate("agent-b", Set.of(ReviewDomain.SECURITY_REVIEW),
                         0, AgentHealth.READY, null, null));
 
-        var resultWith = strategyWithCbr.select(ctx, candidates).await().indefinitely();
-        var resultWithout = strategyWithout.select(ctx, candidates).await().indefinitely();
+        var resultWith = strategyWithCbr.select(ctx, candidates);
+        var resultWithout = strategyWithout.select(ctx, candidates);
 
         assertThat(((RoutingResult.Selected) resultWith).single().executorId())
                 .isEqualTo(((RoutingResult.Selected) resultWithout).single().executorId());

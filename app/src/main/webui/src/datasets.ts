@@ -7,6 +7,7 @@ export const datasets = [
   dataset("problems", "/api/governance/problems", { dataPath: "items" }),
   dataset("reviewers", "/api/governance/reviewers", { dataPath: "items" }),
   dataset("merge-queue", "/api/governance/merge-queue", { dataPath: "queuedPrs" }),
+  dataset("active-batches", "/api/governance/merge-queue", { dataPath: "activeBatches" }),
   dataset("merge-queue-metrics", "/api/governance/merge-queue/metrics", { expression: "[$]" }),
   dataset("triage", "/api/governance/triage", { dataPath: "items" }),
   dataset("case-definitions", "/api/v1/case-definitions"),

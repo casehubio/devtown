@@ -1,5 +1,5 @@
 import {
-  page, metric, columns, rows, table, barChart, title,
+  page, metric, columns, rows, table, title,
 } from "@casehubio/pages-ui";
 import { lookup, groupBy, col } from "@casehubio/pages-ui";
 
@@ -15,25 +15,23 @@ export const systemView = page("System",
       [metric({ title: "Pending Work Items", lookup: lookup("system-health", groupBy(null, col("pendingWorkItems"))), subtype: "plain-text" })],
     ),
 
-    // Body — trust chart + problems table
-    columns([50, 50],
-      [barChart({
-        title: "Average Trust by Capability",
-        lookup: lookup("system-health", groupBy("capability", col("capability"), col("avgTrust"))),
-      })],
-      [table({
-        title: "Problems",
-        lookup: lookup("problems"),
-        sortable: true,
-      })],
-    ),
+    // Problems table
+    title("Problems", 3),
+    table({
+      lookup: lookup("problems", groupBy("category",
+        col("category"), col("severity"), col("description"),
+        col("caseId"), col("actorId"), col("since")
+      )),
+      sortable: true,
+      filter: { enabled: true },
+    }),
 
     // Queue health
     title("Queue Health", 3),
     columns([25, 25, 25, 25],
       [metric({ title: "Queue Depth", lookup: lookup("merge-queue-metrics", groupBy(null, col("queueDepth"))), subtype: "plain-text" })],
-      [metric({ title: "Oldest Wait", lookup: lookup("merge-queue-metrics", groupBy(null, col("oldestWait"))), subtype: "plain-text" })],
-      [metric({ title: "Avg Wait", lookup: lookup("merge-queue-metrics", groupBy(null, col("avgWait"))), subtype: "plain-text" })],
+      [metric({ title: "Oldest Wait (min)", lookup: lookup("merge-queue-metrics", groupBy(null, col("oldestWaitMinutes"))), subtype: "plain-text" })],
+      [metric({ title: "Avg Wait (min)", lookup: lookup("merge-queue-metrics", groupBy(null, col("avgWaitMinutes"))), subtype: "plain-text" })],
       [metric({ title: "Failure Rate", lookup: lookup("merge-queue-metrics", groupBy(null, col("failureRate"))), subtype: "plain-text" })],
     ),
   ),

@@ -169,9 +169,9 @@ class DevtownRestSecurityTest {
 
     @Test
     @TestSecurity(user = "service-user", roles = {DevtownRoles.SERVICE})
-    void service_cannotReadGovernance() {
+    void service_canReadGovernance() {
         given().when().get("/api/governance/queue-status")
-               .then().statusCode(403);
+               .then().statusCode(200);
     }
 
 

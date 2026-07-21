@@ -5,8 +5,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>DevTown Governance</title>
   <style>
-    body { margin: 0; font-family: system-ui, sans-serif; }
-    #app { width: 100vw; height: 100vh; }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; }
+    #app {
+      min-height: 100%;
+      font-family: var(--casehub-font, system-ui, sans-serif);
+      background: var(--casehub-bg, #fff);
+      color: var(--casehub-text, #333);
+    }
   </style>
 </head>
 <body>

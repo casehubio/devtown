@@ -109,8 +109,7 @@ class TrustFeedbackClosedLoopTest {
         AgentCandidate candidateB = new AgentCandidate(AGENT_B, Set.of(ReviewDomain.SECURITY_REVIEW), 0, AgentHealth.READY, null, null);
         AgentRoutingContext context = new AgentRoutingContext(UUID.randomUUID(), ReviewDomain.SECURITY_REVIEW, null, TENANT, List.of());
 
-        RoutingResult routingResult = routingStrategy.select(context, List.of(candidateA, candidateB))
-            .await().atMost(Duration.ofSeconds(5));
+        RoutingResult routingResult = routingStrategy.select(context, List.of(candidateA, candidateB));
 
         assertThat(routingResult).isInstanceOf(RoutingResult.Selected.class);
         assertThat(((RoutingResult.Selected) routingResult).single().executorId())

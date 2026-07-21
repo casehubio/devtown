@@ -150,7 +150,7 @@
     <!-- test -->
     <dependency>
       <groupId>io.quarkus</groupId>
-      <artifactId>quarkus-junit5</artifactId>
+      <artifactId>quarkus-junit</artifactId>
       <scope>test</scope>
     </dependency>
     <dependency>
@@ -210,6 +210,12 @@
       <groupId>io.quarkus</groupId>
       <artifactId>quarkus-test-security</artifactId>
       <scope>test</scope>
+      <exclusions>
+        <exclusion>
+          <groupId>io.quarkus</groupId>
+          <artifactId>quarkus-junit</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
   </dependencies>
 

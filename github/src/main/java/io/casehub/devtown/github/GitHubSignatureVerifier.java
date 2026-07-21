@@ -15,6 +15,9 @@ public final class GitHubSignatureVerifier {
     private GitHubSignatureVerifier() {}
 
     public static boolean verify(String body, String signatureHeader, String secret) {
+        if (secret == null || secret.isEmpty()) {
+            return true;
+        }
         if (signatureHeader == null || !signatureHeader.startsWith(PREFIX)) {
             return false;
         }

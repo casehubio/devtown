@@ -55,7 +55,7 @@ public class DevtownActionRiskClassifier {
     private RiskDecision alwaysGate(final PlannedAction action, final Preferences prefs,
             final String reason, final boolean reversible, final CandidateSetStrategy candidateGroups) {
         return new RiskDecision.GateRequired(reason, reversible, candidateGroups,
-                expiresIn(prefs, reversible), action.actionType());
+                expiresIn(prefs, reversible), action.actionType(), null);
     }
 
     private RiskDecision classifyMergeExecute(final PlannedAction action, final Preferences prefs) {
@@ -65,7 +65,7 @@ public class DevtownActionRiskClassifier {
             return new RiskDecision.GateRequired(
                     "Merge requires at least " + minimum + " approved review(s)",
                     false, StaticSetStrategy.of(HumanDecision.PR_APPROVAL),
-                    expiresIn(prefs, false), action.actionType());
+                    expiresIn(prefs, false), action.actionType(), null);
         }
         return new RiskDecision.Autonomous();
     }
@@ -95,7 +95,7 @@ public class DevtownActionRiskClassifier {
             return new RiskDecision.GateRequired(
                     "Security finding (" + actual + ") requires human confirmation",
                     true, StaticSetStrategy.of(HumanOversight.ROUTING_REVIEW),
-                    expiresIn(prefs, true), action.actionType());
+                    expiresIn(prefs, true), action.actionType(), null);
         }
         return new RiskDecision.Autonomous();
     }
@@ -108,7 +108,7 @@ public class DevtownActionRiskClassifier {
         final Integer actual = extractInt(action.parameters(), contextKey);
         if (actual == null || actual >= threshold) {
             return new RiskDecision.GateRequired(reason, reversible, candidateGroups,
-                    expiresIn(prefs, reversible), action.actionType());
+                    expiresIn(prefs, reversible), action.actionType(), null);
         }
         return new RiskDecision.Autonomous();
     }
@@ -119,7 +119,7 @@ public class DevtownActionRiskClassifier {
             return new RiskDecision.GateRequired(
                     "Overriding a rejection requires human approval",
                     true, StaticSetStrategy.of(HumanDecision.PR_APPROVAL),
-                    expiresIn(prefs, true), action.actionType());
+                    expiresIn(prefs, true), action.actionType(), null);
         }
         return new RiskDecision.Autonomous();
     }
@@ -128,7 +128,7 @@ public class DevtownActionRiskClassifier {
         return new RiskDecision.GateRequired(
                 "Unknown action type — manual review required",
                 true, StaticSetStrategy.of(HumanOversight.GENERAL),
-                Duration.ofHours(24), action.actionType());
+                Duration.ofHours(24), action.actionType(), null);
     }
 
     private RiskDecision failSafeForAction(final PlannedAction action, final Preferences prefs,
@@ -136,7 +136,7 @@ public class DevtownActionRiskClassifier {
         return new RiskDecision.GateRequired(
                 "Missing or invalid context — manual review required",
                 reversible, candidateGroups,
-                expiresIn(prefs, reversible), action.actionType());
+                expiresIn(prefs, reversible), action.actionType(), null);
     }
 
     private static Duration expiresIn(final Preferences prefs, final boolean reversible) {

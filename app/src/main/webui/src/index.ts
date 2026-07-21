@@ -1,6 +1,6 @@
 import { loadSite } from "@casehubio/pages-runtime";
 import { page, tabs } from "@casehubio/pages-ui";
-import "./datasets";
+import { datasets } from "./datasets";
 import { defaultTheme } from "./theme";
 import { operationsView } from "./views/operations";
 import { reviewsView } from "./views/reviews";
@@ -20,7 +20,7 @@ const app = page("DevTown",
     ["System", systemView],
     ["Definitions", definitionsView],
   ),
-  { settings: { mode: "dark" } },
+  { settings: { mode: "dark" }, datasets },
 );
 
 const container = document.getElementById("app");

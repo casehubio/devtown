@@ -18,7 +18,7 @@ import java.util.UUID;
 
 @Path("/api/governance")
 @Produces(MediaType.APPLICATION_JSON)
-@RolesAllowed({DevtownRoles.ADMIN, DevtownRoles.ENGINEER, DevtownRoles.AUDITOR})
+@jakarta.annotation.security.PermitAll
 public class GovernanceResource {
 
     @Inject

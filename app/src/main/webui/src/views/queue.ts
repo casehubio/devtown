@@ -1,30 +1,30 @@
 import {
-  page, rows, columns, metric, table, title,
+  page, rows, metricGrid, metric, table, title,
 } from "@casehubio/pages-ui";
 import { lookup, groupBy, col } from "@casehubio/pages-ui";
 
 export const queueView = page("Merge Queue",
   rows(
-    title("Merge Queue", 2),
+    title("Merge Queue", "h2"),
 
     // Metrics row
-    columns([25, 25, 25, 25],
-      [metric({ title: "Queue Depth", lookup: lookup("merge-queue-metrics", groupBy(null, col("queueDepth"))), subtype: "plain-text" })],
-      [metric({ title: "Active Batches", lookup: lookup("merge-queue-metrics", groupBy(null, col("activeBatches"))), subtype: "plain-text" })],
-      [metric({ title: "24h Throughput", lookup: lookup("merge-queue-metrics", groupBy(null, col("throughput24h"))), subtype: "plain-text" })],
-      [metric({ title: "Failure Rate", lookup: lookup("merge-queue-metrics", groupBy(null, col("failureRate"))), subtype: "plain-text" })],
+    metricGrid(
+      metric({ title: "Queue Depth", lookup: lookup("merge-queue-metrics", groupBy(null, col("queueDepth"))), subtype: "plain-text" }),
+      metric({ title: "Active Batches", lookup: lookup("merge-queue-metrics", groupBy(null, col("activeBatches"))), subtype: "plain-text" }),
+      metric({ title: "24h Throughput", lookup: lookup("merge-queue-metrics", groupBy(null, col("throughput24h"))), subtype: "plain-text" }),
+      metric({ title: "Failure Rate", lookup: lookup("merge-queue-metrics", groupBy(null, col("failureRate"))), subtype: "plain-text" }),
     ),
 
     // Wait time metrics
-    title("Wait Times", 3),
-    columns([33, 33, 34],
-      [metric({ title: "Oldest Wait (min)", lookup: lookup("merge-queue-metrics", groupBy(null, col("oldestWaitMinutes"))), subtype: "plain-text" })],
-      [metric({ title: "Avg Wait (min)", lookup: lookup("merge-queue-metrics", groupBy(null, col("avgWaitMinutes"))), subtype: "plain-text" })],
-      [metric({ title: "Avg Trust Score", lookup: lookup("merge-queue-metrics", groupBy(null, col("avgTrustScore"))), subtype: "plain-text" })],
+    title("Wait Times", "h3"),
+    metricGrid(
+      metric({ title: "Oldest Wait (min)", lookup: lookup("merge-queue-metrics", groupBy(null, col("oldestWaitMinutes"))), subtype: "plain-text" }),
+      metric({ title: "Avg Wait (min)", lookup: lookup("merge-queue-metrics", groupBy(null, col("avgWaitMinutes"))), subtype: "plain-text" }),
+      metric({ title: "Avg Trust Score", lookup: lookup("merge-queue-metrics", groupBy(null, col("avgTrustScore"))), subtype: "plain-text" }),
     ),
 
     // Queued PRs table
-    title("Queued PRs", 3),
+    title("Queued PRs", "h3"),
     table({
       lookup: lookup("merge-queue", groupBy("number",
         col("number"),
@@ -40,7 +40,7 @@ export const queueView = page("Merge Queue",
     }),
 
     // Active Batches table
-    title("Active Batches", 3),
+    title("Active Batches", "h3"),
     table({
       lookup: lookup("active-batches", groupBy("batchId",
         col("batchId"),

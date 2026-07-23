@@ -19,6 +19,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Checkout casehub-pages (sibling)
+        uses: actions/checkout@v4
+        with:
+          repository: casehubio/casehub-pages
+          token: ${{ secrets.GH_PAT || secrets.GITHUB_TOKEN }}
+          path: ../pages
+
       - name: Set up Java 21
         uses: actions/setup-java@v4
         with:
@@ -32,6 +39,15 @@ jobs:
         with:
           node-version: '22'
           registry-url: 'https://npm.pkg.github.com'
+
+      - name: Build pages packages
+        working-directory: ../pages
+        run: |
+          corepack enable
+          yarn install --immutable
+          yarn build
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GH_PAT }}
 
       - name: Build frontend
         working-directory: app/src/main/webui

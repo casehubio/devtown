@@ -23,7 +23,6 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: casehubio/casehub-pages
-          token: ${{ secrets.GH_PAT || secrets.GITHUB_TOKEN }}
           path: .sibling-pages
 
       - name: Symlink pages as sibling
@@ -50,13 +49,13 @@ jobs:
           yarn install --immutable
           yarn build
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.GH_PAT }}
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build frontend
         working-directory: app/src/main/webui
         run: npm install && npm run build
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.GH_PAT }}
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build and test
         run: mvn --batch-mode verify

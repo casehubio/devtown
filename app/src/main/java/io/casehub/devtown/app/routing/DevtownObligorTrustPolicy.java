@@ -5,6 +5,7 @@ import io.casehub.devtown.domain.trust.TrustGatePreferenceKeys;
 import io.casehub.ledger.runtime.service.TrustGateService;
 import io.casehub.platform.api.preferences.PreferenceProvider;
 import io.casehub.platform.api.preferences.Preferences;
+import io.casehub.platform.api.path.Path;
 import io.casehub.platform.api.preferences.SettingsScope;
 import io.casehub.qhorus.api.spi.ObligorTrustContext;
 import io.casehub.qhorus.api.spi.ObligorTrustPolicy;
@@ -38,7 +39,7 @@ public class DevtownObligorTrustPolicy implements ObligorTrustPolicy {
     public boolean permits(ObligorTrustContext ctx) {
         // Resolved per-call — PreferenceProvider caches internally; YAML changes take effect at next call.
         final Preferences prefs = preferenceProvider.resolve(
-            SettingsScope.of("casehubio", "devtown", "trust-gate"));
+            SettingsScope.of("casehubio", Path.parse("devtown/trust-gate")));
 
         final DoublePreference thresholdPref = prefs.get(TrustGatePreferenceKeys.MIN_OBLIGOR_TRUST);
         final double floor = thresholdPref != null ? thresholdPref.value() : 0.0;

@@ -1,5 +1,5 @@
 import {
-  page, rows, table, title,
+  page, rows, dataTable, title,
 } from "@casehubio/pages-ui";
 import { lookup, groupBy, col } from "@casehubio/pages-ui";
 
@@ -7,7 +7,7 @@ export const triageView = page("Human Triage",
   rows(
     title("Human Triage", 2),
 
-    table({
+    dataTable({
       lookup: lookup("triage", groupBy("workItemId",
         col("prRef"),
         col("decisionType"),

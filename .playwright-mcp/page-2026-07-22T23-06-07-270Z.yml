@@ -1,0 +1,443 @@
+- generic [ref=f10e2]:
+  - button "Toggle sidebar" [ref=f10e3] [cursor=pointer]
+  - complementary [ref=f10e6]:
+    - generic [ref=f10e7]:
+      - heading "CaseHub Pages Examples" [level=1] [ref=f10e8]
+      - generic [ref=f10e9]: 64 samples
+      - generic [ref=f10e10]:
+        - button "🌙" [ref=f10e11] [cursor=pointer]
+        - button "⊟" [ref=f10e12] [cursor=pointer]
+    - textbox "Search samples..." [ref=f10e14]
+    - navigation [ref=f10e15]:
+      - generic [ref=f10e16]:
+        - generic [ref=f10e17] [cursor=pointer]:
+          - generic [ref=f10e18]: Charts
+          - generic [ref=f10e19]: ▼
+        - generic [ref=f10e20]:
+          - generic [ref=f10e21] [cursor=pointer]: Charts
+          - generic [ref=f10e22] [cursor=pointer]: Decal Pattern
+          - generic [ref=f10e23] [cursor=pointer]: ECharts Custom
+          - generic [ref=f10e24] [cursor=pointer]: Histogram
+          - generic [ref=f10e25] [cursor=pointer]: Timeline and Graph
+          - generic [ref=f10e26] [cursor=pointer]: TimeSeries
+      - generic [ref=f10e27]:
+        - generic [ref=f10e28] [cursor=pointer]:
+          - generic [ref=f10e29]: Tables
+          - generic [ref=f10e30]: ▼
+        - generic [ref=f10e31]:
+          - generic [ref=f10e32] [cursor=pointer]: Accumulate Flag
+          - generic [ref=f10e33] [cursor=pointer]: Column Settings
+          - generic [ref=f10e34] [cursor=pointer]: GitHub Repos
+          - generic [ref=f10e35] [cursor=pointer]: Google Spreadsheet
+          - generic [ref=f10e36] [cursor=pointer]: Grouped Roadmap
+          - generic [ref=f10e37] [cursor=pointer]: Grouped View
+          - generic [ref=f10e38] [cursor=pointer]: Inline Dataset
+          - generic [ref=f10e39] [cursor=pointer]: Lookup Operations
+          - generic [ref=f10e40] [cursor=pointer]: Project Roadmap
+          - generic [ref=f10e41] [cursor=pointer]: Row Detail
+          - generic [ref=f10e42] [cursor=pointer]: Row Styles
+          - generic [ref=f10e43] [cursor=pointer]: Spanning
+          - generic [ref=f10e44] [cursor=pointer]: Table
+          - generic [ref=f10e45] [cursor=pointer]: Tree Table
+      - generic [ref=f10e46]:
+        - generic [ref=f10e47] [cursor=pointer]:
+          - generic [ref=f10e48]: Metrics
+          - generic [ref=f10e49]: ▼
+        - generic [ref=f10e50]:
+          - generic [ref=f10e51] [cursor=pointer]: Badges and Countdown
+          - generic [ref=f10e52] [cursor=pointer]: Metrics and Gauges
+      - generic [ref=f10e53]:
+        - generic [ref=f10e54] [cursor=pointer]:
+          - generic [ref=f10e55]: Maps
+          - generic [ref=f10e56]: ▼
+        - generic [ref=f10e57]:
+          - generic [ref=f10e58] [cursor=pointer]: Maps
+          - generic [ref=f10e59] [cursor=pointer]: SVG Heatmap
+      - generic [ref=f10e60]:
+        - generic [ref=f10e61] [cursor=pointer]:
+          - generic [ref=f10e62]: Forms
+          - generic [ref=f10e63]: ▼
+        - generic [ref=f10e64]:
+          - generic [ref=f10e65] [cursor=pointer]: Contact Manager
+          - generic [ref=f10e66] [cursor=pointer]: Developer Registration
+          - generic [ref=f10e67] [cursor=pointer]: Schema Form
+      - generic [ref=f10e68]:
+        - generic [ref=f10e69] [cursor=pointer]:
+          - generic [ref=f10e70]: Layout
+          - generic [ref=f10e71]: ▼
+        - generic [ref=f10e72]:
+          - generic [ref=f10e73] [cursor=pointer]: Carousel and Stack
+          - generic [ref=f10e74] [cursor=pointer]: Column with Rows
+          - generic [ref=f10e75] [cursor=pointer]: Layout Patterns
+          - generic [ref=f10e76] [cursor=pointer]: Split and Dock
+          - generic [ref=f10e77] [cursor=pointer]: Team Management
+      - generic [ref=f10e78]:
+        - generic [ref=f10e79] [cursor=pointer]:
+          - generic [ref=f10e80]: Interactivity
+          - generic [ref=f10e81]: ▼
+        - generic [ref=f10e82]:
+          - generic [ref=f10e83] [cursor=pointer]: Action Button
+          - generic [ref=f10e84] [cursor=pointer]: Dynamic Visibility
+          - generic [ref=f10e85] [cursor=pointer]: Navigation Rebinding
+          - generic [ref=f10e86] [cursor=pointer]: Selectors and Filters
+      - generic [ref=f10e87]:
+        - generic [ref=f10e88] [cursor=pointer]:
+          - generic [ref=f10e89]: Live Data
+          - generic [ref=f10e90]: ▼
+        - generic [ref=f10e91]: Polling
+      - generic [ref=f10e93]:
+        - generic [ref=f10e94] [cursor=pointer]:
+          - generic [ref=f10e95]: Content
+          - generic [ref=f10e96]: ▼
+        - generic [ref=f10e97]:
+          - generic [ref=f10e98] [cursor=pointer]: Alerts
+          - generic [ref=f10e99] [cursor=pointer]: Content Types
+      - generic [ref=f10e100]:
+        - generic [ref=f10e101] [cursor=pointer]:
+          - generic [ref=f10e102]: Custom Components
+          - generic [ref=f10e103]: ▼
+        - generic [ref=f10e104]: Iframe Components
+      - generic [ref=f10e106]:
+        - generic [ref=f10e107] [cursor=pointer]:
+          - generic [ref=f10e108]: Theming
+          - generic [ref=f10e109]: ▼
+        - generic [ref=f10e110]:
+          - generic [ref=f10e111] [cursor=pointer]: DarkMode
+          - generic [ref=f10e112] [cursor=pointer]: Token Showcase
+      - generic [ref=f10e113]:
+        - generic [ref=f10e114] [cursor=pointer]:
+          - generic [ref=f10e115]: Monitoring
+          - generic [ref=f10e116]: ▼
+        - generic [ref=f10e117]:
+          - generic [ref=f10e118] [cursor=pointer]: Ansible Metrics
+          - generic [ref=f10e119] [cursor=pointer]: Backstage Metrics
+          - generic [ref=f10e120] [cursor=pointer]: Jupyter Hub Metrics
+          - generic [ref=f10e121] [cursor=pointer]: Jupyter Metrics Summary
+          - generic [ref=f10e122] [cursor=pointer]: JVM Monitoring
+          - generic [ref=f10e123] [cursor=pointer]: Kepler Metrics
+          - generic [ref=f10e124] [cursor=pointer]: ModelMesh Metrics
+          - generic [ref=f10e125] [cursor=pointer]: OpenTelemetry Basic
+          - generic [ref=f10e126] [cursor=pointer]: Prometheus Basic
+          - generic [ref=f10e127] [cursor=pointer]: Prometheus HTTP Requests
+          - generic [ref=f10e128] [cursor=pointer]: Quarkus Monitoring
+          - generic [ref=f10e129] [cursor=pointer]: Real Time JVM Monitoring
+          - generic [ref=f10e130] [cursor=pointer]: Triton Inference Server
+      - generic [ref=f10e131]:
+        - generic [ref=f10e132] [cursor=pointer]:
+          - generic [ref=f10e133]: Domain Showcases
+          - generic [ref=f10e134]: ▼
+        - generic [ref=f10e135]:
+          - generic [ref=f10e136] [cursor=pointer]: FIFA 2022 Goals
+          - generic [ref=f10e137] [cursor=pointer]: Fleet Monitor
+          - generic [ref=f10e138] [cursor=pointer]: Github Repositories
+          - generic [ref=f10e139] [cursor=pointer]: Most Spoken Languages
+          - generic [ref=f10e140] [cursor=pointer]: Patient Tracker
+          - generic [ref=f10e141] [cursor=pointer]: Podman Stats
+          - generic [ref=f10e142] [cursor=pointer]: PR Review Governance
+          - generic [ref=f10e143] [cursor=pointer]: Sales Dashboard
+          - generic [ref=f10e144] [cursor=pointer]: Workforce Analytics
+  - main [ref=f10e145]:
+    - generic [ref=f10e146]:
+      - generic [ref=f10e147]:
+        - heading "PR Review Governance" [level=2] [ref=f10e148]
+        - generic [ref=f10e149]:
+          - button "Open in new window" [ref=f10e150] [cursor=pointer]
+          - button "Reload sample" [ref=f10e153] [cursor=pointer]
+          - button "Toggle source code" [ref=f10e156] [cursor=pointer]
+      - generic [ref=f10e159]:
+        - generic [ref=f10e164]:
+          - generic [ref=f10e167]:
+            - generic [ref=f10e168]: Active Cases
+            - generic [ref=f10e169]: "5"
+          - generic [ref=f10e172]:
+            - generic [ref=f10e173]: Fleet Size
+            - generic [ref=f10e174]: "5"
+          - generic [ref=f10e177]:
+            - generic [ref=f10e178]: Open Problems
+            - generic [ref=f10e179]: "3"
+          - generic [ref=f10e182]:
+            - generic [ref=f10e183]: Pending Triage
+            - generic [ref=f10e184]: "2"
+          - heading "Active Reviews" [level=3] [ref=f10e186]
+          - grid "Data table" [ref=f10e189]:
+            - generic [ref=f10e190]:
+              - row [ref=f10e191]:
+                - columnheader "caseId ▲" [ref=f10e192] [cursor=pointer]:
+                  - text: caseId
+                  - generic [ref=f10e193]: ▲
+                - columnheader "prNumber ▲" [ref=f10e194] [cursor=pointer]:
+                  - text: prNumber
+                  - generic [ref=f10e195]: ▲
+                - columnheader "repo ▲" [ref=f10e196] [cursor=pointer]:
+                  - text: repo
+                  - generic [ref=f10e197]: ▲
+                - columnheader "contributor ▲" [ref=f10e198] [cursor=pointer]:
+                  - text: contributor
+                  - generic [ref=f10e199]: ▲
+                - columnheader "status ▲" [ref=f10e200] [cursor=pointer]:
+                  - text: status
+                  - generic [ref=f10e201]: ▲
+                - columnheader "linesChanged ▲" [ref=f10e202] [cursor=pointer]:
+                  - text: linesChanged
+                  - generic [ref=f10e203]: ▲
+                - columnheader "startedAt ▲" [ref=f10e204] [cursor=pointer]:
+                  - text: startedAt
+                  - generic [ref=f10e205]: ▲
+                - columnheader "lastEventAt ▲" [ref=f10e206] [cursor=pointer]:
+                  - text: lastEventAt
+                  - generic [ref=f10e207]: ▲
+              - button "Table options" [ref=f10e209] [cursor=pointer]: ⋮
+            - generic [ref=f10e211]:
+              - row [ref=f10e212]:
+                - gridcell "3ca0e1e6" [ref=f10e213]
+                - gridcell "42" [ref=f10e214]
+                - gridcell "casehubio/devtown" [ref=f10e215]
+                - gridcell "alice" [ref=f10e216]
+                - gridcell "RUNNING" [ref=f10e217]
+                - gridcell "150" [ref=f10e218]
+                - gridcell "22/07/2026" [ref=f10e219]
+                - gridcell "22/07/2026" [ref=f10e220]
+              - row [ref=f10e221]:
+                - gridcell "f1b2c3d4" [ref=f10e222]
+                - gridcell "87" [ref=f10e223]
+                - gridcell "casehubio/engine" [ref=f10e224]
+                - gridcell "bob" [ref=f10e225]
+                - gridcell "WAITING" [ref=f10e226]
+                - gridcell "320" [ref=f10e227]
+                - gridcell "22/07/2026" [ref=f10e228]
+                - gridcell "22/07/2026" [ref=f10e229]
+              - row [ref=f10e230]:
+                - gridcell "a1b2c3d4" [ref=f10e231]
+                - gridcell "15" [ref=f10e232]
+                - gridcell "casehubio/platform" [ref=f10e233]
+                - gridcell "carol" [ref=f10e234]
+                - gridcell "RUNNING" [ref=f10e235]
+                - gridcell "45" [ref=f10e236]
+                - gridcell "22/07/2026" [ref=f10e237]
+                - gridcell "22/07/2026" [ref=f10e238]
+              - row [ref=f10e239]:
+                - gridcell "deadbeef" [ref=f10e240]
+                - gridcell "203" [ref=f10e241]
+                - gridcell "casehubio/work" [ref=f10e242]
+                - gridcell "dave" [ref=f10e243]
+                - gridcell "COMPLETED" [ref=f10e244]
+                - gridcell "890" [ref=f10e245]
+                - gridcell "21/07/2026" [ref=f10e246]
+                - gridcell "22/07/2026" [ref=f10e247]
+              - row [ref=f10e248]:
+                - gridcell "11223344" [ref=f10e249]
+                - gridcell "56" [ref=f10e250]
+                - gridcell "casehubio/ledger" [ref=f10e251]
+                - gridcell "eve" [ref=f10e252]
+                - gridcell "FAULTED" [ref=f10e253]
+                - gridcell "210" [ref=f10e254]
+                - gridcell "22/07/2026" [ref=f10e255]
+                - gridcell "22/07/2026" [ref=f10e256]
+            - navigation "Table pagination" [ref=f10e257]:
+              - generic [ref=f10e258]:
+                - generic [ref=f10e259]: Showing 1-5 of 5
+                - generic [ref=f10e260]:
+                  - text: Rows
+                  - combobox "Rows per page" [ref=f10e261] [cursor=pointer]:
+                    - option "10" [selected]
+                    - option "25"
+                    - option "50"
+                    - option "100"
+              - generic [ref=f10e262]:
+                - button "First page" [disabled] [ref=f10e263]: First
+                - button "Previous page" [disabled] [ref=f10e264]: Prev
+                - generic [ref=f10e265]:
+                  - spinbutton "Jump to page" [ref=f10e266]: "1"
+                  - generic [ref=f10e267]: of 1
+                - button "Next page" [disabled] [ref=f10e268]: Next
+                - button "Last page" [disabled] [ref=f10e269]: Last
+          - heading "Problems" [level=3] [ref=f10e271]
+          - grid "Data table" [ref=f10e274]:
+            - generic [ref=f10e275]:
+              - row [ref=f10e276]:
+                - columnheader "category ▲" [ref=f10e277] [cursor=pointer]:
+                  - text: category
+                  - generic [ref=f10e278]: ▲
+                - columnheader "severity ▲" [ref=f10e279] [cursor=pointer]:
+                  - text: severity
+                  - generic [ref=f10e280]: ▲
+                - columnheader "description ▲" [ref=f10e281] [cursor=pointer]:
+                  - text: description
+                  - generic [ref=f10e282]: ▲
+                - columnheader "caseId ▲" [ref=f10e283] [cursor=pointer]:
+                  - text: caseId
+                  - generic [ref=f10e284]: ▲
+                - columnheader "actorId ▲" [ref=f10e285] [cursor=pointer]:
+                  - text: actorId
+                  - generic [ref=f10e286]: ▲
+                - columnheader "since ▲" [ref=f10e287] [cursor=pointer]:
+                  - text: since
+                  - generic [ref=f10e288]: ▲
+              - button "Table options" [ref=f10e290] [cursor=pointer]: ⋮
+            - generic [ref=f10e292]:
+              - row [ref=f10e293]:
+                - gridcell "stalled_case" [ref=f10e294]
+                - gridcell "warning" [ref=f10e295]
+                - gridcell "PR stalled — casehubio/ledger#56 no progress 60+ min" [ref=f10e296]
+                - gridcell "11223344" [ref=f10e297]
+                - gridcell "arch-review-agent" [ref=f10e298]
+                - gridcell "22/07/2026" [ref=f10e299]
+              - row [ref=f10e300]:
+                - gridcell "expired_commitment" [ref=f10e301]
+                - gridcell "error" [ref=f10e302]
+                - 'gridcell "Commitment expired: arch-review-agent REVIEW_RESPONSE" [ref=f10e303]'
+                - gridcell "11223344" [ref=f10e304]
+                - gridcell "arch-review-agent" [ref=f10e305]
+                - gridcell "22/07/2026" [ref=f10e306]
+              - row [ref=f10e307]:
+                - gridcell "worker_failure" [ref=f10e308]
+                - gridcell "error" [ref=f10e309]
+                - 'gridcell "Worker failure: arch-review-agent on casehubio/ledger#56" [ref=f10e310]'
+                - gridcell "11223344" [ref=f10e311]
+                - gridcell "arch-review-agent" [ref=f10e312]
+                - gridcell "22/07/2026" [ref=f10e313]
+            - navigation "Table pagination" [ref=f10e314]:
+              - generic [ref=f10e315]:
+                - generic [ref=f10e316]: Showing 1-3 of 3
+                - generic [ref=f10e317]:
+                  - text: Rows
+                  - combobox "Rows per page" [ref=f10e318] [cursor=pointer]:
+                    - option "10" [selected]
+                    - option "25"
+                    - option "50"
+                    - option "100"
+              - generic [ref=f10e319]:
+                - button "First page" [disabled] [ref=f10e320]: First
+                - button "Previous page" [disabled] [ref=f10e321]: Prev
+                - generic [ref=f10e322]:
+                  - spinbutton "Jump to page" [ref=f10e323]: "1"
+                  - generic [ref=f10e324]: of 1
+                - button "Next page" [disabled] [ref=f10e325]: Next
+                - button "Last page" [disabled] [ref=f10e326]: Last
+          - heading "Merge Queue" [level=3] [ref=f10e328]
+          - grid "Data table" [ref=f10e331]:
+            - generic [ref=f10e332]:
+              - row [ref=f10e333]:
+                - columnheader "number ▲" [ref=f10e334] [cursor=pointer]:
+                  - text: number
+                  - generic [ref=f10e335]: ▲
+                - columnheader "repository ▲" [ref=f10e336] [cursor=pointer]:
+                  - text: repository
+                  - generic [ref=f10e337]: ▲
+                - columnheader "author ▲" [ref=f10e338] [cursor=pointer]:
+                  - text: author
+                  - generic [ref=f10e339]: ▲
+                - columnheader "trustScore ▲" [ref=f10e340] [cursor=pointer]:
+                  - text: trustScore
+                  - generic [ref=f10e341]: ▲
+                - columnheader "priorityLane ▲" [ref=f10e342] [cursor=pointer]:
+                  - text: priorityLane
+                  - generic [ref=f10e343]: ▲
+                - columnheader "waitMinutes ▲" [ref=f10e344] [cursor=pointer]:
+                  - text: waitMinutes
+                  - generic [ref=f10e345]: ▲
+              - button "Table options" [ref=f10e347] [cursor=pointer]: ⋮
+            - generic [ref=f10e349]:
+              - row [ref=f10e350]:
+                - gridcell "99" [ref=f10e351]
+                - gridcell "casehubio/devtown" [ref=f10e352]
+                - gridcell "frank" [ref=f10e353]
+                - gridcell "0.85" [ref=f10e354]
+                - gridcell "express" [ref=f10e355]
+                - gridcell "35" [ref=f10e356]
+              - row [ref=f10e357]:
+                - gridcell "101" [ref=f10e358]
+                - gridcell "casehubio/engine" [ref=f10e359]
+                - gridcell "grace" [ref=f10e360]
+                - gridcell "0.72" [ref=f10e361]
+                - gridcell "standard" [ref=f10e362]
+                - gridcell "65" [ref=f10e363]
+              - row [ref=f10e364]:
+                - gridcell "78" [ref=f10e365]
+                - gridcell "casehubio/platform" [ref=f10e366]
+                - gridcell "heidi" [ref=f10e367]
+                - gridcell "0.91" [ref=f10e368]
+                - gridcell "express" [ref=f10e369]
+                - gridcell "15" [ref=f10e370]
+            - navigation "Table pagination" [ref=f10e371]:
+              - generic [ref=f10e372]:
+                - generic [ref=f10e373]: Showing 1-3 of 3
+                - generic [ref=f10e374]:
+                  - text: Rows
+                  - combobox "Rows per page" [ref=f10e375] [cursor=pointer]:
+                    - option "10" [selected]
+                    - option "25"
+                    - option "50"
+                    - option "100"
+              - generic [ref=f10e376]:
+                - button "First page" [disabled] [ref=f10e377]: First
+                - button "Previous page" [disabled] [ref=f10e378]: Prev
+                - generic [ref=f10e379]:
+                  - spinbutton "Jump to page" [ref=f10e380]: "1"
+                  - generic [ref=f10e381]: of 1
+                - button "Next page" [disabled] [ref=f10e382]: Next
+                - button "Last page" [disabled] [ref=f10e383]: Last
+          - heading "Human Triage" [level=3] [ref=f10e385]
+          - grid "Data table" [ref=f10e388]:
+            - generic [ref=f10e389]:
+              - row [ref=f10e390]:
+                - columnheader "workItemId ▲" [ref=f10e391] [cursor=pointer]:
+                  - text: workItemId
+                  - generic [ref=f10e392]: ▲
+                - columnheader "prRef ▲" [ref=f10e393] [cursor=pointer]:
+                  - text: prRef
+                  - generic [ref=f10e394]: ▲
+                - columnheader "decisionType ▲" [ref=f10e395] [cursor=pointer]:
+                  - text: decisionType
+                  - generic [ref=f10e396]: ▲
+                - columnheader "candidateGroup ▲" [ref=f10e397] [cursor=pointer]:
+                  - text: candidateGroup
+                  - generic [ref=f10e398]: ▲
+                - columnheader "expiresAt ▲" [ref=f10e399] [cursor=pointer]:
+                  - text: expiresAt
+                  - generic [ref=f10e400]: ▲
+                - columnheader "escalationStage ▲" [ref=f10e401] [cursor=pointer]:
+                  - text: escalationStage
+                  - generic [ref=f10e402]: ▲
+                - columnheader "createdAt ▲" [ref=f10e403] [cursor=pointer]:
+                  - text: createdAt
+                  - generic [ref=f10e404]: ▲
+              - button "Table options" [ref=f10e406] [cursor=pointer]: ⋮
+            - generic [ref=f10e408]:
+              - row [ref=f10e409]:
+                - gridcell "wi-001" [ref=f10e410]
+                - gridcell "casehubio/engine#87" [ref=f10e411]
+                - gridcell "pr-approval" [ref=f10e412]
+                - gridcell "senior-engineers" [ref=f10e413]
+                - gridcell "22/07/2026" [ref=f10e414]
+                - gridcell "initial" [ref=f10e415]
+                - gridcell "22/07/2026" [ref=f10e416]
+              - row [ref=f10e417]:
+                - gridcell "wi-002" [ref=f10e418]
+                - gridcell "casehubio/devtown#42" [ref=f10e419]
+                - gridcell "routing-review" [ref=f10e420]
+                - gridcell "platform-team" [ref=f10e421]
+                - gridcell "22/07/2026" [ref=f10e422]
+                - gridcell "escalated" [ref=f10e423]
+                - gridcell "22/07/2026" [ref=f10e424]
+            - navigation "Table pagination" [ref=f10e425]:
+              - generic [ref=f10e426]:
+                - generic [ref=f10e427]: Showing 1-2 of 2
+                - generic [ref=f10e428]:
+                  - text: Rows
+                  - combobox "Rows per page" [ref=f10e429] [cursor=pointer]:
+                    - option "10" [selected]
+                    - option "25"
+                    - option "50"
+                    - option "100"
+              - generic [ref=f10e430]:
+                - button "First page" [disabled] [ref=f10e431]: First
+                - button "Previous page" [disabled] [ref=f10e432]: Prev
+                - generic [ref=f10e433]:
+                  - spinbutton "Jump to page" [ref=f10e434]: "1"
+                  - generic [ref=f10e435]: of 1
+                - button "Next page" [disabled] [ref=f10e436]: Next
+                - button "Last page" [disabled] [ref=f10e437]: Last
+        - complementary:
+          - generic [ref=f10e438]:
+            - code: "global: mode: dark datasets: - uuid: active-reviews content: >- [ [\"3ca0e1e6\", 42, \"casehubio/devtown\", \"alice\", \"RUNNING\", 150, \"2026-07-22T09:15:00Z\", \"2026-07-22T09:18:32Z\"], [\"f1b2c3d4\", 87, \"casehubio/engine\", \"bob\", \"WAITING\", 320, \"2026-07-22T08:45:00Z\", \"2026-07-22T09:10:15Z\"], [\"a1b2c3d4\", 15, \"casehubio/platform\", \"carol\", \"RUNNING\", 45, \"2026-07-22T09:30:00Z\", \"2026-07-22T09:31:05Z\"], [\"deadbeef\", 203, \"casehubio/work\", \"dave\", \"COMPLETED\", 890, \"2026-07-21T14:20:00Z\", \"2026-07-22T08:55:00Z\"], [\"11223344\", 56, \"casehubio/ledger\", \"eve\", \"FAULTED\", 210, \"2026-07-22T07:00:00Z\", \"2026-07-22T07:45:30Z\"] ] columns: - id: caseId type: LABEL - id: prNumber type: NUMBER - id: repo type: LABEL - id: contributor type: LABEL - id: status type: LABEL - id: linesChanged type: NUMBER - id: startedAt type: DATE - id: lastEventAt type: DATE - uuid: events content: >- [ [\"2026-07-22T09:31:05Z\", \"a1b2c3d4\", \"CaseStarted\", \"\", \"RUNNING\"], [\"2026-07-22T09:30:02Z\", \"a1b2c3d4\", \"WorkSubmitted\", \"code-analysis-agent\", \"RUNNING\"], [\"2026-07-22T09:18:32Z\", \"3ca0e1e6\", \"WorkerCompleted\", \"security-agent\", \"RUNNING\"], [\"2026-07-22T09:15:00Z\", \"3ca0e1e6\", \"CaseStarted\", \"\", \"RUNNING\"], [\"2026-07-22T09:10:15Z\", \"f1b2c3d4\", \"HumanDecisionRequested\", \"\", \"WAITING\"], [\"2026-07-22T08:55:00Z\", \"deadbeef\", \"CaseCompleted\", \"\", \"COMPLETED\"], [\"2026-07-22T08:45:00Z\", \"f1b2c3d4\", \"CaseStarted\", \"\", \"RUNNING\"], [\"2026-07-22T07:45:30Z\", \"11223344\", \"WorkerFailed\", \"arch-review-agent\", \"FAULTED\"], [\"2026-07-22T07:00:00Z\", \"11223344\", \"CaseStarted\", \"\", \"RUNNING\"] ] columns: - id: timestamp type: DATE - id: caseId type: LABEL - id: eventType type: LABEL - id: actorId type: LABEL - id: caseStatus type: LABEL - uuid: reviewers content: >- [ [\"security-agent\", \"Active\", 2, 18, 0.82], [\"code-analysis-agent\", \"Active\", 1, 45, 0.91], [\"arch-review-agent\", \"Emerging\", 3, 7, 0.65], [\"style-agent\", \"Active\", 0, 32, 0.88], [\"perf-agent\", \"Bootstrap\", 1, 2, 0.50] ] columns: - id: actorId type: LABEL - id: maturityPhase type: LABEL - id: openCommitments type: NUMBER - id: totalDecisions type: NUMBER - id: trustScore type: NUMBER - uuid: problems content: >- [ [\"stalled_case\", \"warning\", \"PR stalled — casehubio/ledger#56 no progress 60+ min\", \"11223344\", \"arch-review-agent\", \"2026-07-22T07:45:30Z\"], [\"expired_commitment\", \"error\", \"Commitment expired: arch-review-agent REVIEW_RESPONSE\", \"11223344\", \"arch-review-agent\", \"2026-07-22T08:00:00Z\"], [\"worker_failure\", \"error\", \"Worker failure: arch-review-agent on casehubio/ledger#56\", \"11223344\", \"arch-review-agent\", \"2026-07-22T07:45:30Z\"] ] columns: - id: category type: LABEL - id: severity type: LABEL - id: description type: TEXT - id: caseId type: LABEL - id: actorId type: LABEL - id: since type: DATE - uuid: merge-queue content: >- [ [99, \"casehubio/devtown\", \"frank\", 0.85, \"express\", 35], [101, \"casehubio/engine\", \"grace\", 0.72, \"standard\", 65], [78, \"casehubio/platform\", \"heidi\", 0.91, \"express\", 15] ] columns: - id: number type: NUMBER - id: repository type: LABEL - id: author type: LABEL - id: trustScore type: NUMBER - id: priorityLane type: LABEL - id: waitMinutes type: NUMBER - uuid: triage content: >- [ [\"wi-001\", \"casehubio/engine#87\", \"pr-approval\", \"senior-engineers\", \"2026-07-22T10:10:00Z\", \"initial\", \"2026-07-22T09:10:15Z\"], [\"wi-002\", \"casehubio/devtown#42\", \"routing-review\", \"platform-team\", \"2026-07-22T11:15:00Z\", \"escalated\", \"2026-07-22T09:18:32Z\"] ] columns: - id: workItemId type: LABEL - id: prRef type: LABEL - id: decisionType type: LABEL - id: candidateGroup type: LABEL - id: expiresAt type: DATE - id: escalationStage type: LABEL - id: createdAt type: DATE pages: - name: PR Review Governance rows: - columns: - span: 3 components: - type: metric properties: title: Active Cases lookup: uuid: active-reviews group: - functions: - source: caseId function: COUNT - span: 3 components: - type: metric properties: title: Fleet Size lookup: uuid: reviewers group: - functions: - source: actorId function: COUNT - span: 3 components: - type: metric properties: title: Open Problems lookup: uuid: problems group: - functions: - source: category function: COUNT - span: 3 components: - type: metric properties: title: Pending Triage lookup: uuid: triage group: - functions: - source: workItemId function: COUNT - columns: - span: 8 components: - type: title properties: text: Active Reviews size: h3 - type: table properties: lookup: uuid: active-reviews sortable: true filter: enabled: true - span: 4 components: - type: title properties: text: Problems size: h3 - type: table properties: lookup: uuid: problems sortable: true - type: title properties: text: Reviewer Fleet size: h3 - type: table properties: lookup: uuid: reviewers sortable: true filter: enabled: true - columns: - span: 6 components: - type: title properties: text: Merge Queue size: h3 - type: table properties: lookup: uuid: merge-queue sortable: true filter: enabled: true - span: 6 components: - type: title properties: text: Human Triage size: h3 - type: table properties: lookup: uuid: triage sortable: true filter: enabled: true - type: title properties: text: Event Stream size: h3 - type: table properties: lookup: uuid: events sortable: true filter: enabled: true"

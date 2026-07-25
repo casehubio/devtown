@@ -18,6 +18,7 @@ import io.casehub.neocortex.memory.MemoryQuery;
 import io.casehub.neocortex.memory.MemoryScanRequest;
 import io.casehub.platform.api.preferences.PreferenceProvider;
 import io.casehub.platform.api.preferences.Preferences;
+import io.casehub.platform.api.path.Path;
 import io.casehub.platform.api.preferences.SettingsScope;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -36,7 +37,7 @@ public class DefaultCbrRetrievalService implements CbrRetrievalService {
 
     private static final Logger             LOG       = Logger.getLogger(DefaultCbrRetrievalService.class);
     private static final SettingsScope      CBR_SCOPE =
-            SettingsScope.of("casehubio", "devtown", "cbr");
+            SettingsScope.of("casehubio", Path.parse("devtown/cbr"));
     private final        CaseMemoryStore         store;
     private final        PreferenceProvider      preferenceProvider;
     private final        CbrWeightOverrideStore  weightOverrides;

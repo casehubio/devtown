@@ -1,0 +1,153 @@
+- generic [ref=f14e2]:
+  - button "Toggle sidebar" [ref=f14e3] [cursor=pointer]
+  - complementary [ref=f14e6]:
+    - generic [ref=f14e7]:
+      - heading "CaseHub Pages Examples" [level=1] [ref=f14e8]
+      - generic [ref=f14e9]: 64 samples
+      - generic [ref=f14e10]:
+        - button "🌙" [ref=f14e11] [cursor=pointer]
+        - button "⊟" [ref=f14e12] [cursor=pointer]
+    - textbox "Search samples..." [ref=f14e14]
+    - navigation [ref=f14e15]:
+      - generic [ref=f14e16]:
+        - generic [ref=f14e17] [cursor=pointer]:
+          - generic [ref=f14e18]: Charts
+          - generic [ref=f14e19]: ▼
+        - generic [ref=f14e20]:
+          - generic [ref=f14e21] [cursor=pointer]: Charts
+          - generic [ref=f14e22] [cursor=pointer]: Decal Pattern
+          - generic [ref=f14e23] [cursor=pointer]: ECharts Custom
+          - generic [ref=f14e24] [cursor=pointer]: Histogram
+          - generic [ref=f14e25] [cursor=pointer]: Timeline and Graph
+          - generic [ref=f14e26] [cursor=pointer]: TimeSeries
+      - generic [ref=f14e27]:
+        - generic [ref=f14e28] [cursor=pointer]:
+          - generic [ref=f14e29]: Tables
+          - generic [ref=f14e30]: ▼
+        - generic [ref=f14e31]:
+          - generic [ref=f14e32] [cursor=pointer]: Accumulate Flag
+          - generic [ref=f14e33] [cursor=pointer]: Column Settings
+          - generic [ref=f14e34] [cursor=pointer]: GitHub Repos
+          - generic [ref=f14e35] [cursor=pointer]: Google Spreadsheet
+          - generic [ref=f14e36] [cursor=pointer]: Grouped Roadmap
+          - generic [ref=f14e37] [cursor=pointer]: Grouped View
+          - generic [ref=f14e38] [cursor=pointer]: Inline Dataset
+          - generic [ref=f14e39] [cursor=pointer]: Lookup Operations
+          - generic [ref=f14e40] [cursor=pointer]: Project Roadmap
+          - generic [ref=f14e41] [cursor=pointer]: Row Detail
+          - generic [ref=f14e42] [cursor=pointer]: Row Styles
+          - generic [ref=f14e43] [cursor=pointer]: Spanning
+          - generic [ref=f14e44] [cursor=pointer]: Table
+          - generic [ref=f14e45] [cursor=pointer]: Tree Table
+      - generic [ref=f14e46]:
+        - generic [ref=f14e47] [cursor=pointer]:
+          - generic [ref=f14e48]: Metrics
+          - generic [ref=f14e49]: ▼
+        - generic [ref=f14e50]:
+          - generic [ref=f14e51] [cursor=pointer]: Badges and Countdown
+          - generic [ref=f14e52] [cursor=pointer]: Metrics and Gauges
+      - generic [ref=f14e53]:
+        - generic [ref=f14e54] [cursor=pointer]:
+          - generic [ref=f14e55]: Maps
+          - generic [ref=f14e56]: ▼
+        - generic [ref=f14e57]:
+          - generic [ref=f14e58] [cursor=pointer]: Maps
+          - generic [ref=f14e59] [cursor=pointer]: SVG Heatmap
+      - generic [ref=f14e60]:
+        - generic [ref=f14e61] [cursor=pointer]:
+          - generic [ref=f14e62]: Forms
+          - generic [ref=f14e63]: ▼
+        - generic [ref=f14e64]:
+          - generic [ref=f14e65] [cursor=pointer]: Contact Manager
+          - generic [ref=f14e66] [cursor=pointer]: Developer Registration
+          - generic [ref=f14e67] [cursor=pointer]: Schema Form
+      - generic [ref=f14e68]:
+        - generic [ref=f14e69] [cursor=pointer]:
+          - generic [ref=f14e70]: Layout
+          - generic [ref=f14e71]: ▼
+        - generic [ref=f14e72]:
+          - generic [ref=f14e73] [cursor=pointer]: Carousel and Stack
+          - generic [ref=f14e74] [cursor=pointer]: Column with Rows
+          - generic [ref=f14e75] [cursor=pointer]: Layout Patterns
+          - generic [ref=f14e76] [cursor=pointer]: Split and Dock
+          - generic [ref=f14e77] [cursor=pointer]: Team Management
+      - generic [ref=f14e78]:
+        - generic [ref=f14e79] [cursor=pointer]:
+          - generic [ref=f14e80]: Interactivity
+          - generic [ref=f14e81]: ▼
+        - generic [ref=f14e82]:
+          - generic [ref=f14e83] [cursor=pointer]: Action Button
+          - generic [ref=f14e84] [cursor=pointer]: Dynamic Visibility
+          - generic [ref=f14e85] [cursor=pointer]: Navigation Rebinding
+          - generic [ref=f14e86] [cursor=pointer]: Selectors and Filters
+      - generic [ref=f14e87]:
+        - generic [ref=f14e88] [cursor=pointer]:
+          - generic [ref=f14e89]: Live Data
+          - generic [ref=f14e90]: ▼
+        - generic [ref=f14e91]: Polling
+      - generic [ref=f14e93]:
+        - generic [ref=f14e94] [cursor=pointer]:
+          - generic [ref=f14e95]: Content
+          - generic [ref=f14e96]: ▼
+        - generic [ref=f14e97]:
+          - generic [ref=f14e98] [cursor=pointer]: Alerts
+          - generic [ref=f14e99] [cursor=pointer]: Content Types
+      - generic [ref=f14e100]:
+        - generic [ref=f14e101] [cursor=pointer]:
+          - generic [ref=f14e102]: Custom Components
+          - generic [ref=f14e103]: ▼
+        - generic [ref=f14e104]: Iframe Components
+      - generic [ref=f14e106]:
+        - generic [ref=f14e107] [cursor=pointer]:
+          - generic [ref=f14e108]: Theming
+          - generic [ref=f14e109]: ▼
+        - generic [ref=f14e110]:
+          - generic [ref=f14e111] [cursor=pointer]: DarkMode
+          - generic [ref=f14e112] [cursor=pointer]: Token Showcase
+      - generic [ref=f14e113]:
+        - generic [ref=f14e114] [cursor=pointer]:
+          - generic [ref=f14e115]: Monitoring
+          - generic [ref=f14e116]: ▼
+        - generic [ref=f14e117]:
+          - generic [ref=f14e118] [cursor=pointer]: Ansible Metrics
+          - generic [ref=f14e119] [cursor=pointer]: Backstage Metrics
+          - generic [ref=f14e120] [cursor=pointer]: Jupyter Hub Metrics
+          - generic [ref=f14e121] [cursor=pointer]: Jupyter Metrics Summary
+          - generic [ref=f14e122] [cursor=pointer]: JVM Monitoring
+          - generic [ref=f14e123] [cursor=pointer]: Kepler Metrics
+          - generic [ref=f14e124] [cursor=pointer]: ModelMesh Metrics
+          - generic [ref=f14e125] [cursor=pointer]: OpenTelemetry Basic
+          - generic [ref=f14e126] [cursor=pointer]: Prometheus Basic
+          - generic [ref=f14e127] [cursor=pointer]: Prometheus HTTP Requests
+          - generic [ref=f14e128] [cursor=pointer]: Quarkus Monitoring
+          - generic [ref=f14e129] [cursor=pointer]: Real Time JVM Monitoring
+          - generic [ref=f14e130] [cursor=pointer]: Triton Inference Server
+      - generic [ref=f14e131]:
+        - generic [ref=f14e132] [cursor=pointer]:
+          - generic [ref=f14e133]: Domain Showcases
+          - generic [ref=f14e134]: ▼
+        - generic [ref=f14e135]:
+          - generic [ref=f14e136] [cursor=pointer]: FIFA 2022 Goals
+          - generic [ref=f14e137] [cursor=pointer]: Fleet Monitor
+          - generic [ref=f14e138] [cursor=pointer]: Github Repositories
+          - generic [ref=f14e139] [cursor=pointer]: Most Spoken Languages
+          - generic [ref=f14e140] [cursor=pointer]: Patient Tracker
+          - generic [ref=f14e141] [cursor=pointer]: Podman Stats
+          - generic [ref=f14e142] [cursor=pointer]: PR Review Governance
+          - generic [ref=f14e143] [cursor=pointer]: Sales Dashboard
+          - generic [ref=f14e144] [cursor=pointer]: Workforce Analytics
+  - main [ref=f14e145]:
+    - generic [ref=f14e146]:
+      - generic [ref=f14e147]:
+        - heading "PR Review Governance" [level=2] [ref=f14e148]
+        - generic [ref=f14e149]:
+          - button "Open in new window" [ref=f14e150] [cursor=pointer]
+          - button "Reload sample" [ref=f14e153] [cursor=pointer]
+          - button "Toggle source code" [ref=f14e156] [cursor=pointer]
+      - generic [ref=f14e159]:
+        - generic [ref=f14e162]:
+          - strong [ref=f14e163]: Error loading sample
+          - paragraph [ref=f14e164]: Maximum call stack size exceeded
+        - complementary:
+          - generic [ref=f14e165]:
+            - code: "global: mode: dark datasets: - uuid: queue-status content: >- [ [\"3ca0e1e6\", 42, \"casehubio/devtown\", \"alice\", \"RUNNING\", 150, \"2026-07-22T09:15:00Z\", \"2026-07-22T09:18:32Z\"], [\"f1b2c3d4\", 87, \"casehubio/engine\", \"bob\", \"WAITING\", 320, \"2026-07-22T08:45:00Z\", \"2026-07-22T09:10:15Z\"], [\"a1b2c3d4\", 15, \"casehubio/platform\", \"carol\", \"RUNNING\", 45, \"2026-07-22T09:30:00Z\", \"2026-07-22T09:31:05Z\"], [\"deadbeef\", 203, \"casehubio/work\", \"dave\", \"COMPLETED\", 890, \"2026-07-21T14:20:00Z\", \"2026-07-22T08:55:00Z\"], [\"11223344\", 56, \"casehubio/ledger\", \"eve\", \"FAULTED\", 210, \"2026-07-22T07:00:00Z\", \"2026-07-22T07:45:30Z\"] ] columns: - id: caseId type: LABEL - id: prNumber type: NUMBER - id: repo type: LABEL - id: contributor type: LABEL - id: status type: LABEL - id: linesChanged type: NUMBER - id: startedAt type: DATE - id: lastEventAt type: DATE - uuid: recent-events content: >- [ [\"2026-07-22T09:31:05Z\", \"a1b2c3d4\", \"CaseStarted\", \"\", \"RUNNING\"], [\"2026-07-22T09:30:02Z\", \"a1b2c3d4\", \"WorkSubmitted\", \"code-analysis-agent\", \"RUNNING\"], [\"2026-07-22T09:18:32Z\", \"3ca0e1e6\", \"WorkerCompleted\", \"security-agent\", \"RUNNING\"], [\"2026-07-22T09:15:00Z\", \"3ca0e1e6\", \"CaseStarted\", \"\", \"RUNNING\"], [\"2026-07-22T09:10:15Z\", \"f1b2c3d4\", \"HumanDecisionRequested\", \"\", \"WAITING\"], [\"2026-07-22T08:55:00Z\", \"deadbeef\", \"CaseCompleted\", \"\", \"COMPLETED\"], [\"2026-07-22T08:45:00Z\", \"f1b2c3d4\", \"CaseStarted\", \"\", \"RUNNING\"], [\"2026-07-22T07:45:30Z\", \"11223344\", \"WorkerFailed\", \"arch-review-agent\", \"FAULTED\"], [\"2026-07-22T07:00:00Z\", \"11223344\", \"CaseStarted\", \"\", \"RUNNING\"] ] columns: - id: timestamp type: DATE - id: caseId type: LABEL - id: eventType type: LABEL - id: actorId type: LABEL - id: caseStatus type: LABEL - uuid: system-health content: >- [ [5, 5, 8, 2] ] columns: - id: activeCases type: NUMBER - id: fleetSize type: NUMBER - id: openCommitments type: NUMBER - id: pendingWorkItems type: NUMBER - uuid: problems content: >- [ [\"stalled_case\", \"warning\", \"PR stalled — casehubio/ledger#56 no progress 60+ min\", \"11223344\", \"arch-review-agent\", \"2026-07-22T07:45:30Z\"], [\"expired_commitment\", \"error\", \"Commitment expired: arch-review-agent REVIEW_RESPONSE\", \"11223344\", \"arch-review-agent\", \"2026-07-22T08:00:00Z\"], [\"worker_failure\", \"error\", \"Worker failure: arch-review-agent on casehubio/ledger#56\", \"11223344\", \"arch-review-agent\", \"2026-07-22T07:45:30Z\"] ] columns: - id: category type: LABEL - id: severity type: LABEL - id: description type: TEXT - id: caseId type: LABEL - id: actorId type: LABEL - id: since type: DATE - uuid: reviewers content: >- [ [\"security-agent\", \"Active\", 2, 18, 0.82], [\"code-analysis-agent\", \"Active\", 1, 45, 0.91], [\"arch-review-agent\", \"Emerging\", 3, 7, 0.65], [\"style-agent\", \"Active\", 0, 32, 0.88], [\"perf-agent\", \"Bootstrap\", 1, 2, 0.50] ] columns: - id: actorId type: LABEL - id: maturityPhase type: LABEL - id: openCommitments type: NUMBER - id: totalDecisions type: NUMBER - id: trustScore type: NUMBER - uuid: merge-queue content: >- [ [99, \"casehubio/devtown\", \"frank\", 0.85, \"express\", 35], [101, \"casehubio/engine\", \"grace\", 0.72, \"standard\", 65], [78, \"casehubio/platform\", \"heidi\", 0.91, \"express\", 15] ] columns: - id: number type: NUMBER - id: repository type: LABEL - id: author type: LABEL - id: trustScore type: NUMBER - id: priorityLane type: LABEL - id: waitMinutes type: NUMBER - uuid: merge-queue-metrics content: >- [ [3, 1, 65, 38, 0.83, 2, 0.08] ] columns: - id: queueDepth type: NUMBER - id: activeBatches type: NUMBER - id: oldestWaitMinutes type: NUMBER - id: avgWaitMinutes type: NUMBER - id: avgTrustScore type: NUMBER - id: throughput24h type: NUMBER - id: failureRate type: NUMBER - uuid: active-batches content: >- [ [\"batch-001\", \"b1c2d3e4\", 3, \"ROUTINE\"] ] columns: - id: batchId type: LABEL - id: caseId type: LABEL - id: prCount type: NUMBER - id: riskLevel type: LABEL - uuid: triage content: >- [ [\"wi-001\", \"casehubio/engine#87\", \"pr-approval\", \"senior-engineers\", \"2026-07-22T10:10:00Z\", \"initial\", \"2026-07-22T09:10:15Z\", \"f1b2c3d4\"], [\"wi-002\", \"casehubio/devtown#42\", \"routing-review\", \"platform-team\", \"2026-07-22T11:15:00Z\", \"escalated\", \"2026-07-22T09:18:32Z\", \"3ca0e1e6\"] ] columns: - id: workItemId type: LABEL - id: prRef type: LABEL - id: decisionType type: LABEL - id: candidateGroup type: LABEL - id: expiresAt type: DATE - id: escalationStage type: LABEL - id: createdAt type: DATE - id: caseId type: LABEL pages: - name: index components: - type: sidebar properties: navGroupId: DevTownNav # ── Operations ────────────────────────────────────── - name: Operations rows: - columns: - span: 4 components: - type: title properties: text: Active Reviews size: h3 - type: table properties: lookup: uuid: queue-status sortable: true filter: enabled: true - span: 4 components: - type: title properties: text: Workbench size: h2 - type: metric properties: title: Active Cases lookup: uuid: system-health - type: metric properties: title: Pending Work Items lookup: uuid: system-health - type: metric properties: title: Fleet Size lookup: uuid: system-health - type: metric properties: title: Open Commitments lookup: uuid: system-health - span: 4 components: - type: title properties: text: Problems size: h3 - type: table properties: lookup: uuid: problems sortable: true filter: enabled: true - columns: - span: 4 components: - type: title properties: text: Merge Queue size: h3 - type: table properties: lookup: uuid: merge-queue sortable: true filter: enabled: true - type: title properties: text: Event Stream size: h3 - type: table properties: lookup: uuid: recent-events sortable: true filter: enabled: true # ── Reviews ────────────────────────────────────── - name: Reviews rows: - type: title properties: text: Reviews size: h2 - type: table properties: lookup: uuid: queue-status sortable: true filter: enabled: true # ── Merge Queue ────────────────────────────────── - name: Merge Queue rows: - type: title properties: text: Merge Queue size: h2 - columns: - span: 3 components: - type: metric properties: title: Queue Depth lookup: uuid: merge-queue-metrics - span: 3 components: - type: metric properties: title: Active Batches lookup: uuid: merge-queue-metrics - span: 3 components: - type: metric properties: title: 24h Throughput lookup: uuid: merge-queue-metrics - span: 3 components: - type: metric properties: title: Failure Rate lookup: uuid: merge-queue-metrics - type: title properties: text: Wait Times size: h3 - columns: - span: 4 components: - type: metric properties: title: Oldest Wait (min) lookup: uuid: merge-queue-metrics - span: 4 components: - type: metric properties: title: Avg Wait (min) lookup: uuid: merge-queue-metrics - span: 4 components: - type: metric properties: title: Avg Trust Score lookup: uuid: merge-queue-metrics - type: title properties: text: Queued PRs size: h3 - type: table properties: lookup: uuid: merge-queue sortable: true filter: enabled: true - type: title properties: text: Active Batches size: h3 - type: table properties: lookup: uuid: active-batches sortable: true filter: enabled: true # ── Reviewers ────────────────────────────────────── - name: Reviewers rows: - type: title properties: text: Reviewer Fleet size: h2 - type: table properties: lookup: uuid: reviewers sortable: true filter: enabled: true # ── Human Triage ────────────────────────────────── - name: Human Triage rows: - type: title properties: text: Human Triage size: h2 - type: table properties: lookup: uuid: triage sortable: true filter: enabled: true # ── System ────────────────────────────────────── - name: System rows: - type: title properties: text: System Health size: h2 - columns: - span: 3 components: - type: metric properties: title: Active Cases lookup: uuid: system-health - span: 3 components: - type: metric properties: title: Fleet Size lookup: uuid: system-health - span: 3 components: - type: metric properties: title: Open Commitments lookup: uuid: system-health - span: 3 components: - type: metric properties: title: Pending Work Items lookup: uuid: system-health - type: title properties: text: Problems size: h3 - type: table properties: lookup: uuid: problems sortable: true - type: title properties: text: Queue Health size: h3 - columns: - span: 3 components: - type: metric properties: title: Queue Depth lookup: uuid: merge-queue-metrics - span: 3 components: - type: metric properties: title: Oldest Wait (min) lookup: uuid: merge-queue-metrics - span: 3 components: - type: metric properties: title: Avg Wait (min) lookup: uuid: merge-queue-metrics - span: 3 components: - type: metric properties: title: Failure Rate lookup: uuid: merge-queue-metrics"

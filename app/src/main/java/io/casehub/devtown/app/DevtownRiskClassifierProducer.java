@@ -8,6 +8,7 @@ import io.casehub.worker.api.PlannedAction;
 import io.casehub.devtown.review.DevtownActionRiskClassifier;
 import io.casehub.platform.api.preferences.PreferenceProvider;
 import io.casehub.platform.api.preferences.Preferences;
+import io.casehub.platform.api.path.Path;
 import io.casehub.platform.api.preferences.SettingsScope;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -28,7 +29,7 @@ public class DevtownRiskClassifierProducer implements ActionRiskClassifier {
     @Override
     public RiskDecision classify(final PlannedAction action, final ClassificationContext context) {
         final Preferences prefs = preferenceProvider.resolve(
-                SettingsScope.of("casehubio", "devtown", "risk", action.actionType()));
+                SettingsScope.of("casehubio", Path.parse("devtown/risk/" + action.actionType())));
         return classifier.classify(action, prefs);
     }
 }

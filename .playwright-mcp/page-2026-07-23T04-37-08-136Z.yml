@@ -1,0 +1,96 @@
+- generic [ref=e5]:
+  - generic [ref=e6]:
+    - button "Operations" [ref=e7] [cursor=pointer]
+    - button "Reviews" [ref=e8] [cursor=pointer]
+    - button "Merge Queue" [ref=e9] [cursor=pointer]
+    - button "Reviewers" [ref=e10] [cursor=pointer]
+    - button "Triage" [ref=e11] [cursor=pointer]
+    - button "System" [ref=e12] [cursor=pointer]
+    - button "Definitions" [ref=e13] [cursor=pointer]
+  - generic [ref=e18]:
+    - generic [ref=e19]:
+      - generic [ref=e22]:
+        - heading "Active Reviews" [level=3] [ref=e24]
+        - grid "Data table" [ref=e27]:
+          - generic [ref=e28]:
+            - row [ref=e29]:
+              - columnheader "prNumber ▲" [ref=e30] [cursor=pointer]:
+                - text: prNumber
+                - generic [ref=e31]: ▲
+              - columnheader "repo ▲" [ref=e32] [cursor=pointer]:
+                - text: repo
+                - generic [ref=e33]: ▲
+              - columnheader "contributor ▲" [ref=e34] [cursor=pointer]:
+                - text: contributor
+                - generic [ref=e35]: ▲
+              - columnheader "status ▲" [ref=e36] [cursor=pointer]:
+                - text: status
+                - generic [ref=e37]: ▲
+              - columnheader "linesChanged ▲" [ref=e38] [cursor=pointer]:
+                - text: linesChanged
+                - generic [ref=e39]: ▲
+              - columnheader "startedAt ▲" [ref=e40] [cursor=pointer]:
+                - text: startedAt
+                - generic [ref=e41]: ▲
+              - columnheader "lastEventAt ▲" [ref=e42] [cursor=pointer]:
+                - text: lastEventAt
+                - generic [ref=e43]: ▲
+            - button "Table options" [ref=e45] [cursor=pointer]: ⋮
+          - row [ref=e48]:
+            - gridcell "42" [ref=e49]
+            - gridcell "casehubio/devtown" [ref=e50]
+            - gridcell "demo-dev" [ref=e51]
+            - gridcell "RUNNING" [ref=e52]
+            - gridcell "150" [ref=e53]
+            - gridcell "23/07/2026" [ref=e54]
+            - gridcell "23/07/2026" [ref=e55]
+        - heading "Merge Queue" [level=3] [ref=e57]
+        - grid [ref=e60]:
+          - generic [ref=e61]: "UNKNOWN_COLUMN: Column \"number\" not found"
+      - generic [ref=e64]:
+        - heading "Workbench" [level=2] [ref=e66]
+        - table [ref=e69]:
+          - rowgroup [ref=e70]:
+            - row [ref=e71]:
+              - columnheader [ref=e72]
+              - columnheader "fleetSize" [ref=e73]
+              - columnheader "openCommitments" [ref=e74]
+              - columnheader "pendingWorkItems" [ref=e75]
+          - rowgroup [ref=e76]:
+            - row [ref=e77]:
+              - rowheader "1" [ref=e78]
+              - cell "0" [ref=e79]
+              - cell "0" [ref=e80]
+              - cell "0" [ref=e81]
+      - generic [ref=e84]:
+        - heading "Problems" [level=3] [ref=e86]
+        - generic [ref=e89]:
+          - text: ⚠
+          - generic [ref=e90]: "UNKNOWN_COLUMN: Column \"category\" not found"
+          - button "Retry" [ref=e91]
+    - heading "Event Stream" [level=3] [ref=e93]
+    - grid "Data table" [ref=e96]:
+      - generic [ref=e97]:
+        - row [ref=e98]:
+          - columnheader "timestamp ▲" [ref=e99] [cursor=pointer]:
+            - text: timestamp
+            - generic [ref=e100]: ▲
+          - columnheader "caseId ▲" [ref=e101] [cursor=pointer]:
+            - text: caseId
+            - generic [ref=e102]: ▲
+          - columnheader "eventType ▲" [ref=e103] [cursor=pointer]:
+            - text: eventType
+            - generic [ref=e104]: ▲
+          - columnheader "actorId ▲" [ref=e105] [cursor=pointer]:
+            - text: actorId
+            - generic [ref=e106]: ▲
+          - columnheader "caseStatus ▲" [ref=e107] [cursor=pointer]:
+            - text: caseStatus
+            - generic [ref=e108]: ▲
+        - button "Table options" [ref=e110] [cursor=pointer]: ⋮
+      - row [ref=e113]:
+        - gridcell "2026-07-23T04:36:33.835Z" [ref=e114]
+        - gridcell "d6e595c6-1be4-4afc-bd7b-b3c61e648991" [ref=e115]
+        - gridcell "CaseStarted" [ref=e116]
+        - gridcell [ref=e117]
+        - gridcell "RUNNING" [ref=e118]

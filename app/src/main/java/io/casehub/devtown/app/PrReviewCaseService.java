@@ -15,6 +15,7 @@ import io.casehub.devtown.review.SupersedeResult;
 import io.casehub.platform.api.identity.CurrentPrincipal;
 import io.casehub.platform.api.preferences.PreferenceProvider;
 import io.casehub.platform.api.preferences.Preferences;
+import io.casehub.platform.api.path.Path;
 import io.casehub.platform.api.preferences.SettingsScope;
 import jakarta.annotation.Priority;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -76,9 +77,9 @@ public class PrReviewCaseService implements PrReviewApplicationService {
         var memoryContext = memoryRecaller.recall(pr);
 
         Preferences prefs = preferenceProvider.resolve(
-                SettingsScope.of("casehubio", "devtown", "pr-review"));
+                SettingsScope.of("casehubio", Path.parse("devtown/pr-review")));
         Preferences mergeQueuePrefs = preferenceProvider.resolve(
-                SettingsScope.of("casehubio", "devtown", "merge-queue"));
+                SettingsScope.of("casehubio", Path.parse("devtown/merge-queue")));
 
         var policy = Map.<String, Object>of(
                 "humanApprovalThreshold", prefs.getOrDefault(PrReviewPreferenceKeys.HUMAN_APPROVAL_THRESHOLD).value(),

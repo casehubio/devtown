@@ -1,4 +1,2 @@
-import { DARK_THEME, LIGHT_THEME } from "@casehubio/pages-runtime";
-
-export const themes = { light: LIGHT_THEME, dark: DARK_THEME };
-export type ThemeMode = keyof typeof themes;
+// Theme config is handled by loadSite's DEFAULT_THEME.
+// Custom overrides (accentHue, chroma, etc.) would go here.

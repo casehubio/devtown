@@ -65,7 +65,7 @@ public class CaseLifecycleNotificationBridge {
 
     private String resolveChannel(String namespace) {
         return preferenceProvider
-            .resolve(namespace != null ? SettingsScope.of(namespace) : SettingsScope.root())
+            .resolve(SettingsScope.root(namespace != null ? namespace : "devtown"))
             .getOrDefault(NotificationPreferenceKeys.SLACK_CHANNEL).value();
     }
 }

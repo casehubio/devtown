@@ -4,6 +4,7 @@ import io.casehub.devtown.domain.queue.MergeQueuePreferenceKeys;
 import io.casehub.devtown.merge.MergeQueueStore;
 import io.casehub.platform.api.preferences.PreferenceProvider;
 import io.casehub.platform.api.preferences.Preferences;
+import io.casehub.platform.api.path.Path;
 import io.casehub.platform.api.preferences.SettingsScope;
 import io.quarkus.scheduler.Scheduled;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -18,7 +19,7 @@ public class BatchRetentionJob {
 
     private static final Logger LOG = Logger.getLogger(BatchRetentionJob.class);
     private static final SettingsScope MERGE_QUEUE_SCOPE =
-        SettingsScope.of("devtown", "merge-queue");
+        SettingsScope.of("devtown", Path.parse("merge-queue"));
 
     @Inject
     MergeQueueStore store;

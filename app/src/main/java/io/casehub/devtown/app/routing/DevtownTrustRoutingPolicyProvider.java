@@ -13,6 +13,7 @@ import io.casehub.devtown.domain.RoutingPolicy;
 import io.casehub.devtown.domain.spi.CapabilityRegistry;
 import io.casehub.platform.api.preferences.PreferenceProvider;
 import io.casehub.platform.api.preferences.Preferences;
+import io.casehub.platform.api.path.Path;
 import io.casehub.platform.api.preferences.SettingsScope;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -70,7 +71,7 @@ public class DevtownTrustRoutingPolicyProvider implements TrustRoutingPolicyProv
 
         final RoutingPolicy routingPolicy = rp.get();
         final Preferences prefs = preferenceProvider.resolve(
-                SettingsScope.of("casehubio", "devtown", "trust-routing", capabilityName));
+                SettingsScope.of("casehubio", Path.parse("devtown/trust-routing/" + capabilityName)));
 
         final double threshold = routingPolicy.threshold()
                                               .orElse(TrustRoutingPolicy.DEFAULT.threshold());

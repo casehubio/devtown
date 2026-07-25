@@ -15,6 +15,7 @@ import io.casehub.devtown.queue.BatchFormationContext;
 import io.casehub.devtown.queue.QueuedPr;
 import io.casehub.platform.api.preferences.PreferenceProvider;
 import io.casehub.platform.api.preferences.Preferences;
+import io.casehub.platform.api.path.Path;
 import io.casehub.platform.api.preferences.SettingsScope;
 import io.casehub.work.api.WorkItemCreateRequest;
 import io.casehub.work.runtime.service.WorkItemService;
@@ -453,7 +454,7 @@ public class MergeQueueService implements MergeQueuePort {
 
     private Preferences resolvePreferences() {
         return preferenceProvider.resolve(
-            SettingsScope.of("casehubio", "devtown", "merge-queue"));
+            SettingsScope.of("casehubio", Path.parse("devtown/merge-queue")));
     }
 
     private UUID dispatchBatch(Batch batch) {

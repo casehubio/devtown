@@ -34,8 +34,8 @@ public class ReviewAssignmentNotificationBridge {
         if (event.types() == null || !event.types().contains("human-decision:pr-approval")) return;
         String targetChannel = preferenceProvider
             .resolve(event.workItem() != null && event.workItem().scope != null
-                ? SettingsScope.of(event.workItem().scope)
-                : SettingsScope.root())
+                ? SettingsScope.root(event.workItem().scope)
+                : SettingsScope.root("devtown"))
             .getOrDefault(NotificationPreferenceKeys.SLACK_CHANNEL).value();
         reviewAssignedEvents.fire(new ReviewAssignedEvent(
             event.workItemId().toString(),

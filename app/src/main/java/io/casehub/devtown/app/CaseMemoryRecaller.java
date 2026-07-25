@@ -19,6 +19,7 @@ import io.casehub.neocortex.memory.MemoryQuery;
 import io.casehub.platform.api.identity.CurrentPrincipal;
 import io.casehub.platform.api.preferences.PreferenceProvider;
 import io.casehub.platform.api.preferences.Preferences;
+import io.casehub.platform.api.path.Path;
 import io.casehub.platform.api.preferences.SettingsScope;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.inject.Instance;
@@ -44,7 +45,7 @@ public class CaseMemoryRecaller {
 
     private static final Logger        LOG          = Logger.getLogger(CaseMemoryRecaller.class);
     private static final SettingsScope RECALL_SCOPE =
-            SettingsScope.of("casehubio", "devtown", "memory-recall");
+            SettingsScope.of("casehubio", Path.parse("devtown/memory-recall"));
 
     private final Instance<CaseMemoryStore>     store;
     private final CurrentPrincipal              principal;
@@ -135,7 +136,7 @@ public class CaseMemoryRecaller {
     private Set<String> evaluateActivations(List<Precedent> precedents) {
         if (precedents.isEmpty()) {return Set.of();}
         Preferences cbrPrefs = preferenceProvider.resolve(
-                SettingsScope.of("casehubio", "devtown", "cbr"));
+                SettingsScope.of("casehubio", Path.parse("devtown/cbr")));
         var defaultThreshold = new ActivationThreshold(
                 cbrPrefs.getOrDefault(CbrPreferenceKeys.PRECEDENT_ACTIVATION_MIN_EVIDENCE).value(),
                 cbrPrefs.getOrDefault(CbrPreferenceKeys.PRECEDENT_ACTIVATION_MIN_FRACTION).value());

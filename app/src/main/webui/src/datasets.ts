@@ -1,17 +1,22 @@
-import { dataset } from "@casehubio/pages-ui";
+import { bind, restSource } from "@casehubio/pages-ui";
+import type { DataSetId } from "@casehubio/pages-data";
+
+function rest(id: string, url: string, opts?: { dataPath?: string; expression?: string }) {
+  return bind(id, restSource(url, id as DataSetId, opts));
+}
 
 export const datasets = [
-  dataset("queue-status", "/api/governance/queue-status", { dataPath: "reviews" }),
-  dataset("recent-events", "/api/governance/recent-events?limit=100"),
-  dataset("system-health", "/api/governance/system-health", { expression: "[$]" }),
-  dataset("problems", "/api/governance/problems", { dataPath: "items" }),
-  dataset("reviewers", "/api/governance/reviewers", { dataPath: "items" }),
-  dataset("merge-queue", "/api/governance/merge-queue", { dataPath: "queuedPrs" }),
-  dataset("active-batches", "/api/governance/merge-queue", { dataPath: "activeBatches" }),
-  dataset("merge-queue-metrics", "/api/governance/merge-queue/metrics", { expression: "[$]" }),
-  dataset("triage", "/api/governance/triage", { dataPath: "items" }),
-  dataset("case-definitions", "/api/v1/case-definitions"),
-  dataset("plan-items", "/api/v1/cases/#{row.caseId}/plan-items"),
-  dataset("goal-status", "/api/v1/cases/#{row.caseId}/goals"),
-  dataset("case-context", "/api/v1/cases/#{row.caseId}/context"),
+  rest("queue-status", "/api/governance/queue-status", { dataPath: "reviews" }),
+  rest("recent-events", "/api/governance/recent-events?limit=100"),
+  rest("system-health", "/api/governance/system-health", { expression: "[$]" }),
+  rest("problems", "/api/governance/problems?threshold_minutes=0", { dataPath: "items" }),
+  rest("reviewers", "/api/governance/reviewers", { dataPath: "items" }),
+  rest("merge-queue", "/api/governance/merge-queue", { dataPath: "queuedPrs" }),
+  rest("active-batches", "/api/governance/merge-queue", { dataPath: "activeBatches" }),
+  rest("merge-queue-metrics", "/api/governance/merge-queue/metrics", { expression: "[$]" }),
+  rest("triage", "/api/governance/triage", { dataPath: "items" }),
+  rest("case-definitions", "/api/v1/case-definitions"),
+  rest("plan-items", "/api/v1/cases/#{row.caseId}/plan-items"),
+  rest("goal-status", "/api/v1/cases/#{row.caseId}/goals"),
+  rest("case-context", "/api/v1/cases/#{row.caseId}/context"),
 ];

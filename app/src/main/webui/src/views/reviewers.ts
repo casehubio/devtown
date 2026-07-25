@@ -1,5 +1,5 @@
 import {
-  page, rows, table, title,
+  page, rows, dataTable, title,
 } from "@casehubio/pages-ui";
 import { lookup, groupBy, col } from "@casehubio/pages-ui";
 
@@ -7,7 +7,7 @@ export const reviewersView = page("Reviewers",
   rows(
     title("Reviewer Fleet", 2),
 
-    table({
+    dataTable({
       lookup: lookup("reviewers", groupBy("actorId",
         col("actorId"),
         col("maturityPhase"),

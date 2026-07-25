@@ -1,0 +1,105 @@
+- generic [ref=f3e5]:
+  - generic [ref=f3e6]:
+    - button "Operations" [ref=f3e7] [cursor=pointer]
+    - button "Reviews" [ref=f3e8] [cursor=pointer]
+    - button "Merge Queue" [ref=f3e9] [cursor=pointer]
+    - button "Reviewers" [ref=f3e10] [cursor=pointer]
+    - button "Triage" [ref=f3e11] [cursor=pointer]
+    - button "System" [ref=f3e12] [cursor=pointer]
+    - button "Definitions" [ref=f3e13] [cursor=pointer]
+  - generic [ref=f3e18]:
+    - generic [ref=f3e19]:
+      - generic [ref=f3e22]:
+        - heading "Problems" [level=3] [ref=f3e24]
+        - table [ref=f3e27]:
+          - rowgroup [ref=f3e28]:
+            - row [ref=f3e29]:
+              - columnheader "severity" [ref=f3e30]
+              - columnheader "description" [ref=f3e31]
+              - columnheader "actorId" [ref=f3e32]
+              - columnheader "since" [ref=f3e33]
+          - rowgroup [ref=f3e34]:
+            - row [ref=f3e35]:
+              - cell "warning" [ref=f3e36]
+              - cell "PR review stalled for casehubio/devtown#42 — no progress for 0+ minutes" [ref=f3e37]
+              - cell [ref=f3e38]
+              - cell "Thu Jul 23 2026 12:57:51 GMT+0100 (British Summer Time)" [ref=f3e39]
+      - generic [ref=f3e42]:
+        - heading "System" [level=3] [ref=f3e44]
+        - table [ref=f3e47]:
+          - rowgroup [ref=f3e48]:
+            - row [ref=f3e49]:
+              - rowheader "activeCases" [ref=f3e50]
+              - cell "1" [ref=f3e51]
+            - row [ref=f3e52]:
+              - rowheader "fleetSize" [ref=f3e53]
+              - cell "0" [ref=f3e54]
+            - row [ref=f3e55]:
+              - rowheader "avgTrustByCapability" [ref=f3e56]
+              - 'cell "{}" [ref=f3e57]'
+            - row [ref=f3e58]:
+              - rowheader "openCommitments" [ref=f3e59]
+              - cell "0" [ref=f3e60]
+            - row [ref=f3e61]:
+              - rowheader "pendingWorkItems" [ref=f3e62]
+              - cell "0" [ref=f3e63]
+    - heading "Active Reviews" [level=3] [ref=f3e65]
+    - grid "Data table" [ref=f3e68]:
+      - generic [ref=f3e69]:
+        - row [ref=f3e70]:
+          - columnheader "prNumber ▲" [ref=f3e71] [cursor=pointer]:
+            - text: prNumber
+            - generic [ref=f3e72]: ▲
+          - columnheader "repo ▲" [ref=f3e73] [cursor=pointer]:
+            - text: repo
+            - generic [ref=f3e74]: ▲
+          - columnheader "contributor ▲" [ref=f3e75] [cursor=pointer]:
+            - text: contributor
+            - generic [ref=f3e76]: ▲
+          - columnheader "status ▲" [ref=f3e77] [cursor=pointer]:
+            - text: status
+            - generic [ref=f3e78]: ▲
+          - columnheader "linesChanged ▲" [ref=f3e79] [cursor=pointer]:
+            - text: linesChanged
+            - generic [ref=f3e80]: ▲
+          - columnheader "startedAt ▲" [ref=f3e81] [cursor=pointer]:
+            - text: startedAt
+            - generic [ref=f3e82]: ▲
+          - columnheader "lastEventAt ▲" [ref=f3e83] [cursor=pointer]:
+            - text: lastEventAt
+            - generic [ref=f3e84]: ▲
+        - button "Table options" [ref=f3e86] [cursor=pointer]: ⋮
+      - row [ref=f3e89]:
+        - gridcell "42" [ref=f3e90]
+        - gridcell "casehubio/devtown" [ref=f3e91]
+        - gridcell "demo-dev" [ref=f3e92]
+        - gridcell "RUNNING" [ref=f3e93]
+        - gridcell "150" [ref=f3e94]
+        - gridcell "23/07/2026" [ref=f3e95]
+        - gridcell "23/07/2026" [ref=f3e96]
+    - heading "Event Stream" [level=3] [ref=f3e98]
+    - grid "Data table" [ref=f3e101]:
+      - generic [ref=f3e102]:
+        - row [ref=f3e103]:
+          - columnheader "timestamp ▲" [ref=f3e104] [cursor=pointer]:
+            - text: timestamp
+            - generic [ref=f3e105]: ▲
+          - columnheader "caseId ▲" [ref=f3e106] [cursor=pointer]:
+            - text: caseId
+            - generic [ref=f3e107]: ▲
+          - columnheader "eventType ▲" [ref=f3e108] [cursor=pointer]:
+            - text: eventType
+            - generic [ref=f3e109]: ▲
+          - columnheader "actorId ▲" [ref=f3e110] [cursor=pointer]:
+            - text: actorId
+            - generic [ref=f3e111]: ▲
+          - columnheader "caseStatus ▲" [ref=f3e112] [cursor=pointer]:
+            - text: caseStatus
+            - generic [ref=f3e113]: ▲
+        - button "Table options" [ref=f3e115] [cursor=pointer]: ⋮
+      - row [ref=f3e118]:
+        - gridcell "2026-07-23T11:57:51.432Z" [ref=f3e119]
+        - gridcell "21e75e64-7806-4cd8-92bc-101b3be61962" [ref=f3e120]
+        - gridcell "CaseStarted" [ref=f3e121]
+        - gridcell [ref=f3e122]
+        - gridcell "RUNNING" [ref=f3e123]

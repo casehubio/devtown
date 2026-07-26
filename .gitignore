@@ -38,3 +38,5 @@ replay_pid*
 
 # Workspace
 wksp
+.claude
+package-lock.json

@@ -39,10 +39,18 @@ jobs:
           node -e "
             const fs = require('fs');
             const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
+            const unpublished = ['@casehubio/blocks-ui-session-workbench'];
             for (const [name, ver] of Object.entries(pkg.dependencies || {})) {
+              if (unpublished.includes(name)) { delete pkg.dependencies[name]; continue; }
               if (ver.startsWith('file:')) pkg.dependencies[name] = '*';
             }
             fs.writeFileSync('package.json', JSON.stringify(pkg, null, 2) + '\n');
+            for (const name of unpublished) {
+              const dir = 'node_modules/' + name;
+              fs.mkdirSync(dir, { recursive: true });
+              fs.writeFileSync(dir + '/package.json', JSON.stringify({ name, main: 'index.js' }));
+              fs.writeFileSync(dir + '/index.js', '');
+            }
           "
           npm install && npm run build
         env:

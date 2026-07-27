@@ -8,7 +8,8 @@
   },
   "dependencies": {
     "@casehubio/pages-runtime": "file:../../../../../pages/packages/pages-runtime",
-    "@casehubio/pages-ui": "file:../../../../../pages/packages/pages-ui"
+    "@casehubio/pages-ui": "file:../../../../../pages/packages/pages-ui",
+    "@casehubio/blocks-ui-session-workbench": "file:../../../../../../blocks-ui/components/session-workbench"
   },
   "devDependencies": {
     "esbuild": "^0.25.0",

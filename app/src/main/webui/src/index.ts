@@ -1,7 +1,7 @@
-import { loadSite } from "@casehubio/pages-runtime";
-import { page, tabs } from "@casehubio/pages-ui";
+import { loadSite, registerPanel } from "@casehubio/pages-runtime";
+import { page, tabs, hostPanel } from "@casehubio/pages-ui";
+import "@casehubio/blocks-ui-session-workbench";
 import { datasets } from "./datasets";
-
 import { operationsView } from "./views/operations";
 import { reviewsView } from "./views/reviews";
 import { queueView } from "./views/queue";
@@ -12,12 +12,15 @@ import { definitionsView } from "./views/definitions";
 
 const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
 
+registerPanel("session-workbench", "blocks-session-workbench");
+
 const app = page("DevTown",
   tabs(
     ["Operations", operationsView],
     ["Reviews", reviewsView],
     ["Merge Queue", queueView],
     ["Reviewers", reviewersView],
+    ["Workers", hostPanel("session-workbench", { endpoint: "/api/sessions" })],
     ["Triage", triageView],
     ["System", systemView],
     ["Definitions", definitionsView],

@@ -32,6 +32,6 @@ jobs:
           echo '<html><body>CI stub</body></html>' > app/src/main/webui/dist/index.html
 
       - name: Publish to GitHub Packages
-        run: mvn --batch-mode deploy -Dmaven.test.skip=true
+        run: mvn --batch-mode deploy -Dmaven.test.skip=true -Dquarkus.quinoa.package-manager-install=false -Dquarkus.quinoa.force-install=false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -89,6 +89,13 @@
         <version>${quarkus-mcp-server.version}</version>
       </dependency>
 
+      <!-- jackson-jq convergence: engine-api 1.6.0 vs platform-expression 1.0.0 -->
+      <dependency>
+        <groupId>net.thisptr</groupId>
+        <artifactId>jackson-jq</artifactId>
+        <version>1.6.0</version>
+      </dependency>
+
       <!-- Quarkus Quinoa -->
       <dependency>
         <groupId>io.quarkiverse.quinoa</groupId>

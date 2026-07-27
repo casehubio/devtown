@@ -9,4 +9,7 @@ public record IntPreference(int value) implements SingleValuePreference {
         Objects.requireNonNull(raw, "raw must not be null");
         return new IntPreference(Integer.parseInt(raw));
     }
+
+    @Override
+    public String toSerializedValue() {return String.valueOf(value);}
 }

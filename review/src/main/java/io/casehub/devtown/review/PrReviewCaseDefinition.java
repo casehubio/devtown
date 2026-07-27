@@ -118,7 +118,7 @@ public final class PrReviewCaseDefinition {
             .condition(ctx -> "merged".equals(ctx.getPath("pr.status")) || ctx.get("merge_sha") != null)
             .build();
 
-        var trigger = new ContextChangeTrigger((io.casehub.api.model.evaluator.ExpressionEvaluator) null);
+        var trigger = new ContextChangeTrigger((io.casehub.platform.api.expression.ExpressionEvaluator) null);
 
         CaseDefinition def = CaseDefinition.builder()
             .namespace("devtown").name("pr-review").version("1.0.0")

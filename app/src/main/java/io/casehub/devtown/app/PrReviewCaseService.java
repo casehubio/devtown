@@ -107,7 +107,7 @@ public class PrReviewCaseService implements PrReviewApplicationService {
         }
         initialContext.putAll(additionalContext);
 
-        UUID caseId = caseHub.startCase(initialContext).toCompletableFuture().join();
+        UUID caseId = caseHub.startCase(initialContext);
 
         var vector = PrFeatureVector.from(
                 pr.repo(), pr.prNumber(), pr.contributor(), pr.linesChanged(), pr.changedPaths());
@@ -167,7 +167,7 @@ public class PrReviewCaseService implements PrReviewApplicationService {
 
         UUID caseId = active.get().caseId();
 
-        String currentSha = caseHub.query(caseId, "pr.headSha", String.class).toCompletableFuture().join();
+        String currentSha = caseHub.query(caseId, "pr.headSha", String.class);
         if (!headSha.equals(currentSha)) return LifecycleResult.STALE_EVENT;
 
         caseHub.signal(caseId, "ci.suites." + suiteId, Map.of(
@@ -193,7 +193,7 @@ public class PrReviewCaseService implements PrReviewApplicationService {
 
         UUID caseId = active.get().caseId();
 
-        String currentSha = caseHub.query(caseId, "pr.headSha", String.class).toCompletableFuture().join();
+        String currentSha = caseHub.query(caseId, "pr.headSha", String.class);
         if (!headSha.equals(currentSha)) return LifecycleResult.STALE_EVENT;
 
         caseHub.signal(caseId, "ci.checks." + checkName, Map.of(

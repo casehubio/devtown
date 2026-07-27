@@ -484,7 +484,7 @@ public class MergeQueueService implements MergeQueuePort {
 
         batchContext.put("batch", batchMap);
 
-        return mergeBatchCaseHub.startCase(batchContext).toCompletableFuture().join();
+        return mergeBatchCaseHub.startCase(batchContext);
     }
 
     /**

@@ -13,4 +13,7 @@ public record StringPreference(String value) implements SingleValuePreference {
         Objects.requireNonNull(raw, "raw must not be null");
         return new StringPreference(raw);
     }
+
+    @Override
+    public String toSerializedValue() {return value;}
 }

@@ -18,4 +18,7 @@ public record BooleanPreference(boolean value) implements SingleValuePreference 
                     "Invalid boolean preference: '" + raw + "' — expected 'true' or 'false'");
         };
     }
+
+    @Override
+    public String toSerializedValue() {return String.valueOf(value);}
 }

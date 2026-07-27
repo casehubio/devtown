@@ -376,7 +376,7 @@ public class DevtownMcpTools {
         initialContext.put("pr", prContext);
         initialContext.put("policy", policy);
 
-        UUID newCaseId = caseHub.startCase(initialContext).toCompletableFuture().join();
+        UUID newCaseId = caseHub.startCase(initialContext);
 
         // Register with tracker
         tracker.register(newCaseId, tenant, caseInfo.payload());
@@ -578,7 +578,7 @@ public class DevtownMcpTools {
                     io.casehub.api.model.event.CaseHubEventType.WORKER_OUTCOME_FAILED,
                     io.casehub.api.model.event.CaseHubEventType.WORKER_OUTCOME_EXPIRED,
                     io.casehub.api.model.event.CaseHubEventType.ORCHESTRATION_ESCALATED
-                                                                         )).toCompletableFuture().join();
+                                                                         ));
             return events.stream().map(e -> new AgentMessage(
                     e.timestamp(), e.eventType().name(),
                     e.payload() != null ? e.payload().toString() : null

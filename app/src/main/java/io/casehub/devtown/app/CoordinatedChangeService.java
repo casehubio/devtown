@@ -48,8 +48,7 @@ public class CoordinatedChangeService implements CoordinatedChangePort {
             return m;
         }).toList();
 
-        UUID parentCaseId = caseHub.startCase(Map.of("repos", reposContext))
-            .toCompletableFuture().join();
+        UUID parentCaseId = caseHub.startCase(Map.of("repos", reposContext));
 
         Map<String, UUID> started = new LinkedHashMap<>();
         try {
@@ -71,8 +70,7 @@ public class CoordinatedChangeService implements CoordinatedChangePort {
             throw new RuntimeException("Coordinated change start failed after " + started.size() + " reviews", e);
         }
 
-        caseHubRuntime.signal(parentCaseId, "reviewCases", started)
-            .toCompletableFuture().join();
+        caseHubRuntime.signal(parentCaseId, "reviewCases", started);
 
         return new CoordinatedChangeOutcome(parentCaseId, started);
     }

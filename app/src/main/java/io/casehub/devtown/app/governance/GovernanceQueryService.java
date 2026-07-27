@@ -256,7 +256,7 @@ public class GovernanceQueryService {
         }
 
         // Event log timeline (await async result)
-        List<CaseEventLogRecord> events = caseHubRuntime.eventLog(caseId).toCompletableFuture().join();
+        List<CaseEventLogRecord> events = caseHubRuntime.eventLog(caseId);
         List<EventEntry> timeline = events.stream()
             .map(e -> {
                 // Extract actorId from metadata if present
@@ -278,7 +278,7 @@ public class GovernanceQueryService {
             CaseHubEventType.WORKER_EXECUTION_COMPLETED,
             CaseHubEventType.WORKER_EXECUTION_FAILED,
             CaseHubEventType.WORKER_OUTCOME_DECLINED
-        )).toCompletableFuture().join();
+        ));
 
         Map<String, CapabilityStatus> capabilityMap = new LinkedHashMap<>();
         for (CaseEventLogRecord event : workerEvents) {

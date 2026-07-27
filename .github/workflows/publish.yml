@@ -28,7 +28,7 @@ jobs:
 
       - name: Stub frontend for Quinoa
         run: |
-          mkdir -p app/src/main/webui/dist
+          mkdir -p app/src/main/webui/dist app/src/main/webui/node_modules
           echo '<html><body>CI stub</body></html>' > app/src/main/webui/dist/index.html
 
       - name: Publish to GitHub Packages

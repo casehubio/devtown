@@ -30,7 +30,6 @@ import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import java.util.concurrent.CompletableFuture;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -384,7 +383,7 @@ class DevtownMcpToolsTest {
         UUID newCaseId = UUID.randomUUID();
         when(tracker.getCase(testCaseId)).thenReturn(testCaseInfo);
         when(caseHub.startCase(any(Map.class)))
-            .thenReturn(CompletableFuture.completedFuture(newCaseId));
+            .thenReturn(newCaseId);
 
         DevtownMcpTools.RerouteResult result = tools.rerouteReview(testCaseId.toString());
 

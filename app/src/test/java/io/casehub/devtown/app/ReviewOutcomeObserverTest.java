@@ -1,23 +1,23 @@
 package io.casehub.devtown.app;
 
+import io.casehub.devtown.domain.memory.ReviewOutcome;
+import io.casehub.devtown.review.ReviewCompletedEvent;
+import io.casehub.engine.common.spi.CrossTenantCaseInstanceRepository;
+import io.casehub.engine.common.spi.event.PlanItemCompletedEvent;
+import io.quarkus.test.junit.QuarkusTest;
+import jakarta.enterprise.event.Event;
+import jakarta.inject.Inject;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
-
-import io.casehub.engine.common.spi.event.PlanItemCompletedEvent;
-import io.casehub.devtown.domain.memory.ReviewOutcome;
-import io.casehub.devtown.review.ReviewCompletedEvent;
-import io.casehub.engine.common.spi.CrossTenantCaseInstanceRepository;
-import io.quarkus.test.junit.QuarkusTest;
-import jakarta.enterprise.event.Event;
-import jakarta.inject.Inject;
-import java.time.Duration;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 
 @QuarkusTest
 class ReviewOutcomeObserverTest {
@@ -55,7 +55,7 @@ class ReviewOutcomeObserverTest {
     void observerExtractsReviewOutcome_fromStyleCheck() throws Exception {
         // Start a case so we have a CaseInstance with context
         UUID caseId = caseHub.startCase(minimalContext())
-                .toCompletableFuture().get(5, SECONDS);
+                ;
         assertThat(caseId).isNotNull();
 
         // Signal the styleCheck outcome into the case context
@@ -100,7 +100,7 @@ class ReviewOutcomeObserverTest {
     @Test
     void observerIgnoresInfrastructureBindings() throws Exception {
         UUID caseId = caseHub.startCase(minimalContext())
-                .toCompletableFuture().get(5, SECONDS);
+                ;
 
         // "initial-analysis" is an infrastructure binding — not in the planItem-to-context map
         planItemCompletedEvents.fireAsync(
@@ -125,7 +125,7 @@ class ReviewOutcomeObserverTest {
     @Test
     void observerUsesUnknown_whenTrackingKeyNull() throws Exception {
         UUID caseId = caseHub.startCase(minimalContext())
-                .toCompletableFuture().get(5, SECONDS);
+                ;
 
         caseHub.signal(caseId, "testCoverage", Map.of("outcome", "APPROVED"));
         await().atMost(3, SECONDS).pollInterval(50, MILLISECONDS).untilAsserted(() -> {
@@ -148,7 +148,7 @@ class ReviewOutcomeObserverTest {
     @Test
     void observerHandlesHumanApproval() throws Exception {
         UUID caseId = caseHub.startCase(minimalContext())
-                .toCompletableFuture().get(5, SECONDS);
+                ;
 
         // Manually set humanApproval.status in context
         caseHub.signal(caseId, "humanApproval", Map.of("status", "approved"));

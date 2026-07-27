@@ -1,28 +1,27 @@
 package io.casehub.devtown.app;
 
-import static java.util.concurrent.TimeUnit.MILLISECONDS;
-import static java.util.concurrent.TimeUnit.SECONDS;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.awaitility.Awaitility.await;
-
 import io.casehub.api.model.CaseStatus;
 import io.casehub.engine.common.spi.CrossTenantCaseInstanceRepository;
+import io.casehub.work.engine.WorkItemLifecycleAdapter;
 import io.casehub.work.runtime.event.WorkItemLifecycleEvent;
 import io.casehub.work.runtime.model.WorkItem;
 import io.casehub.work.runtime.service.WorkItemService;
-import io.casehub.work.engine.WorkItemLifecycleAdapter;
 import io.casehub.worker.api.Worker;
 import io.casehub.worker.api.WorkerResult;
 import io.quarkus.test.junit.QuarkusTest;
 import jakarta.inject.Inject;
-import java.time.Duration;
-import java.util.LinkedHashMap;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
+import static java.util.concurrent.TimeUnit.SECONDS;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.awaitility.Awaitility.await;
 
 /**
  * Escalation path integration tests for the merge queue.
@@ -82,7 +81,7 @@ class MergeQueueEscalationTest {
         Map<String, Object> batchContext = MergeQueueBatchLifecycleTest.buildBatchContext(2, "HIGH");
 
         UUID caseId = caseHub.startCase(batchContext)
-            .toCompletableFuture().get(5, SECONDS);
+            ;
         assertThat(caseId).isNotNull();
 
         // Wait for human-merge-approval WorkItem to be created
@@ -130,7 +129,7 @@ class MergeQueueEscalationTest {
         batchContext.put("tipTest", Map.of("status", "REROUTES_EXHAUSTED"));
 
         UUID caseId = caseHub.startCase(batchContext)
-            .toCompletableFuture().get(5, SECONDS);
+            ;
         assertThat(caseId).isNotNull();
 
         // Wait for tip-test-escalation WorkItem
@@ -178,7 +177,7 @@ class MergeQueueEscalationTest {
         batchContext.put("mergeResult", Map.of("status", "REROUTES_EXHAUSTED"));
 
         UUID caseId = caseHub.startCase(batchContext)
-            .toCompletableFuture().get(5, SECONDS);
+            ;
         assertThat(caseId).isNotNull();
 
         // Wait for merge-escalation WorkItem
@@ -234,7 +233,7 @@ class MergeQueueEscalationTest {
         batchContext.put("mergeResult", Map.of("status", "REROUTES_EXHAUSTED"));
 
         UUID caseId = caseHub.startCase(batchContext)
-            .toCompletableFuture().get(5, SECONDS);
+            ;
 
         await().atMost(10, SECONDS)
             .pollInterval(200, MILLISECONDS)

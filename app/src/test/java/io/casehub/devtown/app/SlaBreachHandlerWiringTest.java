@@ -1,10 +1,5 @@
 package io.casehub.devtown.app;
 
-import static java.util.concurrent.TimeUnit.MILLISECONDS;
-import static java.util.concurrent.TimeUnit.SECONDS;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.awaitility.Awaitility.await;
-
 import io.casehub.engine.common.internal.model.PlanItemRecord;
 import io.casehub.engine.common.spi.CrossTenantCaseInstanceRepository;
 import io.casehub.engine.common.spi.PlanItemStore;
@@ -15,16 +10,21 @@ import io.casehub.work.api.BreachType;
 import io.casehub.work.api.BreachedTask;
 import io.casehub.work.api.SlaBreachContext;
 import io.casehub.work.api.spi.SlaBreachPolicy;
-import io.casehub.work.runtime.event.SlaBreachEvent;
 import io.casehub.work.engine.PlanItemCallerRef;
+import io.casehub.work.runtime.event.SlaBreachEvent;
 import io.quarkus.test.junit.QuarkusTest;
 import jakarta.enterprise.event.Event;
 import jakarta.inject.Inject;
-import java.time.Duration;
+import org.junit.jupiter.api.Test;
+
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
-import org.junit.jupiter.api.Test;
+
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
+import static java.util.concurrent.TimeUnit.SECONDS;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.awaitility.Awaitility.await;
 
 @QuarkusTest
 class SlaBreachHandlerWiringTest {
@@ -55,7 +55,7 @@ class SlaBreachHandlerWiringTest {
 
     @Test
     void slaBreachHandler_onFail_resolvesOutputKeyFromBinding() throws Exception {
-        UUID caseId = caseHub.startCase(MINIMAL_CTX).toCompletableFuture().get(5, SECONDS);
+        UUID caseId = caseHub.startCase(MINIMAL_CTX);
         assertThat(caseId).isNotNull();
 
         String planItemId = await().atMost(5, SECONDS).pollInterval(100, MILLISECONDS).until(() -> {

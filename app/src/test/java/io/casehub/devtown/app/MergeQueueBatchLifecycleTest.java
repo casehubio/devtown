@@ -1,17 +1,14 @@
 package io.casehub.devtown.app;
 
-import static java.util.concurrent.TimeUnit.MILLISECONDS;
-import static java.util.concurrent.TimeUnit.SECONDS;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.awaitility.Awaitility.await;
-
 import io.casehub.api.model.CaseStatus;
 import io.casehub.engine.common.spi.CrossTenantCaseInstanceRepository;
 import io.casehub.worker.api.Worker;
 import io.casehub.worker.api.WorkerResult;
 import io.quarkus.test.junit.QuarkusTest;
 import jakarta.inject.Inject;
-import java.time.Duration;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -19,8 +16,11 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
+import static java.util.concurrent.TimeUnit.SECONDS;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.awaitility.Awaitility.await;
 
 /**
  * Happy-path integration test for the merge queue batch lifecycle.
@@ -81,7 +81,7 @@ class MergeQueueBatchLifecycleTest {
         batchContext.put("mergeResult", Map.of("status", "pending"));
 
         UUID caseId = caseHub.startCase(batchContext)
-            .toCompletableFuture().get(5, SECONDS);
+            ;
         assertThat(caseId).isNotNull();
 
         // Wait for tip test to complete
@@ -128,7 +128,7 @@ class MergeQueueBatchLifecycleTest {
         Map<String, Object> batchContext = buildBatchContext(1, "ROUTINE");
 
         UUID caseId = caseHub.startCase(batchContext)
-            .toCompletableFuture().get(5, SECONDS);
+            ;
         assertThat(caseId).isNotNull();
 
         // Case should reach COMPLETED via single-pr-rejected goal

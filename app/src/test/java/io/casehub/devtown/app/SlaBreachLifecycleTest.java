@@ -1,22 +1,23 @@
 package io.casehub.devtown.app;
 
-import static java.util.concurrent.TimeUnit.MILLISECONDS;
-import static java.util.concurrent.TimeUnit.SECONDS;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.awaitility.Awaitility.await;
-
 import io.casehub.engine.common.spi.CrossTenantCaseInstanceRepository;
-import io.casehub.work.runtime.model.WorkItem;
 import io.casehub.work.api.WorkItemStatus;
+import io.casehub.work.runtime.model.WorkItem;
 import io.casehub.work.runtime.repository.WorkItemStore;
 import io.casehub.work.runtime.service.ExpiryLifecycleService;
 import io.quarkus.test.junit.QuarkusTest;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
+import org.junit.jupiter.api.Test;
+
 import java.time.Instant;
 import java.util.Map;
 import java.util.UUID;
-import org.junit.jupiter.api.Test;
+
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
+import static java.util.concurrent.TimeUnit.SECONDS;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.awaitility.Awaitility.await;
 
 @QuarkusTest
 class SlaBreachLifecycleTest {
@@ -50,7 +51,7 @@ class SlaBreachLifecycleTest {
 
         // ── Checkpoint 1: start case ──────────────────────────────────────────
         UUID caseId = caseHub.startCase(initialCtx)
-                .toCompletableFuture().get(5, SECONDS);
+                ;
         assertThat(caseId).isNotNull();
 
         // ── Checkpoint 2: WorkItem created with candidateGroups=pr-reviewers ──

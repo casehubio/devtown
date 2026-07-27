@@ -127,30 +127,20 @@ class CrossRepoCoordinatedMergeTest {
     }
 
     private void preSeedCapabilityKeys(UUID reviewCaseId) {
-        caseHubRuntime.signal(reviewCaseId, "codeAnalysis", Map.of("outcome", "PENDING"))
-            .toCompletableFuture().join();
-        caseHubRuntime.signal(reviewCaseId, "styleCheck", Map.of("outcome", "PENDING"))
-            .toCompletableFuture().join();
-        caseHubRuntime.signal(reviewCaseId, "testCoverage", Map.of("outcome", "PENDING"))
-            .toCompletableFuture().join();
-        caseHubRuntime.signal(reviewCaseId, "performanceAnalysis", Map.of("outcome", "PENDING"))
-            .toCompletableFuture().join();
-        caseHubRuntime.signal(reviewCaseId, "ci", Map.of("status", "PENDING"))
-            .toCompletableFuture().join();
+        caseHubRuntime.signal(reviewCaseId, "codeAnalysis", Map.of("outcome", "PENDING"));
+        caseHubRuntime.signal(reviewCaseId, "styleCheck", Map.of("outcome", "PENDING"));
+        caseHubRuntime.signal(reviewCaseId, "testCoverage", Map.of("outcome", "PENDING"));
+        caseHubRuntime.signal(reviewCaseId, "performanceAnalysis", Map.of("outcome", "PENDING"));
+        caseHubRuntime.signal(reviewCaseId, "ci", Map.of("status", "PENDING"));
     }
 
     private void driveReviewToCompletion(UUID reviewCaseId) {
         caseHubRuntime.signal(reviewCaseId, "codeAnalysis",
-            Map.of("complete", true, "securitySensitive", false, "architectureCrossing", false))
-            .toCompletableFuture().join();
-        caseHubRuntime.signal(reviewCaseId, "styleCheck", Map.of("outcome", "APPROVED"))
-            .toCompletableFuture().join();
-        caseHubRuntime.signal(reviewCaseId, "testCoverage", Map.of("outcome", "APPROVED"))
-            .toCompletableFuture().join();
-        caseHubRuntime.signal(reviewCaseId, "performanceAnalysis", Map.of("outcome", "APPROVED"))
-            .toCompletableFuture().join();
-        caseHubRuntime.signal(reviewCaseId, "ci", Map.of("status", "passing"))
-            .toCompletableFuture().join();
+            Map.of("complete", true, "securitySensitive", false, "architectureCrossing", false));
+        caseHubRuntime.signal(reviewCaseId, "styleCheck", Map.of("outcome", "APPROVED"));
+        caseHubRuntime.signal(reviewCaseId, "testCoverage", Map.of("outcome", "APPROVED"));
+        caseHubRuntime.signal(reviewCaseId, "performanceAnalysis", Map.of("outcome", "APPROVED"));
+        caseHubRuntime.signal(reviewCaseId, "ci", Map.of("status", "passing"));
     }
 
     private void driveReviewToFault(UUID reviewCaseId) {
@@ -242,7 +232,7 @@ class CrossRepoCoordinatedMergeTest {
         assertThat(reviewAInstance.getCaseContext().getPath("coordinatedChange")).isEqualTo(true);
 
         // ── Phase 6: EventLog ────────────────────────────────────────
-        var allEvents = caseHubRuntime.eventLog(parentCaseId).toCompletableFuture().join();
+        var allEvents = caseHubRuntime.eventLog(parentCaseId);
         assertThat(allEvents).as("Parent case should have EventLog entries").isNotEmpty();
 
         var signals = allEvents.stream()
@@ -296,7 +286,7 @@ class CrossRepoCoordinatedMergeTest {
         assertThat(testMergeClient.calls()).isEmpty();
 
         // ── Phase 5: EventLog ────────────────────────────────────────
-        var allEvents = caseHubRuntime.eventLog(parentCaseId).toCompletableFuture().join();
+        var allEvents = caseHubRuntime.eventLog(parentCaseId);
         var signals = allEvents.stream()
                                .filter(e -> e.eventType() == CaseHubEventType.SIGNAL_RECEIVED).toList();
         assertThat(signals.stream().anyMatch(s ->
@@ -362,7 +352,7 @@ class CrossRepoCoordinatedMergeTest {
         // silently (#165 — casehub-work binary incompatibility). Signal
         // rollbackEscalation directly to complete the chain.
         caseHubRuntime.signal(parentCaseId, "rollbackEscalation",
-            Map.of("outcome", "RESOLVED")).toCompletableFuture().join();
+            Map.of("outcome", "RESOLVED"));
 
         // ── Phase 6: Terminal — merge-failed fires after escalation ──
         awaitCaseTerminal(parentCaseId);
@@ -445,8 +435,7 @@ class CrossRepoCoordinatedMergeTest {
         // Signal only if case is still active — terminal cases reject signals
         var instance = caseInstanceRepository.findByUuid(parentCaseId);
         if (!TERMINAL.contains(instance.getState())) {
-            caseHubRuntime.signal(parentCaseId, "probe", "idempotency-check")
-                          .toCompletableFuture().join();
+            caseHubRuntime.signal(parentCaseId, "probe", "idempotency-check");
         }
 
         // Assert rollback binding does NOT re-fire — condition guard

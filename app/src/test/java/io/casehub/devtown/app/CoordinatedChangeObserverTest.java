@@ -1,8 +1,5 @@
 package io.casehub.devtown.app;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.*;
-
 import io.casehub.api.engine.CaseHubRuntime;
 import io.casehub.engine.common.spi.event.CaseLifecycleEvent;
 import org.junit.jupiter.api.BeforeEach;
@@ -11,7 +8,14 @@ import org.mockito.ArgumentCaptor;
 
 import java.util.Map;
 import java.util.UUID;
-import java.util.concurrent.CompletableFuture;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 
 class CoordinatedChangeObserverTest {
 
@@ -26,8 +30,7 @@ class CoordinatedChangeObserverTest {
     void setUp() {
         tracker = new CoordinatedChangeTracker();
         runtime = mock(CaseHubRuntime.class);
-        when(runtime.signal(any(UUID.class), anyString(), any())).thenReturn(CompletableFuture.completedFuture(null));
-        when(runtime.signal(any(UUID.class), anyString(), any(), any(Map.class))).thenReturn(CompletableFuture.completedFuture(null));
+
         observer = new CoordinatedChangeObserver(tracker, runtime);
         tracker.register(parentId, "casehubio/engine", reviewA);
         tracker.register(parentId, "casehubio/platform", reviewB);

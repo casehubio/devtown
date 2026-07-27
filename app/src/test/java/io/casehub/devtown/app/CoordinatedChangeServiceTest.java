@@ -1,23 +1,27 @@
 package io.casehub.devtown.app;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.Mockito.*;
-
 import io.casehub.api.engine.CaseHubRuntime;
+import io.casehub.devtown.app.mcp.PrReviewCaseTracker;
 import io.casehub.devtown.domain.CoordinatedChangeRequest;
 import io.casehub.devtown.domain.RepoChangeEntry;
 import io.casehub.devtown.review.PrPayload;
 import io.casehub.devtown.review.PrReviewApplicationService;
 import io.casehub.devtown.review.PrReviewOutcome;
-import io.casehub.devtown.app.mcp.PrReviewCaseTracker;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import java.util.concurrent.CompletableFuture;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 class CoordinatedChangeServiceTest {
 
@@ -40,8 +44,8 @@ class CoordinatedChangeServiceTest {
         prTracker = new PrReviewCaseTracker();
         runtime = mock(CaseHubRuntime.class);
 
-        when(caseHub.startCase(any())).thenReturn(CompletableFuture.completedFuture(parentCaseId));
-        when(runtime.signal(any(UUID.class), anyString(), any())).thenReturn(CompletableFuture.completedFuture(null));
+        when(caseHub.startCase(any())).thenReturn(parentCaseId);
+
 
         service = new CoordinatedChangeService();
         service.caseHub = caseHub;

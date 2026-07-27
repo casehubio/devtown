@@ -1,13 +1,14 @@
 package io.casehub.devtown.app;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
 import io.casehub.devtown.review.PrPayload;
 import io.quarkus.test.junit.QuarkusTest;
 import jakarta.inject.Inject;
 import org.junit.jupiter.api.Test;
+
 import java.util.List;
 import java.util.Map;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 @QuarkusTest
 class PrReviewCaseServiceAdditionalContextTest {
@@ -23,7 +24,7 @@ class PrReviewCaseServiceAdditionalContextTest {
         assertThat(outcome.caseId()).isNotNull();
 
         var coordinated = caseHub.query(outcome.caseId(), "coordinatedChange", Boolean.class)
-            .toCompletableFuture().join();
+            ;
         assertThat(coordinated).isTrue();
     }
 
@@ -35,7 +36,7 @@ class PrReviewCaseServiceAdditionalContextTest {
         assertThat(outcome.caseId()).isNotNull();
 
         var coordinated = caseHub.query(outcome.caseId(), "coordinatedChange", Boolean.class)
-            .toCompletableFuture().join();
+            ;
         assertThat(coordinated).isNull();
     }
 }

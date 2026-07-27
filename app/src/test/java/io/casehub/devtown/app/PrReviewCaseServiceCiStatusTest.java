@@ -11,11 +11,15 @@ import org.junit.jupiter.api.Test;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import java.util.concurrent.CompletableFuture;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.when;
 
 class PrReviewCaseServiceCiStatusTest {
 
@@ -34,9 +38,8 @@ class PrReviewCaseServiceCiStatusTest {
         tracker.register(caseId, "default", payload);
 
         caseHub = mock(PrReviewCaseHub.class);
-        when(caseHub.signal(any(), any(), any())).thenReturn(CompletableFuture.completedFuture(null));
         when(caseHub.query(eq(caseId), eq("pr.headSha"), eq(String.class)))
-            .thenReturn(CompletableFuture.completedFuture("sha123"));
+            .thenReturn("sha123");
 
         ciStatusClient = mock(CiStatusClient.class);
 

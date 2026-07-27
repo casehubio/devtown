@@ -1,28 +1,29 @@
 package io.casehub.devtown.app;
 
-import static java.util.concurrent.TimeUnit.MILLISECONDS;
-import static java.util.concurrent.TimeUnit.SECONDS;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.awaitility.Awaitility.await;
-
-import io.casehub.engine.common.spi.event.PlanItemCompletedEvent;
 import io.casehub.devtown.domain.memory.DevtownMemoryDomain;
 import io.casehub.devtown.domain.memory.DevtownMemoryKeys;
 import io.casehub.devtown.review.MemoryContext;
 import io.casehub.devtown.review.PrPayload;
-import io.casehub.platform.api.identity.TenancyConstants;
+import io.casehub.engine.common.spi.event.PlanItemCompletedEvent;
 import io.casehub.neocortex.memory.CaseMemoryStore;
 import io.casehub.neocortex.memory.MemoryOrder;
 import io.casehub.neocortex.memory.MemoryQuery;
+import io.casehub.platform.api.identity.TenancyConstants;
 import io.casehub.platform.testing.FixedCurrentPrincipal;
 import io.quarkus.test.junit.QuarkusTest;
 import jakarta.enterprise.event.Event;
 import jakarta.inject.Inject;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
+import static java.util.concurrent.TimeUnit.SECONDS;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.awaitility.Awaitility.await;
 
 /**
  * Full round-trip integration test for CaseMemoryStore chain:
@@ -72,7 +73,7 @@ class CaseMemoryIntegrationTest {
             "performanceAnalysis", Map.of("outcome", "PENDING"),
             "ci", Map.of("status", "passing"));
 
-        UUID caseId = caseHub.startCase(initialCtx).toCompletableFuture().get(10, SECONDS);
+        UUID caseId = caseHub.startCase(initialCtx);
         assertThat(caseId).as("Case should start successfully").isNotNull();
 
         // Fire PlanItemCompletedEvent directly via CDI — simulating what the engine

@@ -1,17 +1,14 @@
 package io.casehub.devtown.app;
 
-import static java.util.concurrent.TimeUnit.MILLISECONDS;
-import static java.util.concurrent.TimeUnit.SECONDS;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.awaitility.Awaitility.await;
-
 import io.casehub.api.model.CaseStatus;
 import io.casehub.engine.common.spi.CrossTenantCaseInstanceRepository;
 import io.casehub.worker.api.Worker;
 import io.casehub.worker.api.WorkerResult;
 import io.quarkus.test.junit.QuarkusTest;
 import jakarta.inject.Inject;
-import java.time.Duration;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -19,8 +16,11 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
+import static java.util.concurrent.TimeUnit.SECONDS;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.awaitility.Awaitility.await;
 
 /**
  * Bisection integration test for the merge queue.
@@ -90,7 +90,7 @@ class MergeQueueBisectionTest {
 
         // Act
         UUID caseId = caseHub.startCase(batchContext)
-            .toCompletableFuture().get(5, SECONDS);
+            ;
         assertThat(caseId).isNotNull();
 
         // Wait for tip test to fail and bisection-splitter to compute the split
@@ -138,7 +138,7 @@ class MergeQueueBisectionTest {
         Map<String, Object> batchContext = buildBatchWithCulprit();
 
         UUID caseId = caseHub.startCase(batchContext)
-            .toCompletableFuture().get(5, SECONDS);
+            ;
 
         await().atMost(10, SECONDS)
             .pollInterval(200, MILLISECONDS)
@@ -183,7 +183,7 @@ class MergeQueueBisectionTest {
         Map<String, Object> batchContext = buildBatchWithCulprit();
 
         UUID caseId = caseHub.startCase(batchContext)
-            .toCompletableFuture().get(5, SECONDS);
+            ;
 
         // Wait for splitResult to be populated
         await().atMost(10, SECONDS)
@@ -238,7 +238,7 @@ class MergeQueueBisectionTest {
         );
 
         UUID caseId = caseHub.startCase(batchContext)
-            .toCompletableFuture().get(5, SECONDS);
+            ;
         assertThat(caseId).isNotNull();
 
         // Wait for bisection split

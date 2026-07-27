@@ -1,24 +1,24 @@
 package io.casehub.devtown.app;
 
-import static java.util.concurrent.TimeUnit.MILLISECONDS;
-import static java.util.concurrent.TimeUnit.SECONDS;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.awaitility.Awaitility.await;
-
 import io.casehub.api.model.CaseStatus;
 import io.casehub.engine.common.spi.CrossTenantCaseInstanceRepository;
+import io.casehub.work.engine.WorkItemLifecycleAdapter;
 import io.casehub.work.runtime.event.WorkItemLifecycleEvent;
 import io.casehub.work.runtime.model.WorkItem;
 import io.casehub.work.runtime.service.WorkItemService;
-import io.casehub.work.engine.WorkItemLifecycleAdapter;
 import io.quarkus.test.junit.QuarkusTest;
 import jakarta.inject.Inject;
-import java.time.Duration;
+import org.junit.jupiter.api.Test;
+
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
-import org.junit.jupiter.api.Test;
+
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
+import static java.util.concurrent.TimeUnit.SECONDS;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.awaitility.Awaitility.await;
 
 @QuarkusTest
 class HumanApprovalLifecycleTest {
@@ -64,9 +64,7 @@ class HumanApprovalLifecycleTest {
                 "ci",                 Map.of("status", "passing"));
 
         // ── Checkpoint 1: start the case ──────────────────────────────────────
-        UUID caseId = caseHub.startCase(initialContext)
-                .toCompletableFuture()
-                .get(5, SECONDS);
+        UUID caseId = caseHub.startCase(initialContext);
         assertThat(caseId).isNotNull();
 
         // ── Checkpoint 2: WorkItem created by the human-approval binding ───────

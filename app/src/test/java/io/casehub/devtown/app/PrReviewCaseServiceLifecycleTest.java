@@ -10,11 +10,15 @@ import org.mockito.InOrder;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import java.util.concurrent.CompletableFuture;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isNull;
+import static org.mockito.Mockito.inOrder;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 
 class PrReviewCaseServiceLifecycleTest {
 
@@ -32,7 +36,7 @@ class PrReviewCaseServiceLifecycleTest {
         tracker.register(caseId, "default", payload);
 
         caseHub = mock(PrReviewCaseHub.class);
-        when(caseHub.signal(any(), any(), any())).thenReturn(CompletableFuture.completedFuture(null));
+
 
         service = new PrReviewCaseService();
         service.caseHub = caseHub;

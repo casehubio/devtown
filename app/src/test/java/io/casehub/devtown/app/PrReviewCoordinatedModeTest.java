@@ -39,7 +39,7 @@ class PrReviewCoordinatedModeTest {
         assertThat(jqExpression(mergeCompleted.getCondition())).contains("coordinatedChange");
     }
 
-    private static String jqExpression(io.casehub.api.model.evaluator.ExpressionEvaluator evaluator) {
-        return ((io.casehub.api.model.evaluator.JQExpressionEvaluator) evaluator).expression();
+    private static String jqExpression(io.casehub.platform.api.expression.ExpressionEvaluator evaluator) {
+        return ((io.casehub.platform.api.expression.JQExpressionEvaluator) evaluator).expression();
     }
 }

@@ -39,7 +39,7 @@ class CoordinatedMergeWorkerTest {
         var result = hub.adaptCoordinatedMerge(input);
         assertThat(result.outcome()).isInstanceOf(io.casehub.worker.api.WorkerOutcome.Success.class);
 
-        var mergeResults = (List<Map<String, Object>>) result.output().get("mergeResults");
+        var mergeResults = (List<Map<String, Object>>) ((Map<String, Object>) result.output()).get("mergeResults");
         assertThat(mergeResults).hasSize(2);
         assertThat(mergeResults.get(0).get("status")).isEqualTo("success");
         assertThat(mergeResults.get(0).get("mergeSha")).isEqualTo("sha1");
@@ -64,7 +64,7 @@ class CoordinatedMergeWorkerTest {
         var result = hub.adaptCoordinatedMerge(input);
         assertThat(result.outcome()).isInstanceOf(io.casehub.worker.api.WorkerOutcome.Success.class);
 
-        var mergeResults = (List<Map<String, Object>>) result.output().get("mergeResults");
+        var mergeResults = (List<Map<String, Object>>) ((Map<String, Object>) result.output()).get("mergeResults");
         assertThat(mergeResults).hasSize(2);
         assertThat(mergeResults.get(0).get("status")).isEqualTo("success");
         assertThat(mergeResults.get(1).get("status")).isEqualTo("failed");
@@ -86,7 +86,7 @@ class CoordinatedMergeWorkerTest {
         var result = hub.adaptCoordinatedMerge(input);
         assertThat(result.outcome()).isInstanceOf(io.casehub.worker.api.WorkerOutcome.Success.class);
 
-        var mergeResults = (List<Map<String, Object>>) result.output().get("mergeResults");
+        var mergeResults = (List<Map<String, Object>>) ((Map<String, Object>) result.output()).get("mergeResults");
         assertThat(mergeResults).hasSize(1);
         assertThat(mergeResults.get(0).get("status")).isEqualTo("success");
     }

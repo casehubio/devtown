@@ -49,7 +49,7 @@ class CoordinatedRollbackWorkerTest {
         var result = hub.adaptCoordinatedRollback(input);
         assertThat(result.outcome()).isInstanceOf(io.casehub.worker.api.WorkerOutcome.Success.class);
 
-        var rollbackResults = (List<Map<String, Object>>) result.output().get("rollbackResults");
+        var rollbackResults = (List<Map<String, Object>>) ((Map<String, Object>) result.output()).get("rollbackResults");
         assertThat(rollbackResults).hasSize(2);
         assertThat(rollbackResults.get(0).get("repo")).isEqualTo("casehubio/engine");
         assertThat(rollbackResults.get(0).get("status")).isEqualTo("success");
@@ -83,7 +83,7 @@ class CoordinatedRollbackWorkerTest {
         var result = hub.adaptCoordinatedRollback(input);
         assertThat(result.outcome()).isInstanceOf(io.casehub.worker.api.WorkerOutcome.Success.class);
 
-        var rollbackResults = (List<Map<String, Object>>) result.output().get("rollbackResults");
+        var rollbackResults = (List<Map<String, Object>>) ((Map<String, Object>) result.output()).get("rollbackResults");
         assertThat(rollbackResults).hasSize(2);
         assertThat(rollbackResults.get(0).get("status")).isEqualTo("conflict");
         assertThat(rollbackResults.get(0).get("revertPrNumber")).isEqualTo(101);
@@ -118,7 +118,7 @@ class CoordinatedRollbackWorkerTest {
         var result = hub.adaptCoordinatedRollback(input);
         assertThat(result.outcome()).isInstanceOf(io.casehub.worker.api.WorkerOutcome.Success.class);
 
-        var rollbackResults = (List<Map<String, Object>>) result.output().get("rollbackResults");
+        var rollbackResults = (List<Map<String, Object>>) ((Map<String, Object>) result.output()).get("rollbackResults");
         assertThat(rollbackResults).hasSize(2);
         assertThat(rollbackResults.get(0).get("status")).isEqualTo("failed");
         assertThat(rollbackResults.get(0).get("reason")).isEqualTo("api error: HTTP 500");
@@ -140,7 +140,7 @@ class CoordinatedRollbackWorkerTest {
         var result = hub.adaptCoordinatedRollback(input);
         assertThat(result.outcome()).isInstanceOf(io.casehub.worker.api.WorkerOutcome.Success.class);
 
-        var rollbackResults = (List<Map<String, Object>>) result.output().get("rollbackResults");
+        var rollbackResults = (List<Map<String, Object>>) ((Map<String, Object>) result.output()).get("rollbackResults");
         assertThat(rollbackResults).isEmpty();
 
         verifyNoInteractions(revertClient);
@@ -166,7 +166,7 @@ class CoordinatedRollbackWorkerTest {
         var result = hub.adaptCoordinatedRollback(input);
         assertThat(result.outcome()).isInstanceOf(io.casehub.worker.api.WorkerOutcome.Success.class);
 
-        var rollbackResults = (List<Map<String, Object>>) result.output().get("rollbackResults");
+        var rollbackResults = (List<Map<String, Object>>) ((Map<String, Object>) result.output()).get("rollbackResults");
         assertThat(rollbackResults).hasSize(1);
         assertThat(rollbackResults.get(0).get("repo")).isEqualTo("casehubio/engine");
         assertThat(rollbackResults.get(0).get("status")).isEqualTo("success");

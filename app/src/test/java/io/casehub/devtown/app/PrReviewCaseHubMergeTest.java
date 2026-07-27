@@ -29,13 +29,14 @@ class PrReviewCaseHubMergeTest {
     }
 
     @Test
+    @SuppressWarnings("unchecked")
     void adaptMerge_success_returnsWorkerResultWithMergeSha() {
         when(mergeClient.merge("casehubio", "devtown", 42, "sha123"))
             .thenReturn(new MergeOutcome.Success("merge-sha-abc"));
 
         WorkerResult result = hub.adaptMerge(prInput("casehubio/devtown", "42", "sha123"));
 
-        assertThat(result.output()).containsEntry("merge_sha", "merge-sha-abc");
+        assertThat((Map<String, Object>) result.output()).containsEntry("merge_sha", "merge-sha-abc");
         assertThat(result.outcome()).isInstanceOf(WorkerOutcome.Success.class);
     }
 

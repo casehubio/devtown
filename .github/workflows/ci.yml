@@ -49,7 +49,7 @@ jobs:
           yarn install --immutable
           yarn build
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_PACKAGES_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build frontend
         working-directory: app/src/main/webui

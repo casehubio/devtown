@@ -342,7 +342,7 @@ JAVA_HOME=$(/usr/libexec/java_home -v 26) mvn clean install
 
 Frontend lives at `app/src/main/webui/`. Quinoa runs `npm install` and `npm run build` during Maven build.
 
-- `GITHUB_TOKEN` with `read:packages` scope required for `@casehubio` npm packages
+- `@casehubio` packages resolved from Maven SNAPSHOT artifacts (no npm auth needed — see ADR-0001)
 - Dev mode: `mvn quarkus:dev -pl app` hot-reloads both Java and TypeScript
 - TypeScript only: `cd app/src/main/webui && npm run dev` (esbuild watch mode)
 - Type check: `cd app/src/main/webui && npm run typecheck`

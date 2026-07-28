@@ -67,7 +67,6 @@ class MemoryAdminResourceTest {
     }
 
     @Test
-    @org.junit.jupiter.api.Disabled("platform SNAPSHOT validation change — returns 500 instead of 400")
     void eraseContributor_nullLogin_returns_400() {
         given()
             .contentType("application/json")
@@ -79,7 +78,6 @@ class MemoryAdminResourceTest {
     }
 
     @Test
-    @org.junit.jupiter.api.Disabled("platform SNAPSHOT validation change — returns 500 instead of 400")
     void eraseContributor_blankLogin_returns_400() {
         given()
             .contentType("application/json")

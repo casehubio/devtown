@@ -339,7 +339,6 @@ class IncidentFeedbackServiceTest {
     }
 
     @Test
-    @org.junit.jupiter.api.Disabled("platform SNAPSHOT — error response status changed")
     void restEndpoint_unknownPr_returns404() {
         given()
             .contentType("application/json")
@@ -360,7 +359,6 @@ class IncidentFeedbackServiceTest {
     }
 
     @Test
-    @org.junit.jupiter.api.Disabled("platform SNAPSHOT — error response status changed")
     void restEndpoint_invalidCapability_returns400() {
         given()
             .contentType("application/json")

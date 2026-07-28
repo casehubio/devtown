@@ -17,7 +17,6 @@ class PrReviewCaseServiceAdditionalContextTest {
     @Inject PrReviewCaseHub caseHub;
 
     @Test
-    @org.junit.jupiter.api.Disabled("platform SNAPSHOT — missing WorkerProvisioner SPI bean")
     void startReviewWithAdditionalContext_mergesIntoInitialContext() {
         var pr = new PrPayload("casehubio/engine", 42, "abc123", "main", 10, "alice", List.of("src/Main.java"));
         var outcome = service.startReview(pr, Map.of("coordinatedChange", true));

@@ -19,7 +19,6 @@ import org.junit.jupiter.api.Test;
 @QuarkusTest
 @TestProfile(BatchFormationTestProfile.class)
 @TestSecurity(user = "devtown-admin", roles = {"devtown-admin"})
-@org.junit.jupiter.api.Disabled("platform SNAPSHOT — admission trust score behavior changed")
 class MergeQueueAdmissionTrustScoreTest {
 
     @Inject MergeQueueService mergeQueueService;

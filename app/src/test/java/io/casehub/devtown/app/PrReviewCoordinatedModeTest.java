@@ -7,7 +7,6 @@ import org.junit.jupiter.api.Test;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @QuarkusTest
-@org.junit.jupiter.api.Disabled("platform SNAPSHOT — ExpressionEvaluator package migration")
 class PrReviewCoordinatedModeTest {
 
     @Inject
@@ -41,6 +40,6 @@ class PrReviewCoordinatedModeTest {
     }
 
     private static String jqExpression(io.casehub.platform.api.expression.ExpressionEvaluator evaluator) {
-        return ((io.casehub.platform.api.expression.JQExpressionEvaluator) evaluator).expression();
+        return ((io.casehub.api.model.evaluator.JQExpressionEvaluator) evaluator).expression();
     }
 }

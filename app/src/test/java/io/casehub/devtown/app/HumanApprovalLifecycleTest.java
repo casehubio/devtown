@@ -31,7 +31,6 @@ class HumanApprovalLifecycleTest {
     @Inject WorkItemLifecycleAdapter  lifecycleAdapter;
 
     @Test
-    @org.junit.jupiter.api.Disabled("platform SNAPSHOT — lifecycle timeout, needs investigation")
     void humanApproval_fullLifecycle()
             throws ExecutionException, InterruptedException, TimeoutException {
 

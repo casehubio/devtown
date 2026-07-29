@@ -7,7 +7,6 @@ import io.casehub.devtown.merge.AdmissionResult;
 import io.casehub.devtown.merge.MergeQueueStore;
 import io.casehub.devtown.merge.QueueEntry;
 import io.quarkus.test.junit.QuarkusTest;
-import io.quarkus.test.junit.TestProfile;
 import io.quarkus.test.security.TestSecurity;
 import jakarta.inject.Inject;
 import jakarta.persistence.EntityManager;
@@ -17,7 +16,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 @QuarkusTest
-@TestProfile(BatchFormationTestProfile.class)
 @TestSecurity(user = "devtown-admin", roles = {"devtown-admin"})
 class MergeQueueAdmissionTrustScoreTest {
 

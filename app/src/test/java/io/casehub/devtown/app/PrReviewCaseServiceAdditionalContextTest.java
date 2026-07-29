@@ -11,6 +11,7 @@ import java.util.Map;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @QuarkusTest
+@org.junit.jupiter.api.Disabled("requires WorkerProvisioner — no test stub available (devtown#247)")
 class PrReviewCaseServiceAdditionalContextTest {
 
     @Inject PrReviewCaseService service;

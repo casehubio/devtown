@@ -454,7 +454,7 @@ public class MergeQueueService implements MergeQueuePort {
 
     private Preferences resolvePreferences() {
         return preferenceProvider.resolve(
-            SettingsScope.of("casehubio", Path.parse("devtown/merge-queue")));
+            SettingsScope.of("casehubio", Path.parse("casehubio/devtown/merge-queue")));
     }
 
     private UUID dispatchBatch(Batch batch) {

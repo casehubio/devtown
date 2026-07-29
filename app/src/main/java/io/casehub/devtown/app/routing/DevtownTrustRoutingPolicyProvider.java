@@ -71,7 +71,7 @@ public class DevtownTrustRoutingPolicyProvider implements TrustRoutingPolicyProv
 
         final RoutingPolicy routingPolicy = rp.get();
         final Preferences prefs = preferenceProvider.resolve(
-                SettingsScope.of("casehubio", Path.parse("devtown/trust-routing/" + capabilityName)));
+                SettingsScope.of("casehubio", Path.parse("casehubio/devtown/trust-routing/" + capabilityName)));
 
         final double threshold = routingPolicy.threshold()
                                               .orElse(TrustRoutingPolicy.DEFAULT.threshold());

@@ -19,7 +19,7 @@ public class BatchRetentionJob {
 
     private static final Logger LOG = Logger.getLogger(BatchRetentionJob.class);
     private static final SettingsScope MERGE_QUEUE_SCOPE =
-        SettingsScope.of("devtown", Path.parse("merge-queue"));
+        SettingsScope.of("casehubio", Path.parse("casehubio/devtown/merge-queue"));
 
     @Inject
     MergeQueueStore store;

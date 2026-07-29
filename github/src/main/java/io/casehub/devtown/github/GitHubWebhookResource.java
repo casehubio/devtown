@@ -44,7 +44,7 @@ public class GitHubWebhookResource {
     String webhookSecret;
 
     private static final SettingsScope MERGE_QUEUE_SCOPE =
-            SettingsScope.of("devtown", io.casehub.platform.api.path.Path.parse("merge-queue"));
+            SettingsScope.of("casehubio", io.casehub.platform.api.path.Path.parse("casehubio/devtown/merge-queue"));
 
     @POST
     public Response receive(String body,

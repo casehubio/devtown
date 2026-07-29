@@ -77,9 +77,9 @@ public class PrReviewCaseService implements PrReviewApplicationService {
         var memoryContext = memoryRecaller.recall(pr);
 
         Preferences prefs = preferenceProvider.resolve(
-                SettingsScope.of("casehubio", Path.parse("devtown/pr-review")));
+                SettingsScope.of("casehubio", Path.parse("casehubio/devtown/pr-review")));
         Preferences mergeQueuePrefs = preferenceProvider.resolve(
-                SettingsScope.of("casehubio", Path.parse("devtown/merge-queue")));
+                SettingsScope.of("casehubio", Path.parse("casehubio/devtown/merge-queue")));
 
         var policy = Map.<String, Object>of(
                 "humanApprovalThreshold", prefs.getOrDefault(PrReviewPreferenceKeys.HUMAN_APPROVAL_THRESHOLD).value(),

@@ -37,7 +37,7 @@ public class DefaultCbrRetrievalService implements CbrRetrievalService {
 
     private static final Logger             LOG       = Logger.getLogger(DefaultCbrRetrievalService.class);
     private static final SettingsScope      CBR_SCOPE =
-            SettingsScope.of("casehubio", Path.parse("devtown/cbr"));
+            SettingsScope.of("casehubio", Path.parse("casehubio/devtown/cbr"));
     private final        CaseMemoryStore         store;
     private final        PreferenceProvider      preferenceProvider;
     private final        CbrWeightOverrideStore  weightOverrides;

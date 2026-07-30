@@ -1,5 +1,6 @@
 package io.casehub.devtown.domain.sla;
 
+import io.casehub.devtown.domain.preferences.BooleanPreference;
 import io.casehub.devtown.domain.preferences.IntPreference;
 import io.casehub.platform.api.preferences.PreferenceKey;
 
@@ -20,6 +21,14 @@ public final class SlaPreferenceKeys {
     public static final PreferenceKey<IntPreference> COMPLETION_HOURS =
         new PreferenceKey<>("devtown.sla", "completion-hours",
             IntPreference.of(24), IntPreference::parse);
+    public static final PreferenceKey<BooleanPreference> OVERRIDE_ENABLED =
+            new PreferenceKey<>("devtown.sla", "override-enabled",
+                                BooleanPreference.of(false), BooleanPreference::parse);
+
+    public static final PreferenceKey<IntPreference> OVERRIDE_MIN_PRECEDENTS =
+            new PreferenceKey<>("devtown.sla", "override-min-precedents",
+                                IntPreference.of(5), IntPreference::parse);
+
 
     private SlaPreferenceKeys() {}
 }

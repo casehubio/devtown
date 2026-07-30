@@ -7,6 +7,7 @@ import io.casehub.devtown.domain.cbr.PrFeatureVector;
 import io.casehub.devtown.domain.preferences.PrReviewPreferenceKeys;
 import io.casehub.devtown.domain.queue.MergeQueuePreferenceKeys;
 import io.casehub.devtown.domain.sla.SlaEstimator;
+import io.casehub.devtown.domain.sla.SlaPreferenceKeys;
 import io.casehub.devtown.review.LifecycleResult;
 import io.casehub.devtown.review.PrPayload;
 import io.casehub.devtown.review.PrReviewApplicationService;
@@ -105,7 +106,17 @@ public class PrReviewCaseService implements PrReviewApplicationService {
         initialContext.put("memory", memoryContext.toContextMap());
         var slaEstimate = SlaEstimator.estimate(memoryContext.precedents());
         slaEstimate.ifPresent(estimate ->
-                                                                            initialContext.put("slaEstimate", estimate.toContextMap()));
+                initialContext.put("slaEstimate", estimate.toContextMap()));
+        slaEstimate.ifPresent(estimate -> {
+            boolean overrideEnabled = prefs.getOrDefault(SlaPreferenceKeys.OVERRIDE_ENABLED).value();
+            int minPrecedents = prefs.getOrDefault(SlaPreferenceKeys.OVERRIDE_MIN_PRECEDENTS).value();
+            if (overrideEnabled && estimate.precedentCount() >= minPrecedents) {
+                initialContext.put("slaOverride", Map.of(
+                        "medianSeconds", estimate.median().toSeconds(),
+                        "precedentCount", estimate.precedentCount(),
+                        "active", true));
+            }
+        });
         if ("external".equals(ciMode)) {
             initialContext.put("ci", Map.of("status", "pending"));
         }

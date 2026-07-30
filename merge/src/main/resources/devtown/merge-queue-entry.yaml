@@ -1,0 +1,48 @@
+dsl: "0.1"
+version: "1.0.0"
+name: merge-queue-entry
+namespace: devtown
+title: Merge Queue Entry — single PR lifecycle through the merge queue
+
+spec:
+
+  ## --- Goals -----------------------------------------------------------------
+  goals:
+    - name: pr-merged
+      kind: success
+      condition: '.mergeResult.status == "merged"'
+
+    - name: pr-rejected
+      kind: failure
+      condition: '.mergeResult.status == "rejected"'
+
+    - name: pr-withdrawn
+      kind: failure
+      condition: '.withdrawn == true or .slaEscalation.outcome == "DEQUEUE"'
+
+    - name: pr-conflict
+      kind: failure
+      condition: '.mergeResult.status == "conflict"'
+
+  completion:
+    success:
+      anyOf: [pr-merged]
+    failure:
+      anyOf: [pr-rejected, pr-withdrawn, pr-conflict]
+
+  ## --- Bindings --------------------------------------------------------------
+  bindings:
+
+    ## -- SLA breach escalation -- queue wait exceeded --
+
+    - name: sla-breach-escalation
+      on: { contextChange: {} }
+      when: '.slaBreached == true and .slaEscalation == null'
+      humanTask:
+        title: "Merge queue SLA breach — PR #{pr.number} waiting too long"
+        candidateGroups: [repo-maintainers]
+        expiresIn: PT1H
+        outputMapping: "{ slaEscalation: . }"
+        outcomes: [PRIORITIZE, DEQUEUE, ACKNOWLEDGE]
+
+

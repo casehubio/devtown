@@ -309,7 +309,7 @@ Features Gastown's Refinery provides that devtown must match or exceed:
 
 | Gastown feature | devtown approach | Status |
 |----------------|-----------------|--------|
-| Merge queue (Bors batch-then-bisect) | CasePlanModel + bisect sub-case binding | Not started |
+| Merge queue (Bors batch-then-bisect) | CasePlanModel + bisect sub-case binding | Partial — merge-batch.yaml + merge-queue-entry.yaml shipped |
 | AI coding agent workers | Claudony WorkerProvisioner (already integrated via claudony-casehub) | Foundation ready |
 | Human workspaces (Crew) | Human review WorkItem via casehub-work | Foundation ready |
 | Cross-rig agent routing | Sub-case orchestration | Foundation ready |

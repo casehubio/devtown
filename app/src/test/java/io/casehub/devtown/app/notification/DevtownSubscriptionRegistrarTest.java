@@ -27,7 +27,7 @@ class DevtownSubscriptionRegistrarTest {
     @Test
     void registersAllSixSubscriptions() {
         registrar.register("default-tenant");
-        assertEquals(6, store.stored.size());
+        assertEquals(7, store.stored.size());
     }
 
     @Test
@@ -70,7 +70,7 @@ class DevtownSubscriptionRegistrarTest {
     void idempotentRegistration() {
         registrar.register("default-tenant");
         registrar.register("default-tenant");
-        assertEquals(6, store.stored.size(), "Second registration should be no-op");
+        assertEquals(7, store.stored.size(), "Second registration should be no-op");
     }
 
     @Test

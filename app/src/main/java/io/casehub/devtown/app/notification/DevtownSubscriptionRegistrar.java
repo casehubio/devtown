@@ -3,7 +3,6 @@ package io.casehub.devtown.app.notification;
 import io.casehub.platform.api.notification.NotificationSeverity;
 import io.casehub.platform.api.subscription.NotificationTarget;
 import io.casehub.platform.api.subscription.NotificationTemplate;
-import io.casehub.platform.api.subscription.Subscription;
 import io.casehub.platform.api.subscription.SubscriptionInput;
 import io.casehub.platform.api.subscription.SubscriptionPage;
 import io.casehub.platform.api.subscription.SubscriptionQuery;
@@ -100,6 +99,17 @@ public class DevtownSubscriptionRegistrar {
                 "{breachType} — escalated to {escalationGroups}",
                 NotificationSeverity.URGENT, "devtown.sla.escalated",
                 "/api/workitems/{taskId}", "devtown.sla", "taskId", "callerRef"),
+            true, SubscriptionScope.SYSTEM));
+
+        registerIfAbsent(existing, tenancyId, new SubscriptionInput(
+            "system:devtown", tenancyId, "devtown-agent-dispatched",
+            "io.casehub.devtown.review.agent-dispatched", List.of(),
+            List.of(new NotificationTarget(TargetType.GROUP, "devtown-ops")),
+            false,
+            new NotificationTemplate("Agent dispatched: {agentId}",
+                "Capability {capability} on channel {channelName}",
+                NotificationSeverity.INFO, "devtown.review.agent-dispatched",
+                null, "devtown.review", "agentId", "agentId"),
             true, SubscriptionScope.SYSTEM));
     }
 

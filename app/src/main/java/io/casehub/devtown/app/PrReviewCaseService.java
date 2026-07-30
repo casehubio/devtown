@@ -13,9 +13,9 @@ import io.casehub.devtown.review.PrReviewApplicationService;
 import io.casehub.devtown.review.PrReviewOutcome;
 import io.casehub.devtown.review.SupersedeResult;
 import io.casehub.platform.api.identity.CurrentPrincipal;
+import io.casehub.platform.api.path.Path;
 import io.casehub.platform.api.preferences.PreferenceProvider;
 import io.casehub.platform.api.preferences.Preferences;
-import io.casehub.platform.api.path.Path;
 import io.casehub.platform.api.preferences.SettingsScope;
 import jakarta.annotation.Priority;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -60,6 +60,9 @@ public class PrReviewCaseService implements PrReviewApplicationService {
 
     @ConfigProperty(name = "devtown.ci.mode", defaultValue = "external")
     String ciMode;
+    @Inject
+    io.casehub.devtown.review.sla.SlaCalibrationStore slaCalibrationStore;
+
 
     @Override
     public PrReviewOutcome startReview(PrPayload pr) {
@@ -100,7 +103,8 @@ public class PrReviewCaseService implements PrReviewApplicationService {
         initialContext.put("pr", prContext);
         initialContext.put("policy", policy);
         initialContext.put("memory", memoryContext.toContextMap());
-        SlaEstimator.estimate(memoryContext.precedents()).ifPresent(estimate ->
+        var slaEstimate = SlaEstimator.estimate(memoryContext.precedents());
+        slaEstimate.ifPresent(estimate ->
                                                                             initialContext.put("slaEstimate", estimate.toContextMap()));
         if ("external".equals(ciMode)) {
             initialContext.put("ci", Map.of("status", "pending"));
@@ -108,6 +112,12 @@ public class PrReviewCaseService implements PrReviewApplicationService {
         initialContext.putAll(additionalContext);
 
         UUID caseId = caseHub.startCase(initialContext);
+
+        slaEstimate.ifPresent(estimate -> slaCalibrationStore.save(
+                new io.casehub.devtown.review.sla.SlaCalibrationRecord(
+                        UUID.randomUUID(), "pr-review", "casehubio/devtown/pr-review",
+                        estimate.median(), estimate.min(), estimate.max(),
+                        estimate.precedentCount(), caseId, java.time.Instant.now())));
 
         var vector = PrFeatureVector.from(
                 pr.repo(), pr.prNumber(), pr.contributor(), pr.linesChanged(), pr.changedPaths());

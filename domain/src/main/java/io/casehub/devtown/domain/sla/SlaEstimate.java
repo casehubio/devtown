@@ -1,20 +1,16 @@
 package io.casehub.devtown.domain.sla;
 
-import java.time.Duration;
-import java.util.Map;
-
 public record SlaEstimate(
-    Duration median,
-    int precedentCount,
-    Duration min,
-    Duration max
+        DurationStats overall,
+        java.util.Map<String, DurationStats> capabilityBreakdown
 ) {
-    public Map<String, Object> toContextMap() {
-        return Map.of(
-            "medianSeconds", median.toSeconds(),
-            "precedentCount", precedentCount,
-            "minSeconds", min.toSeconds(),
-            "maxSeconds", max.toSeconds()
-        );
+    public java.util.Map<String, Object> toContextMap() {
+        var map = new java.util.LinkedHashMap<>(overall.toMap());
+        if (!capabilityBreakdown.isEmpty()) {
+            var breakdown = new java.util.LinkedHashMap<String, Object>();
+            capabilityBreakdown.forEach((k, v) -> breakdown.put(k, v.toMap()));
+            map.put("capabilityBreakdown", breakdown);
+        }
+        return map;
     }
 }

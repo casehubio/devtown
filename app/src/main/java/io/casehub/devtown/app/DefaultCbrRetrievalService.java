@@ -16,9 +16,9 @@ import io.casehub.neocortex.memory.Memory;
 import io.casehub.neocortex.memory.MemoryAttributeKeys;
 import io.casehub.neocortex.memory.MemoryQuery;
 import io.casehub.neocortex.memory.MemoryScanRequest;
+import io.casehub.platform.api.path.Path;
 import io.casehub.platform.api.preferences.PreferenceProvider;
 import io.casehub.platform.api.preferences.Preferences;
-import io.casehub.platform.api.path.Path;
 import io.casehub.platform.api.preferences.SettingsScope;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -103,7 +103,7 @@ public class DefaultCbrRetrievalService implements CbrRetrievalService {
         try {
             SimilarityScore score = metric.compute(query, cv.vector);
 
-            EnrichmentResult enrichment = enrichOutcomes(cv.caseId, cv.contributor, tenantId);
+            EnrichmentResult enrichment = enrichOutcomes(cv.caseId, cv.contributor, tenantId, cv.startedAt());
             if (enrichment.outcomes().isEmpty()) {return null;}
 
             Duration completionTime = null;
@@ -124,7 +124,7 @@ public class DefaultCbrRetrievalService implements CbrRetrievalService {
             return null;
         }}
 
-    private EnrichmentResult enrichOutcomes(UUID caseId, String contributor, String tenantId) {
+    private EnrichmentResult enrichOutcomes(UUID caseId, String contributor, String tenantId, Instant startedAt) {
         try {
             List<Memory> outcomeFacts = store.query(
                     MemoryQuery.forEntity(
@@ -140,7 +140,12 @@ public class DefaultCbrRetrievalService implements CbrRetrievalService {
                 String outcome    = fact.attributes().get(MemoryAttributeKeys.OUTCOME);
                 String detail     = fact.attributes().get(DevtownMemoryKeys.OUTCOME_DETAIL);
                 if (capability != null && outcome != null) {
-                    outcomes.put(capability, new CapabilityOutcome(outcome, detail));
+                    Duration duration = null;
+                    if (startedAt != null && fact.createdAt() != null) {
+                        Duration raw = Duration.between(startedAt, fact.createdAt());
+                        if (!raw.isNegative()) {duration = raw;}
+                    }
+                    outcomes.put(capability, new CapabilityOutcome(outcome, detail, duration));
                 }
             }
 
@@ -153,8 +158,7 @@ public class DefaultCbrRetrievalService implements CbrRetrievalService {
         } catch (Exception e) {
             LOG.debugf(e, "Failed to enrich outcomes for case=%s", caseId);
             return new EnrichmentResult(Map.of(), null);
-        }
-    }
+        }}
 
     private String aggregateOutcome(Map<String, CapabilityOutcome> capabilityOutcomes) {
         boolean anyFailed = capabilityOutcomes.values().stream()

@@ -56,7 +56,7 @@ public record MemoryContext(
             String outcome = m.attributes().get(MemoryAttributeKeys.OUTCOME);
             if (ReviewOutcome.FAILED.name().equals(outcome)) {return true;}
             String detail = m.attributes().get(DevtownMemoryKeys.OUTCOME_DETAIL);
-            return new CapabilityOutcome(outcome, detail).hadFindings();
+            return new CapabilityOutcome(outcome, detail, null).hadFindings();
         });
     }
 

@@ -25,13 +25,13 @@ class CapabilityOutcomeTest {
         "DECLINED,outside-scope,false"
     })
     void hadFindings(String outcome, String detail, boolean expected) {
-        assertThat(new CapabilityOutcome(outcome, detail).hadFindings())
+        assertThat(new CapabilityOutcome(outcome, detail, null).hadFindings())
             .as("CapabilityOutcome(%s, %s)", outcome, detail)
             .isEqualTo(expected);
     }
 
     @Test
     void nullOutcomeIsNotFindings() {
-        assertThat(new CapabilityOutcome(null, null).hadFindings()).isFalse();
+        assertThat(new CapabilityOutcome(null, null, null).hadFindings()).isFalse();
     }
 }

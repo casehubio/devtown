@@ -59,4 +59,57 @@ class JpaSlaCalibrationStoreTest {
         var found = store.findLatest("nonexistent", "no/scope");
         assertThat(found).isEmpty();
     }
+
+    @Test
+    @Transactional
+    void saveAll_and_findLatestCalibration() {
+        java.time.Instant now    = java.time.Instant.now();
+        UUID              caseId = UUID.randomUUID();
+        var records = java.util.List.of(
+                new SlaCalibrationRecord(UUID.randomUUID(), "pr-review",
+                                         "casehubio/devtown/pr-review",
+                                         Duration.ofMinutes(45), Duration.ofMinutes(10), Duration.ofHours(3),
+                                         12, caseId, now),
+                new SlaCalibrationRecord(UUID.randomUUID(), "code-analysis",
+                                         "casehubio/devtown/pr-review",
+                                         Duration.ofMinutes(4), Duration.ofMinutes(2), Duration.ofMinutes(8),
+                                         10, caseId, now),
+                new SlaCalibrationRecord(UUID.randomUUID(), "security-review",
+                                         "casehubio/devtown/pr-review",
+                                         Duration.ofMinutes(10), Duration.ofMinutes(5), Duration.ofMinutes(20),
+                                         8, caseId, now));
+
+        store.saveAll(records);
+
+        var latest = store.findLatestCalibration("casehubio/devtown/pr-review");
+        assertThat(latest).hasSize(3);
+        assertThat(latest.stream().map(SlaCalibrationRecord::capability).toList())
+                .containsExactlyInAnyOrder("pr-review", "code-analysis", "security-review");
+    }
+
+    @Test
+    @Transactional
+    void findLatestCalibration_returnsOnlyLatestBatch() {
+        java.time.Instant older = java.time.Instant.now().minusSeconds(3600);
+        java.time.Instant newer = java.time.Instant.now();
+        store.saveAll(java.util.List.of(
+                new SlaCalibrationRecord(UUID.randomUUID(), "pr-review",
+                                         "casehubio/devtown/pr-review",
+                                         Duration.ofMinutes(30), Duration.ofMinutes(5), Duration.ofHours(2),
+                                         8, UUID.randomUUID(), older)));
+        store.saveAll(java.util.List.of(
+                new SlaCalibrationRecord(UUID.randomUUID(), "pr-review",
+                                         "casehubio/devtown/pr-review",
+                                         Duration.ofMinutes(50), Duration.ofMinutes(15), Duration.ofHours(4),
+                                         20, UUID.randomUUID(), newer),
+                new SlaCalibrationRecord(UUID.randomUUID(), "code-analysis",
+                                         "casehubio/devtown/pr-review",
+                                         Duration.ofMinutes(5), Duration.ofMinutes(2), Duration.ofMinutes(10),
+                                         18, UUID.randomUUID(), newer)));
+
+        var latest = store.findLatestCalibration("casehubio/devtown/pr-review");
+        assertThat(latest).hasSize(2);
+        assertThat(latest.stream().map(SlaCalibrationRecord::precedentCount).toList())
+                .allMatch(c -> c >= 18);
+    }
 }

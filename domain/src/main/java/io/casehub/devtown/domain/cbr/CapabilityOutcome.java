@@ -1,10 +1,8 @@
 package io.casehub.devtown.domain.cbr;
 
-import java.util.Set;
+public record CapabilityOutcome(String outcome, String detail, java.time.Duration duration) {
 
-public record CapabilityOutcome(String outcome, String detail) {
-
-    private static final Set<String> SAFE_DETAILS = Set.of("approved", "passed");
+    private static final java.util.Set<String> SAFE_DETAILS = java.util.Set.of("approved", "passed");
 
     public boolean hadFindings() {
         return "COMPLETED".equals(outcome) &&

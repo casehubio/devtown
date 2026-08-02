@@ -110,10 +110,10 @@ public class PrReviewCaseService implements PrReviewApplicationService {
         slaEstimate.ifPresent(estimate -> {
             boolean overrideEnabled = prefs.getOrDefault(SlaPreferenceKeys.OVERRIDE_ENABLED).value();
             int minPrecedents = prefs.getOrDefault(SlaPreferenceKeys.OVERRIDE_MIN_PRECEDENTS).value();
-            if (overrideEnabled && estimate.precedentCount() >= minPrecedents) {
+            if (overrideEnabled && estimate.overall().sampleCount() >= minPrecedents) {
                 initialContext.put("slaOverride", Map.of(
-                        "medianSeconds", estimate.median().toSeconds(),
-                        "precedentCount", estimate.precedentCount(),
+                        "medianSeconds", estimate.overall().median().toSeconds(),
+                        "precedentCount", estimate.overall().sampleCount(),
                         "active", true));
             }
         });
@@ -124,11 +124,21 @@ public class PrReviewCaseService implements PrReviewApplicationService {
 
         UUID caseId = caseHub.startCase(initialContext);
 
-        slaEstimate.ifPresent(estimate -> slaCalibrationStore.save(
-                new io.casehub.devtown.review.sla.SlaCalibrationRecord(
-                        UUID.randomUUID(), "pr-review", "casehubio/devtown/pr-review",
-                        estimate.median(), estimate.min(), estimate.max(),
-                        estimate.precedentCount(), caseId, java.time.Instant.now())));
+        slaEstimate.ifPresent(estimate -> {
+            java.time.Instant now = java.time.Instant.now();
+            String scopePath = "casehubio/devtown/pr-review";
+            var records = new java.util.ArrayList<io.casehub.devtown.review.sla.SlaCalibrationRecord>();
+            records.add(new io.casehub.devtown.review.sla.SlaCalibrationRecord(
+                    UUID.randomUUID(), "pr-review", scopePath,
+                    estimate.overall().median(), estimate.overall().min(), estimate.overall().max(),
+                    estimate.overall().sampleCount(), caseId, now));
+            estimate.capabilityBreakdown().forEach((cap, stats) ->
+                records.add(new io.casehub.devtown.review.sla.SlaCalibrationRecord(
+                    UUID.randomUUID(), cap, scopePath,
+                    stats.median(), stats.min(), stats.max(),
+                    stats.sampleCount(), caseId, now)));
+            slaCalibrationStore.saveAll(records);
+        });
 
         var vector = PrFeatureVector.from(
                 pr.repo(), pr.prNumber(), pr.contributor(), pr.linesChanged(), pr.changedPaths());

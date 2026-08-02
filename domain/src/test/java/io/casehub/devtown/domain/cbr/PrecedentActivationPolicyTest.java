@@ -16,9 +16,9 @@ class PrecedentActivationPolicyTest {
     private static final PrFeatureVector VECTOR = new PrFeatureVector(
         "repo", 1, "dev", 100, Set.of(), Set.of(), Set.of(), false, false);
 
-    private static final CapabilityOutcome FINDINGS = new CapabilityOutcome("COMPLETED", "FINDINGS_PRESENT");
-    private static final CapabilityOutcome APPROVED = new CapabilityOutcome("COMPLETED", "approved");
-    private static final CapabilityOutcome FAILED = new CapabilityOutcome("FAILED", null);
+    private static final CapabilityOutcome FINDINGS = new CapabilityOutcome("COMPLETED", "FINDINGS_PRESENT", null);
+    private static final CapabilityOutcome APPROVED = new CapabilityOutcome("COMPLETED", "approved", null);
+    private static final CapabilityOutcome FAILED = new CapabilityOutcome("FAILED", null, null);
 
     private Precedent precedent(Map<String, CapabilityOutcome> outcomes) {
         return new Precedent(UUID.randomUUID(), SCORE, VECTOR, "flagged", outcomes, null);

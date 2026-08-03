@@ -19,7 +19,7 @@ class PrReviewCaseServiceAdditionalContextTest {
 
     @Test
     void startReviewWithAdditionalContext_mergesIntoInitialContext() {
-        var pr = new PrPayload("casehubio/engine", 42, "abc123", "main", 10, "alice", List.of("src/Main.java"));
+        var pr = new PrPayload("casehubio/engine", 42, "abc123", "main", 10, "alice", 0L, List.of("src/Main.java"));
         var outcome = service.startReview(pr, Map.of("coordinatedChange", true));
         assertThat(outcome).isNotNull();
         assertThat(outcome.caseId()).isNotNull();
@@ -31,7 +31,7 @@ class PrReviewCaseServiceAdditionalContextTest {
 
     @Test
     void startReviewWithoutAdditionalContext_noCoordinatedFlag() {
-        var pr = new PrPayload("casehubio/platform", 99, "def456", "main", 5, "bob", List.of("src/App.java"));
+        var pr = new PrPayload("casehubio/platform", 99, "def456", "main", 5, "bob", 0L, List.of("src/App.java"));
         var outcome = service.startReview(pr);
         assertThat(outcome).isNotNull();
         assertThat(outcome.caseId()).isNotNull();

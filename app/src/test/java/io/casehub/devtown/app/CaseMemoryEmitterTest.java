@@ -120,7 +120,7 @@ class CaseMemoryEmitterTest {
             "security-agent-1",
             ReviewOutcome.COMPLETED,
             "approved",
-            new PrPayload("casehubio/devtown", 45, "abc123", "main", 342, "mdproctor", List.of("app/src/main/Foo.java"))
+            new PrPayload("casehubio/devtown", 45, "abc123", "main", 342, "mdproctor", 0L, List.of("app/src/main/Foo.java"))
         );
 
         emitter.onReviewCompleted(event);
@@ -237,7 +237,7 @@ class CaseMemoryEmitterTest {
             "security-agent-1",
             ReviewOutcome.COMPLETED,
             "approved",
-            new PrPayload("casehubio/devtown", 45, "abc123", "main", 342, contributor, changedPaths)
+            new PrPayload("casehubio/devtown", 45, "abc123", "main", 342, contributor, 0L, changedPaths)
         );
     }
 

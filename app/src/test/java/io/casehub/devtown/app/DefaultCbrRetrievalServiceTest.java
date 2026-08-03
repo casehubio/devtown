@@ -215,12 +215,7 @@ class DefaultCbrRetrievalServiceTest {
         var attrs = new HashMap<>(v.toAttributes());
         attrs.put(DevtownMemoryKeys.ENTITY_TYPE, "case-vector");
         attrs.put(DevtownMemoryKeys.PR_REPO, repo);
-        return new Memory(
-            UUID.randomUUID().toString(),
-            DevtownMemoryDomain.CASE_VECTOR_PREFIX + repo + ":" + caseId,
-            DevtownMemoryDomain.SOFTWARE_REVIEW,
-            "tenant-1", caseId.toString(),
-            "PR in " + repo, attrs, Instant.now(), null);
+        return new Memory(UUID.randomUUID().toString(), DevtownMemoryDomain.CASE_VECTOR_PREFIX + repo + ":" + caseId, DevtownMemoryDomain.SOFTWARE_REVIEW, "tenant-1", caseId.toString(), "PR in " + repo, attrs, Instant.now(), null);
     }
 
     private Memory buildOutcomeMemory(UUID caseId, String capability, String outcome, String detail) {
@@ -229,10 +224,6 @@ class DefaultCbrRetrievalServiceTest {
         attrs.put(DevtownMemoryKeys.CAPABILITY, capability);
         attrs.put(DevtownMemoryKeys.OUTCOME_DETAIL, detail);
         attrs.put(DevtownMemoryKeys.ENTITY_TYPE, "contributor");
-        return new Memory(
-            UUID.randomUUID().toString(),
-            "contributor:someone", DevtownMemoryDomain.SOFTWARE_REVIEW,
-            "tenant-1", caseId.toString(),
-            "Review outcome", attrs, Instant.now(), null);
+        return new Memory(UUID.randomUUID().toString(), "contributor:someone", DevtownMemoryDomain.SOFTWARE_REVIEW, "tenant-1", caseId.toString(), "Review outcome", attrs, Instant.now(), null);
     }
 }

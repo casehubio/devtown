@@ -10,13 +10,13 @@ public final class GitHubPayloadMapper {
     public static PrPayload toPrPayload(GitHubPullRequestEvent event) {
         var pr = event.pull_request();
         return new PrPayload(
-            event.repository().full_name(),
-            event.number(),
-            pr.head().sha(),
-            pr.base().ref(),
-            pr.additions() + pr.deletions(),
-            pr.user().login(),
-            List.of()
-        );
-    }
+                event.repository().full_name(),
+                event.number(),
+                pr.head().sha(),
+                pr.base().ref(),
+                pr.additions() + pr.deletions(),
+                pr.user().login(),
+                pr.user().id(),
+                List.of()
+        );}
 }

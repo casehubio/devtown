@@ -75,6 +75,7 @@ public class PrReviewCaseTrackerHydrator {
                 (String) pr.get("baseRef"),
                 toInt(pr.get("linesChanged")),
                 (String) pr.get("contributor"),
+                pr.containsKey("contributorNumericId") ? toLong(pr.get("contributorNumericId")) : 0L,
                 pr.containsKey("changedPaths") ? (List<String>) pr.get("changedPaths") : List.of()
             );
         } catch (Exception e) {
@@ -88,4 +89,11 @@ public class PrReviewCaseTrackerHydrator {
         if (value instanceof String s) return Integer.parseInt(s);
         return 0;
     }
+
+    private static long toLong(Object value) {
+        if (value instanceof Number n) {return n.longValue();}
+        if (value instanceof String s) {return Long.parseLong(s);}
+        return 0L;
+    }
+
 }

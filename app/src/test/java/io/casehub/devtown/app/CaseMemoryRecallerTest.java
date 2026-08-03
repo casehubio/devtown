@@ -49,15 +49,7 @@ class CaseMemoryRecallerTest {
 
     @Test
     void recall_with_empty_store_returns_empty() {
-        var pr = new PrPayload(
-            "repo1",
-            1,
-            "abc123",
-            "main",
-            100,
-            "alice",
-            List.of("src/main/java/Foo.java")
-        );
+        var pr = new PrPayload("repo1", 1, "abc123", "main", 100, "alice", 0L, List.of("src/main/java/Foo.java"));
 
         var result = recaller.recall(pr);
 
@@ -68,15 +60,7 @@ class CaseMemoryRecallerTest {
 
     @Test
     void recall_with_contributor_history_returns_populated_context() {
-        var pr = new PrPayload(
-            "repo1",
-            2,
-            "def456",
-            "main",
-            200,
-            "bob",
-            List.of("src/main/java/Bar.java")
-        );
+        var pr = new PrPayload("repo1", 2, "def456", "main", 200, "bob", 0L, List.of("src/main/java/Bar.java"));
 
         String tenantId = principal.tenancyId();
 
@@ -108,15 +92,7 @@ class CaseMemoryRecallerTest {
 
     @Test
     void recall_toContextMap_produces_serializable_structure() {
-        var pr = new PrPayload(
-            "repo1",
-            5,
-            "mno345",
-            "main",
-            500,
-            "eve",
-            List.of("src/test/java/Test.java")
-        );
+        var pr = new PrPayload("repo1", 5, "mno345", "main", 500, "eve", 0L, List.of("src/test/java/Test.java"));
 
         String tenantId = principal.tenancyId();
 
@@ -152,15 +128,7 @@ class CaseMemoryRecallerTest {
 
     @Test
     void recall_with_code_area_history_returns_populated_context() {
-        var pr = new PrPayload(
-            "repo1",
-            10,
-            "codearea1",
-            "main",
-            300,
-            "carol",
-            List.of("app/src/main/java/Foo.java")
-        );
+        var pr = new PrPayload("repo1", 10, "codearea1", "main", 300, "carol", 0L, List.of("app/src/main/java/Foo.java"));
 
         String tenantId = principal.tenancyId();
 

@@ -146,9 +146,9 @@ entries:
 - `domain/trust/TrustRoutingPolicyKeys` — package-private constant class with four
   `PreferenceKey` statics (blendFactor, floor.review-thoroughness, floor.precision,
   floor.scope-calibration). No CDI.
-- `DevtownTrustDimension`: rename `FALSE_POSITIVE_RATE → PRECISION`, `"false-positive-rate" → "precision"`
+- `ReviewerTrustDimension`: rename `FALSE_POSITIVE_RATE → PRECISION`, `"false-positive-rate" → "precision"`
 - `RoutingPolicy.isBorderline()`: add `@Deprecated`; add comment: "use TrustRoutingPolicy.isBorderline() — this implementation is one-sided and not called by routing"
-- `DevtownTrustDimensionTest`: update assertion; add inline comment:
+- `ReviewerTrustDimensionTest`: update assertion; add inline comment:
   `// precision = TP/(TP+FP); stored as higher = better, unlike raw FPR`
 
 ### `app/` — new class
@@ -216,7 +216,7 @@ Do **not** create local V2002/V2003 migrations. AML's local copies are a known e
 
 ## Tests
 
-### `DevtownTrustDimensionTest` (update, `domain/`)
+### `ReviewerTrustDimensionTest` (update, `domain/`)
 Update assertion: `FALSE_POSITIVE_RATE → PRECISION`, add inline semantic comment.
 
 ### `DevtownTrustRoutingPolicyProviderTest` (new unit test, `app/`)

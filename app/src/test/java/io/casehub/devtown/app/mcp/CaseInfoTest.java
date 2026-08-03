@@ -12,7 +12,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 class CaseInfoTest {
 
     private final UUID caseId = UUID.randomUUID();
-    private final PrPayload payload = new PrPayload("repo", 1, "sha", "main", 10, "alice", List.of());
+    private final PrPayload payload = new PrPayload("repo", 1, "sha", "main", 10, "alice", 0L, List.of());
     private final Instant now = Instant.now();
 
     @Test

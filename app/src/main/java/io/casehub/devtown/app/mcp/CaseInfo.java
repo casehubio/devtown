@@ -27,10 +27,10 @@ public record CaseInfo(
         var updatedPayload = new PrPayload(
                 payload.repo(), payload.prNumber(), newSha,
                 payload.baseRef(), payload.linesChanged(),
-                payload.contributor(), payload.changedPaths()
+                payload.contributor(), payload.contributorNumericId(),
+                payload.changedPaths()
         );
-        return new CaseInfo(caseId, tenancyId, updatedPayload, startedAt, lastEventAt, status, supersededBy, supersedes);
-    }
+        return new CaseInfo(caseId, tenancyId, updatedPayload, startedAt, lastEventAt, status, supersededBy, supersedes);}
 
     public CaseInfo withSupersededBy(UUID replacementCaseId) {
         return new CaseInfo(caseId, tenancyId, payload, startedAt, lastEventAt, status, replacementCaseId, supersedes);

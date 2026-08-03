@@ -34,7 +34,7 @@ class PrReviewCaseServiceCiStatusTest {
         tracker = new PrReviewCaseTracker();
         caseId = UUID.randomUUID();
 
-        var payload = new PrPayload("casehubio/devtown", 42, "sha123", "main", 100, "octocat", List.of());
+        var payload = new PrPayload("casehubio/devtown", 42, "sha123", "main", 100, "octocat", 0L, List.of());
         tracker.register(caseId, "default", payload);
 
         caseHub = mock(PrReviewCaseHub.class);

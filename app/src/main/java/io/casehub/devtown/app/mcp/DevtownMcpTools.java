@@ -483,7 +483,7 @@ public class DevtownMcpTools {
                                           ) {
         var replacement = new io.casehub.devtown.review.PrPayload(
                 repo, newPrNumber, headSha, baseRef, linesChanged, contributor,
-                java.util.Arrays.asList(changedPaths.split(","))
+                0L, java.util.Arrays.asList(changedPaths.split(","))
         );
 
         var result = reviewService.supersedePr(repo, oldPrNumber, replacement);

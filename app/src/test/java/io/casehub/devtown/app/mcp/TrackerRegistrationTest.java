@@ -17,7 +17,7 @@ class TrackerRegistrationTest {
 
     @Test
     void startReview_registersCaseInTracker() {
-        var pr = new PrPayload("casehubio/devtown", 99, "sha123", "main", 50, "bob", List.of("src/Foo.java"));
+        var pr = new PrPayload("casehubio/devtown", 99, "sha123", "main", 50, "bob", 0L, List.of("src/Foo.java"));
         reviewService.startReview(pr);
 
         var active = tracker.activeCases();

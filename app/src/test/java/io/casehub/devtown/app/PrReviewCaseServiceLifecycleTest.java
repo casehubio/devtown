@@ -32,7 +32,7 @@ class PrReviewCaseServiceLifecycleTest {
         tracker = new PrReviewCaseTracker();
         caseId = UUID.randomUUID();
 
-        var payload = new PrPayload("casehubio/devtown", 42, "oldsha", "main", 100, "octocat", List.of());
+        var payload = new PrPayload("casehubio/devtown", 42, "oldsha", "main", 100, "octocat", 0L, List.of());
         tracker.register(caseId, "default", payload);
 
         caseHub = mock(PrReviewCaseHub.class);
@@ -86,27 +86,27 @@ class PrReviewCaseServiceLifecycleTest {
 
     @Test
     void closePr_notMerged_signalsClosedStatus() {
-        service.closePr("casehubio/devtown", 42, false);
+        service.closePr(new io.casehub.devtown.review.PrClosePayload("casehubio/devtown", 42, false, "octocat", 0L, "octocat", 0L, "User"));
 
         verify(caseHub).signal(caseId, "pr.status", "closed");
     }
 
     @Test
     void closePr_merged_signalsMergedStatus() {
-        service.closePr("casehubio/devtown", 42, true);
+        service.closePr(new io.casehub.devtown.review.PrClosePayload("casehubio/devtown", 42, true, "octocat", 0L, "octocat", 0L, "User"));
 
         verify(caseHub).signal(caseId, "pr.status", "merged");
     }
 
     @Test
     void closePr_returnsNoActiveCase_whenNoCaseExists() {
-        var result = service.closePr("casehubio/other", 99, false);
+        var result = service.closePr(new io.casehub.devtown.review.PrClosePayload("casehubio/other", 99, false, "octocat", 0L, "octocat", 0L, "User"));
         assertThat(result).isEqualTo(LifecycleResult.NO_ACTIVE_CASE);
     }
 
     @Test
     void startReview_existingCase_delegatesToRevisePr() {
-        service.startReview(new PrPayload("casehubio/devtown", 42, "newsha", "main", 200, "octocat", List.of()));
+        service.startReview(new PrPayload("casehubio/devtown", 42, "newsha", "main", 200, "octocat", 0L, List.of()));
 
         verify(caseHub).signal(eq(caseId), eq("pr.headSha"), eq("newsha"));
         verify(caseHub, never()).startCase(any());

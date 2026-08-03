@@ -56,7 +56,7 @@ public class CoordinatedChangeService implements CoordinatedChangePort {
                 String fullRepo = entry.owner() + "/" + entry.repo();
                 var pr = new PrPayload(fullRepo, entry.prNumber(), entry.headSha(),
                     entry.targetBranch(), entry.linesChanged(), entry.contributor(),
-                    entry.changedPaths());
+                    0L, entry.changedPaths());
                 var outcome = reviewService.startReview(pr, Map.of("coordinatedChange", true));
                 tracker.register(parentCaseId, fullRepo, outcome.caseId());
                 started.put(fullRepo, outcome.caseId());

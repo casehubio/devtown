@@ -10,11 +10,12 @@ class GitHubPayloadMapperTest {
         new GitHubPullRequestEvent.PullRequest(
             new GitHubPullRequestEvent.PullRequest.Head("abc123"),
             new GitHubPullRequestEvent.PullRequest.Base("main"),
-            new GitHubPullRequestEvent.PullRequest.User("octocat"),
+            new GitHubPullRequestEvent.PullRequest.User("octocat", 12345L),
             false, false, 100, 50, 5
         ),
         new GitHubPullRequestEvent.Repository("casehubio/devtown"),
-        null
+        null,
+        new GitHubPullRequestEvent.Sender("octocat", 12345L, "User")
     );
 
     @Test
@@ -58,4 +59,11 @@ class GitHubPayloadMapperTest {
         var payload = GitHubPayloadMapper.toPrPayload(event);
         assertThat(payload.changedPaths()).isEmpty();
     }
+
+    @Test
+    void mapsContributorNumericId() {
+        var payload = GitHubPayloadMapper.toPrPayload(event);
+        assertThat(payload.contributorNumericId()).isEqualTo(12345L);
+    }
+
 }

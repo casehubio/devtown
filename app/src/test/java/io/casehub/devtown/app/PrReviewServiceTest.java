@@ -14,21 +14,21 @@ class PrReviewServiceTest {
 
     @Test
     void startReview_returnsNonNullOutcome() {
-        var pr = new PrPayload("casehubio/devtown", 42, "abc123", "main", 150, "test-contributor", List.of());
+        var pr = new PrPayload("casehubio/devtown", 42, "abc123", "main", 150, "test-contributor", 0L, List.of());
         var outcome = service.startReview(pr);
         assertThat(outcome).isNotNull();
     }
 
     @Test
     void startReview_verdictIsNonBlank() {
-        var pr = new PrPayload("casehubio/devtown", 42, "abc123", "main", 150, "test-contributor", List.of());
+        var pr = new PrPayload("casehubio/devtown", 42, "abc123", "main", 150, "test-contributor", 0L, List.of());
         var outcome = service.startReview(pr);
         assertThat(outcome.verdict()).isNotBlank();
     }
 
     @Test
     void startReview_findingsIsNonNull() {
-        var pr = new PrPayload("casehubio/devtown", 42, "abc123", "main", 150, "test-contributor", List.of());
+        var pr = new PrPayload("casehubio/devtown", 42, "abc123", "main", 150, "test-contributor", 0L, List.of());
         var outcome = service.startReview(pr);
         assertThat(outcome.findings()).isNotNull();
     }
@@ -41,7 +41,7 @@ class PrReviewServiceTest {
 
     @Test
     void closePr_returnsNoActiveCase() {
-        var result = service.closePr("casehubio/devtown", 42, false);
+        var result = service.closePr(new io.casehub.devtown.review.PrClosePayload("casehubio/devtown", 42, false, "octocat", 0L, "octocat", 0L, "User"));
         assertThat(result).isEqualTo(LifecycleResult.NO_ACTIVE_CASE);
     }
 }

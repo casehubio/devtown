@@ -7,7 +7,7 @@ import io.casehub.api.spi.routing.TrustRoutingPolicyKeys;
 import io.casehub.api.spi.routing.TrustRoutingPolicyProvider;
 import io.casehub.api.spi.routing.TrustRoutingPolicyResolver;
 import io.casehub.devtown.domain.AgentQualification;
-import io.casehub.devtown.domain.DevtownTrustDimension;
+import io.casehub.devtown.domain.ReviewerTrustDimension;
 import io.casehub.devtown.domain.ReviewDomain;
 import io.casehub.devtown.domain.RoutingPolicy;
 import io.casehub.devtown.domain.spi.CapabilityRegistry;
@@ -27,9 +27,9 @@ public class DevtownTrustRoutingPolicyProvider implements TrustRoutingPolicyProv
 
     static final TrustRoutingPolicyKeys KEYS =
             TrustRoutingPolicyKeys.create("casehubio.devtown.trust-routing")
-                                  .withFloor(DevtownTrustDimension.REVIEW_THOROUGHNESS, "review-thoroughness")
-                                  .withFloor(DevtownTrustDimension.PRECISION, "precision")
-                                  .withFloor(DevtownTrustDimension.SCOPE_CALIBRATION, "scope-calibration");
+                                  .withFloor(ReviewerTrustDimension.REVIEW_THOROUGHNESS, "review-thoroughness")
+                                  .withFloor(ReviewerTrustDimension.PRECISION, "precision")
+                                  .withFloor(ReviewerTrustDimension.SCOPE_CALIBRATION, "scope-calibration");
 
     static final         Map<String, Set<TrustPhase>> EVIDENTIAL_CHECK_PHASES = Map.of(
             ReviewDomain.SECURITY_REVIEW,

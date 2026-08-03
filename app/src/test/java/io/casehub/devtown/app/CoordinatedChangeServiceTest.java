@@ -79,7 +79,7 @@ class CoordinatedChangeServiceTest {
     @Test
     void start_rejectsWhenActiveReviewExists() {
         prTracker.register(UUID.randomUUID(), "t1",
-            new PrPayload("casehubio/engine", 42, "abc", "main", 10, "alice", List.of()));
+            new PrPayload("casehubio/engine", 42, "abc", "main", 10, "alice", 0L, List.of()));
 
         var request = new CoordinatedChangeRequest(List.of(
             new RepoChangeEntry("casehubio", "engine", 42, "abc", "main", "alice", List.of(), 10)

@@ -65,6 +65,7 @@ public class GitHubWebhookResource {
                 case "pull_request" -> handlePullRequest(body);
                 case "check_suite" -> handleCheckSuite(body);
                 case "check_run" -> handleCheckRun(body);
+                case "pull_request_review" -> handlePullRequestReview(body);
                 default -> ok(Map.of("status", "ignored", "event", eventType));
             };
         } catch (Exception e) {
@@ -111,11 +112,36 @@ public class GitHubWebhookResource {
     }
 
     private Response handleClosed(GitHubPullRequestEvent event) {
-        boolean merged = event.pull_request().merged();
-        var result = service.closePr(event.repository().full_name(), event.number(), merged);
-        String action = merged ? "case-merged" : "case-abandoned";
+        var pr = event.pull_request();
+        var close = new io.casehub.devtown.review.PrClosePayload(
+                event.repository().full_name(),
+                event.number(),
+                pr.merged(),
+                pr.user().login(),
+                pr.user().id(),
+                event.sender() != null ? event.sender().login() : pr.user().login(),
+                event.sender() != null ? event.sender().id() : pr.user().id(),
+                event.sender() != null ? event.sender().type() : "User");
+        var    result = service.closePr(close);
+        String action = close.merged() ? "case-merged" : "case-abandoned";
         return ok(Map.of("status", "accepted", "action", lifecycleAction(action, result)));
     }
+
+    private Response handlePullRequestReview(String body) throws Exception {
+        var event = MAPPER.readValue(body, GitHubPullRequestReviewEvent.class);
+        if (!"submitted".equals(event.action())) {
+            return ok(Map.of("status", "ignored", "action", event.action()));
+        }
+        var result = service.signalReviewSubmitted(new io.casehub.devtown.review.PrReviewSubmission(
+                event.repository().full_name(),
+                event.pull_request().number(),
+                event.review().state(),
+                event.review().id(),
+                event.pull_request().user().login(),
+                event.pull_request().user().id()));
+        return ok(Map.of("status", "accepted", "action", lifecycleAction("review-submitted", result)));
+    }
+
 
     private Response handleReopened(GitHubPullRequestEvent event) {
         service.startReview(GitHubPayloadMapper.toPrPayload(event));

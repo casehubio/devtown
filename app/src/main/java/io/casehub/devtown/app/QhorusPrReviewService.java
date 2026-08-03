@@ -4,9 +4,9 @@ import io.casehub.devtown.review.LifecycleResult;
 import io.casehub.devtown.review.PrPayload;
 import io.casehub.devtown.review.PrReviewApplicationService;
 import io.casehub.devtown.review.PrReviewOutcome;
-import io.casehub.devtown.review.SupersedeResult;
 import io.casehub.devtown.review.ReviewerAgent;
 import io.casehub.devtown.review.ReviewerOutcome;
+import io.casehub.devtown.review.SupersedeResult;
 import io.casehub.platform.api.identity.ActorType;
 import io.casehub.qhorus.api.channel.Channel;
 import io.casehub.qhorus.api.channel.ChannelCreateRequest;
@@ -137,7 +137,7 @@ public class QhorusPrReviewService implements PrReviewApplicationService {
     }
 
     @Override
-    public LifecycleResult closePr(String repo, int prNumber, boolean merged) {
+    public LifecycleResult closePr(io.casehub.devtown.review.PrClosePayload close) {
         return LifecycleResult.NO_ACTIVE_CASE;
     }
 

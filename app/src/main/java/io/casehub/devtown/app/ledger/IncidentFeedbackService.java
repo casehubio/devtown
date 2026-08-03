@@ -1,6 +1,6 @@
 package io.casehub.devtown.app.ledger;
 
-import io.casehub.devtown.domain.DevtownTrustDimension;
+import io.casehub.devtown.domain.ReviewerTrustDimension;
 import io.casehub.devtown.domain.FlaggedAgent;
 import io.casehub.devtown.domain.IncidentFeedback;
 import io.casehub.devtown.domain.IncidentFeedbackResult;
@@ -133,7 +133,7 @@ public class IncidentFeedbackService {
         att.attestorRole = ATTESTOR_ROLE;
         att.verdict = AttestationVerdict.FLAGGED;
         att.capabilityTag = feedback.reviewCapability();
-        att.trustDimension = DevtownTrustDimension.REVIEW_THOROUGHNESS;
+        att.trustDimension = ReviewerTrustDimension.REVIEW_THOROUGHNESS;
         att.confidence = feedback.severity().confidence();
         att.dimensionScore = null;
         att.evidence = "Incident " + feedback.incidentId() + ": " + feedback.description();

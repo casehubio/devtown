@@ -20,7 +20,7 @@ class PrReviewCaseTrackerTest {
     void setUp() {
         tracker = new PrReviewCaseTracker();
         caseId = UUID.randomUUID();
-        payload = new PrPayload("casehubio/devtown", 123, "abc123", "main", 50, "alice", List.of("src/Main.java"));
+        payload = new PrPayload("casehubio/devtown", 123, "abc123", "main", 50, "alice", 0L, List.of("src/Main.java"));
     }
 
     @Test
@@ -71,8 +71,8 @@ class PrReviewCaseTrackerTest {
         UUID stalledId = UUID.randomUUID();
         UUID recentId = UUID.randomUUID();
 
-        PrPayload payload1 = new PrPayload("casehubio/devtown", 100, "aaa", "main", 10, "bob", List.of());
-        PrPayload payload2 = new PrPayload("casehubio/devtown", 200, "bbb", "main", 20, "carol", List.of());
+        PrPayload payload1 = new PrPayload("casehubio/devtown", 100, "aaa", "main", 10, "bob", 0L, List.of());
+        PrPayload payload2 = new PrPayload("casehubio/devtown", 200, "bbb", "main", 20, "carol", 0L, List.of());
 
         tracker.register(stalledId, "tenant-1", payload1);
         Thread.sleep(100); // Ensure time difference
@@ -184,7 +184,7 @@ class PrReviewCaseTrackerTest {
     @Test
     void updateHeadSha_updatesPayloadSha_preservesOtherFields() {
         UUID caseId = UUID.randomUUID();
-        var payload = new PrPayload("casehubio/devtown", 42, "oldsha", "main", 100, "octocat", List.of("src/Foo.java"));
+        var payload = new PrPayload("casehubio/devtown", 42, "oldsha", "main", 100, "octocat", 0L, List.of("src/Foo.java"));
         tracker.register(caseId, "tenant-1", payload);
 
         tracker.updateHeadSha(caseId, "newsha");
@@ -205,7 +205,7 @@ class PrReviewCaseTrackerTest {
     void supersede_marksOldCaseAsSuperseded() {
         tracker.register(caseId, "tenant-1", payload);
         UUID      newCaseId  = UUID.randomUUID();
-        PrPayload newPayload = new PrPayload("casehubio/devtown", 456, "def456", "main", 30, "bob", List.of("src/New.java"));
+        PrPayload newPayload = new PrPayload("casehubio/devtown", 456, "def456", "main", 30, "bob", 0L, List.of("src/New.java"));
         tracker.register(newCaseId, "tenant-1", newPayload);
 
         boolean result = tracker.supersede(caseId, newCaseId);
@@ -220,7 +220,7 @@ class PrReviewCaseTrackerTest {
     void supersede_setsSupersededByOnOldCase() {
         tracker.register(caseId, "tenant-1", payload);
         UUID      newCaseId  = UUID.randomUUID();
-        PrPayload newPayload = new PrPayload("casehubio/devtown", 456, "def456", "main", 30, "bob", List.of());
+        PrPayload newPayload = new PrPayload("casehubio/devtown", 456, "def456", "main", 30, "bob", 0L, List.of());
         tracker.register(newCaseId, "tenant-1", newPayload);
 
         tracker.supersede(caseId, newCaseId);
@@ -232,7 +232,7 @@ class PrReviewCaseTrackerTest {
     void supersede_setsSupersedesOnNewCase() {
         tracker.register(caseId, "tenant-1", payload);
         UUID      newCaseId  = UUID.randomUUID();
-        PrPayload newPayload = new PrPayload("casehubio/devtown", 456, "def456", "main", 30, "bob", List.of());
+        PrPayload newPayload = new PrPayload("casehubio/devtown", 456, "def456", "main", 30, "bob", 0L, List.of());
         tracker.register(newCaseId, "tenant-1", newPayload);
 
         tracker.supersede(caseId, newCaseId);
@@ -244,7 +244,7 @@ class PrReviewCaseTrackerTest {
     void supersede_removesOldPrFromIndex() {
         tracker.register(caseId, "tenant-1", payload);
         UUID      newCaseId  = UUID.randomUUID();
-        PrPayload newPayload = new PrPayload("casehubio/devtown", 456, "def456", "main", 30, "bob", List.of());
+        PrPayload newPayload = new PrPayload("casehubio/devtown", 456, "def456", "main", 30, "bob", 0L, List.of());
         tracker.register(newCaseId, "tenant-1", newPayload);
 
         tracker.supersede(caseId, newCaseId);
@@ -256,7 +256,7 @@ class PrReviewCaseTrackerTest {
     void supersede_excludesOldCaseFromActiveCases() {
         tracker.register(caseId, "tenant-1", payload);
         UUID      newCaseId  = UUID.randomUUID();
-        PrPayload newPayload = new PrPayload("casehubio/devtown", 456, "def456", "main", 30, "bob", List.of());
+        PrPayload newPayload = new PrPayload("casehubio/devtown", 456, "def456", "main", 30, "bob", 0L, List.of());
         tracker.register(newCaseId, "tenant-1", newPayload);
 
         tracker.supersede(caseId, newCaseId);
@@ -291,7 +291,7 @@ class PrReviewCaseTrackerTest {
     void supersede_addsEventToBuffer() {
         tracker.register(caseId, "tenant-1", payload);
         UUID      newCaseId  = UUID.randomUUID();
-        PrPayload newPayload = new PrPayload("casehubio/devtown", 456, "def456", "main", 30, "bob", List.of());
+        PrPayload newPayload = new PrPayload("casehubio/devtown", 456, "def456", "main", 30, "bob", 0L, List.of());
         tracker.register(newCaseId, "tenant-1", newPayload);
 
         tracker.supersede(caseId, newCaseId);
@@ -308,9 +308,9 @@ class PrReviewCaseTrackerTest {
         UUID      id1 = UUID.randomUUID();
         UUID      id2 = UUID.randomUUID();
         UUID      id3 = UUID.randomUUID();
-        PrPayload p1  = new PrPayload("r", 1, "a", "main", 10, "x", List.of());
-        PrPayload p2  = new PrPayload("r", 2, "b", "main", 10, "x", List.of());
-        PrPayload p3  = new PrPayload("r", 3, "c", "main", 10, "x", List.of());
+        PrPayload p1  = new PrPayload("r", 1, "a", "main", 10, "x", 0L, List.of());
+        PrPayload p2  = new PrPayload("r", 2, "b", "main", 10, "x", 0L, List.of());
+        PrPayload p3  = new PrPayload("r", 3, "c", "main", 10, "x", 0L, List.of());
         tracker.register(id1, "t", p1);
         tracker.register(id2, "t", p2);
         tracker.register(id3, "t", p3);

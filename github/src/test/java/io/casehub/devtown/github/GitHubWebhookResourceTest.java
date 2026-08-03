@@ -30,8 +30,8 @@ class GitHubWebhookResourceTest {
         PrPayload lastStartReview;
         String lastReviseRepo;
         int lastRevisePr;
-        String lastCloseRepo;
-        boolean lastCloseMerged;
+        io.casehub.devtown.review.PrClosePayload lastClose;
+        io.casehub.devtown.review.PrReviewSubmission lastReviewSubmission;
         LifecycleResult revisePrResult = LifecycleResult.UPDATED;
         LifecycleResult closePrResult = LifecycleResult.UPDATED;
         String lastCiRepo;
@@ -59,10 +59,15 @@ class GitHubWebhookResourceTest {
         }
 
         @Override
-        public LifecycleResult closePr(String repo, int prNumber, boolean merged) {
-            lastCloseRepo = repo;
-            lastCloseMerged = merged;
+        public LifecycleResult closePr(io.casehub.devtown.review.PrClosePayload close) {
+            lastClose = close;
             return closePrResult;
+        }
+
+        @Override
+        public LifecycleResult signalReviewSubmitted(io.casehub.devtown.review.PrReviewSubmission review) {
+            lastReviewSubmission = review;
+            return LifecycleResult.UPDATED;
         }
 
         @Override
@@ -185,15 +190,17 @@ class GitHubWebhookResourceTest {
     void closedMerged_callsClosePrWithTrue() {
         String body = prEvent("closed", false, true);
         resource.receive(body, "pull_request", sign(body), "delivery-1");
-        assertThat(service.lastCloseRepo).isEqualTo("casehubio/devtown");
-        assertThat(service.lastCloseMerged).isTrue();
+        assertThat(service.lastClose).isNotNull();
+        assertThat(service.lastClose.repo()).isEqualTo("casehubio/devtown");
+        assertThat(service.lastClose.merged()).isTrue();
     }
 
     @Test
     void closedNotMerged_callsClosePrWithFalse() {
         String body = prEvent("closed", false, false);
         resource.receive(body, "pull_request", sign(body), "delivery-1");
-        assertThat(service.lastCloseMerged).isFalse();
+        assertThat(service.lastClose).isNotNull();
+        assertThat(service.lastClose.merged()).isFalse();
     }
 
     @Test

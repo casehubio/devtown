@@ -172,7 +172,7 @@ Read these **before designing**, not after. The concern column tells you when ea
 |---------|-----------|
 | Designing a new entity, record, or SPI | `casehub-devtown.md` — does devtown already own this? `PLATFORM.md` capability ownership table — does the foundation own it? |
 | Module placement (`domain/` vs `review/` vs `app/`) | Three-tier rule: `devtown-domain` = pure Java (no Quarkus), `review` = integration logic (casehub-work/engine deps), `app` = all CDI wiring. Port interface (`PrReviewApplicationService`) lives in `review/`, not `app/` — prevents a module dependency cycle |
-| Naming capability tags or trust dimensions | `ReviewDomain`, `AgentQualification`, `HumanDecision`, `HumanOversight`, `DevtownTrustDimension` in `devtown-domain` — extend these rather than creating parallel types |
+| Naming capability tags or trust dimensions | `ReviewDomain`, `AgentQualification`, `HumanDecision`, `HumanOversight`, `ReviewerTrustDimension` in `devtown-domain` — extend these rather than creating parallel types |
 | Mapping features to Gastown parity | `docs/gastown-casehub-analysis-v2.md` Gastown feature parity checklist — which Gastown capability does this correspond to, and does devtown's approach improve on it? |
 
 ### Layer design

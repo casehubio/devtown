@@ -41,3 +41,4 @@ wksp
 .claude
 package-lock.json
 proj
+.mvn/maven.config

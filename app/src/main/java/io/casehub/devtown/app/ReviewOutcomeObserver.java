@@ -142,7 +142,7 @@ public class ReviewOutcomeObserver {
                 ? list.stream().map(Object::toString).toList()
                 : List.of();
 
-        return new PrPayload(repo, prNumber, headSha, baseRef, linesChanged, contributor, changedPaths);
+        return new PrPayload(repo, prNumber, headSha, baseRef, linesChanged, contributor, 0L, changedPaths);
     }
 
     /**

@@ -9,6 +9,8 @@ import io.casehub.devtown.domain.queue.MergeQueuePreferenceKeys;
 import io.casehub.devtown.domain.sla.SlaEstimator;
 import io.casehub.devtown.domain.sla.SlaPreferenceKeys;
 import io.casehub.devtown.review.LifecycleResult;
+import io.casehub.devtown.review.PrClosePayload;
+import io.casehub.devtown.review.PrLifecycleEvent;
 import io.casehub.devtown.review.PrPayload;
 import io.casehub.devtown.review.PrReviewApplicationService;
 import io.casehub.devtown.review.PrReviewOutcome;
@@ -61,6 +63,9 @@ public class PrReviewCaseService implements PrReviewApplicationService {
 
     @ConfigProperty(name = "devtown.ci.mode", defaultValue = "external")
     String ciMode;
+    @Inject jakarta.enterprise.event.Event<io.casehub.devtown.review.PrLifecycleEvent.Merged> mergedEvent;
+    @Inject jakarta.enterprise.event.Event<io.casehub.devtown.review.PrLifecycleEvent.Rejected> rejectedEvent;
+    @Inject jakarta.enterprise.event.Event<io.casehub.devtown.review.PrLifecycleEvent.ChangesRequested> changesRequestedEvent;
     @Inject
     io.casehub.devtown.review.sla.SlaCalibrationStore slaCalibrationStore;
 
@@ -181,15 +186,54 @@ public class PrReviewCaseService implements PrReviewApplicationService {
     }
 
     @Override
-    public LifecycleResult closePr(String repo, int prNumber, boolean merged) {
-        var active = caseTracker.findActiveCaseByPr(repo, prNumber);
-        if (active.isEmpty()) return LifecycleResult.NO_ACTIVE_CASE;
+    public LifecycleResult closePr(PrClosePayload close) {
+        var active = caseTracker.findActiveCaseByPr(close.repo(), close.prNumber());
+        if (active.isEmpty()) {return LifecycleResult.NO_ACTIVE_CASE;}
 
-        UUID caseId = active.get().caseId();
-        caseHub.signal(caseId, "pr.status", merged ? "merged" : "closed");
+        UUID   caseId        = active.get().caseId();
+        String contributorId = "github-id:" + close.contributorNumericId();
+        int    reviewRounds  = readReviewRounds(caseId);
 
+        if (close.merged()) {
+            mergedEvent.fire(new PrLifecycleEvent.Merged(
+                    close.repo(), close.prNumber(), contributorId, caseId, reviewRounds));
+        } else {
+            rejectedEvent.fire(new PrLifecycleEvent.Rejected(
+                    close.repo(), close.prNumber(), contributorId, caseId,
+                    close.senderLogin(), close.senderNumericId(), close.senderType(), reviewRounds));
+        }
+
+        caseHub.signal(caseId, "pr.status", close.merged() ? "merged" : "closed");
         return LifecycleResult.UPDATED;
     }
+
+    @Override
+    public LifecycleResult signalReviewSubmitted(io.casehub.devtown.review.PrReviewSubmission review) {
+        if (!"changes_requested".equals(review.reviewState())) {
+            return LifecycleResult.UPDATED;
+        }
+        var active = caseTracker.findActiveCaseByPr(review.repo(), review.prNumber());
+        if (active.isEmpty()) {return LifecycleResult.NO_ACTIVE_CASE;}
+
+        UUID caseId = active.get().caseId();
+        caseHub.signal(caseId, "review.changesRequestedReviews." + review.reviewId(),
+                       java.time.Instant.now().toString());
+
+        String contributorId = "github-id:" + review.contributorNumericId();
+        changesRequestedEvent.fire(new PrLifecycleEvent.ChangesRequested(
+                review.repo(), review.prNumber(), contributorId, caseId));
+        return LifecycleResult.UPDATED;
+    }
+
+    @SuppressWarnings("unchecked")
+    private int readReviewRounds(UUID caseId) {
+        Object reviewsObj = caseHub.query(caseId, "review.changesRequestedReviews");
+        if (reviewsObj instanceof java.util.Map<?, ?> reviews) {
+            return reviews.size();
+        }
+        return 0;
+    }
+
 
     @Override
     public LifecycleResult signalCiStatus(String repo, int prNumber, String headSha, long suiteId, String conclusion) {

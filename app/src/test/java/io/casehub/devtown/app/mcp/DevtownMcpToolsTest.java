@@ -97,15 +97,7 @@ class DevtownMcpToolsTest {
         when(principal.tenancyId()).thenReturn(TenancyConstants.DEFAULT_TENANT_ID);
         objectMapper = new ObjectMapper();
         testCaseId = UUID.randomUUID();
-        testPayload = new PrPayload(
-            "casehubio/devtown",
-            42,
-            "abc123",
-            "main",
-            250,
-            "alice",
-            List.of("src/Main.java", "src/Test.java")
-        );
+        testPayload = new PrPayload("casehubio/devtown", 42, "abc123", "main", 250, "alice", 0L, List.of("src/Main.java", "src/Test.java"));
         Instant now = Instant.now();
         testCaseInfo = new CaseInfo(
             testCaseId,

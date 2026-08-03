@@ -7,10 +7,13 @@ public interface PrReviewApplicationService {
         return startReview(pr);
     }
 
-
     LifecycleResult revisePr(String repo, int prNumber, String newHeadSha, int linesChanged);
 
-    LifecycleResult closePr(String repo, int prNumber, boolean merged);
+    LifecycleResult closePr(PrClosePayload close);
+
+    default LifecycleResult signalReviewSubmitted(PrReviewSubmission review) {
+        return LifecycleResult.UPDATED;
+    }
 
     LifecycleResult signalCiStatus(String repo, int prNumber, String headSha, long suiteId, String conclusion);
 

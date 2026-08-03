@@ -67,7 +67,7 @@ class CaseMemoryRecallerPreferenceTest {
                 Map.of(), null));
         }
 
-        var pr = new PrPayload("repo1", 1, "sha", "main", 100, "alice", List.of());
+        var pr = new PrPayload("repo1", 1, "sha", "main", 100, "alice", 0L, List.of());
         var result = recaller.recall(pr);
 
         assertThat(result.contributorHistory()).hasSize(1);
@@ -86,8 +86,7 @@ class CaseMemoryRecallerPreferenceTest {
                 Map.of(), null));
         }
 
-        var pr = new PrPayload("repo1", 1, "sha", "main", 100, "bob",
-            List.of("app/src/main/java/Foo.java"));
+        var pr = new PrPayload("repo1", 1, "sha", "main", 100, "bob", 0L, List.of("app/src/main/java/Foo.java"));
         var result = recaller.recall(pr);
 
         assertThat(result.codeAreaHistory()).hasSize(2);
@@ -102,9 +101,7 @@ class CaseMemoryRecallerPreferenceTest {
         @Override
         public String store(final MemoryInput input) {
             String id = UUID.randomUUID().toString();
-            memories.add(new Memory(id, input.entityId(), input.domain(),
-                input.tenantId(), input.caseId(), input.text(),
-                input.attributes(), Instant.now(), input.importance()));
+            memories.add(new Memory(id, input.entityId(), input.domain(), input.tenantId(), input.caseId(), input.text(), input.attributes(), Instant.now(), null));
             return id;
         }
 

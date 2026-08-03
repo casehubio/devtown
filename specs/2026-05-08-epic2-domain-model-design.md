@@ -101,7 +101,7 @@ public final class HumanOversight {
 }
 ```
 
-### 5. `DevtownTrustDimension`
+### 5. `ReviewerTrustDimension`
 
 Quality dimension labels for `LedgerAttestation.trustDimension`. Three dimensions, all auto-computed from the normative layer.
 
@@ -340,7 +340,7 @@ devtown-app/src/test/java/io/casehub/devtown/app/
 | `AgentQualificationTest` | Both constants non-null, non-blank, unique, no overlap with ReviewDomain | Correctness |
 | `HumanDecisionTest` | Constant non-null, non-blank, prefixed `human-decision:` | Correctness |
 | `HumanOversightTest` | Constant non-null, non-blank, prefixed `human-oversight:` | Correctness |
-| `DevtownTrustDimensionTest` | All 3 constants non-null, non-blank, unique | Correctness |
+| `ReviewerTrustDimensionTest` | All 3 constants non-null, non-blank, unique | Correctness |
 
 ### `RoutingPolicy` (correctness + robustness + maturity phases)
 

@@ -97,8 +97,7 @@ class CaseMemoryIntegrationTest {
         });
 
         // Recall for a second PR by the same contributor.
-        var pr2 = new PrPayload("casehubio/devtown", 901, "sha2", "main", 200,
-            "roundtrip-user", List.of("app/src/main/java/Bar.java"));
+        var pr2 = new PrPayload("casehubio/devtown", 901, "sha2", "main", 200, "roundtrip-user", 0L, List.of("app/src/main/java/Bar.java"));
         MemoryContext recalled = recaller.recall(pr2);
 
         // Verify recall returns stored facts.

@@ -1001,7 +1001,7 @@ Per the Arc42Stories spec: only decisions not captured inline elsewhere. Layer-s
 | CaseContext | The shared blackboard for a case instance. Binding conditions read it; agent outputs write to it. |
 | Chapter | A vertical cut through the architectural layers delivering one user-visible capability end-to-end. Chapters are the planning and delivery unit (vs layers, which are the implementation unit). |
 | `DefaultSlaBreachPolicy` | devtown's SPI implementation of `SlaBreachPolicy`. Lives in `devtown-domain` (pure Java). Implements multi-tier escalation via `candidateGroups`. |
-| `DevtownTrustDimension` | Three quality dimensions for trust scoring in devtown: `review-thoroughness`, `false-positive-rate`, `scope-calibration`. |
+| `ReviewerTrustDimension` | Three quality dimensions for trust scoring in devtown: `review-thoroughness`, `false-positive-rate`, `scope-calibration`. |
 | `HumanDecision` | Formal PR accountability event constant (`human-decision:pr-approval`). WorkItem lifecycle type. |
 | `DevtownActionType` | Typed string constants for consequential agent actions: `pr-merge-execute`, `pr-force-merge`, `pr-review-override`, `security-escalation`, `issue-close-invalid`, `dependency-removal`, `contributor-access-change`, `production-deploy`. Used by `DevtownActionRiskClassifier` to classify risk per action type. |
 | `HumanOversight` | System-level oversight constants: `ROUTING_REVIEW` (`human-oversight:routing-review`, triggered by low routing confidence) and `GENERAL` (`human-oversight:general`, catch-all oversight group for action gates without a specific group). |
@@ -1060,7 +1060,7 @@ Per the Arc42Stories spec: only decisions not captured inline elsewhere. Layer-s
 
 **Layer Architecture View (C4Container):** Yes. The horizontal stack in one diagram makes the `@DefaultBean` displacement pattern immediately visible — the reader can see `PrReviewService @DefaultBean` (L1) and `PrReviewCaseService @ApplicationScoped` (L5) in the same diagram, which makes the displacement obvious before reading the prose. The three `Container_Boundary` groups (L1, L2, L5) also make "which components belong to which layer" unambiguous.
 
-**Accuracy concern:** The C4Container diagram omits some L1 vocabulary classes (`PrPayload`, `PrReviewOutcome`, `DevtownTrustDimension`) to keep it readable. These appear in the Layer entry's Key files instead. This is the right tradeoff for the diagram but a reader who looks for them in the diagram won't find them.
+**Accuracy concern:** The C4Container diagram omits some L1 vocabulary classes (`PrPayload`, `PrReviewOutcome`, `ReviewerTrustDimension`) to keep it readable. These appear in the Layer entry's Key files instead. This is the right tradeoff for the diagram but a reader who looks for them in the diagram won't find them.
 
 **Chapter View (C4Component):** Adds value for C1 — seeing all the new (🟢) components in both layers simultaneously makes the scope of Chapter 1 clear. The C2 diagram is less valuable because it's conceptually simple: one new boundary, clear relationships. But it is accurate and follows the spec.
 

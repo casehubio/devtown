@@ -58,7 +58,7 @@ class GovernanceQueryServiceTest {
 
     @Test
     void queueStatus_returnsActiveReviewsWithStatusCounts() {
-        var payload = new PrPayload("casehubio/devtown", 42, "abc123", "main", 150, "jsmith", List.of("src/Main.java"));
+        var payload = new PrPayload("casehubio/devtown", 42, "abc123", "main", 150, "jsmith", 0L, List.of("src/Main.java"));
         var caseId = UUID.randomUUID();
         tracker.register(caseId, "default", payload);
 

@@ -31,7 +31,7 @@ public class PrReviewService implements PrReviewApplicationService {
     }
 
     @Override
-    public LifecycleResult closePr(String repo, int prNumber, boolean merged) {
+    public LifecycleResult closePr(io.casehub.devtown.review.PrClosePayload close) {
         return LifecycleResult.NO_ACTIVE_CASE;
     }
 

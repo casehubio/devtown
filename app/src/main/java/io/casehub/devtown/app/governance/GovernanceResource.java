@@ -21,6 +21,9 @@ public class GovernanceResource {
 
     @Inject
     GovernanceQueryService queryService;
+    @Inject
+    TrustQueryService      trustQueryService;
+
 
     @GET
     @Path("/queue-status")
@@ -112,4 +115,37 @@ public class GovernanceResource {
         return queryService.slaComparison();
     }
 
+    @GET
+    @Path("/trust/{actorId}")
+    public TrustQueryService.TrustScoreResponse trustScore(@PathParam("actorId") String actorId) {
+        return trustQueryService.trustScore(actorId);
+    }
+
+    @GET
+    @Path("/trust/{actorId}/trend")
+    public java.util.List<TrustQueryService.TrustTrendPoint> trustTrend(
+            @PathParam("actorId") String actorId,
+            @QueryParam("capability") String capability,
+            @QueryParam("limit") @DefaultValue("30") int limit) {
+        return trustQueryService.trustTrend(actorId, capability, limit);
+    }
+
+    @GET
+    @Path("/trust/{actorId}/routing-history")
+    public java.util.List<TrustQueryService.RoutingDecisionSummary> routingHistory(
+            @PathParam("actorId") String actorId,
+            @QueryParam("capability") String capability,
+            @QueryParam("limit") @DefaultValue("50") int limit) {
+        return trustQueryService.routingHistory(actorId, capability, limit);
+    }
+
+    @GET
+    @Path("/trust/{actorId}/routing-history/{entryId}")
+    public jakarta.ws.rs.core.Response routingDetail(
+            @PathParam("actorId") String actorId,
+            @PathParam("entryId") UUID entryId) {
+        var detail = trustQueryService.routingDetail(actorId, entryId);
+        if (detail == null) {return jakarta.ws.rs.core.Response.status(404).build();}
+        return jakarta.ws.rs.core.Response.ok(detail).build();
+    }
 }

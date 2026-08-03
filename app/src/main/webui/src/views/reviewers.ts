@@ -1,5 +1,5 @@
 import {
-  page, rows, dataTable, title,
+  page, rows, dataTable, title, hostPanel,
 } from "@casehubio/pages-ui";
 import { lookup, groupBy, col } from "@casehubio/pages-ui";
 
@@ -16,6 +16,11 @@ export const reviewersView = page("Reviewers",
       )),
       sortable: true,
       filter: { enabled: true },
+    }),
+
+    hostPanel("trust-workbench", {
+      endpoint: "/api/governance",
+      "actor-id": "#{row.actorId}",
     }),
   ),
 );

@@ -25,13 +25,16 @@ import static org.mockito.Mockito.when;
 class GovernanceResourceTest {
 
     private GovernanceQueryService mockService;
+    private TrustQueryService mockTrustService;
     private GovernanceResource resource;
 
     @BeforeEach
     void setup() {
         mockService = Mockito.mock(GovernanceQueryService.class);
+        mockTrustService = Mockito.mock(TrustQueryService.class);
         resource = new GovernanceResource();
         resource.queryService = mockService;
+        resource.trustQueryService = mockTrustService;
     }
 
     @Test
@@ -221,4 +224,62 @@ class GovernanceResourceTest {
         assertThat(result.calibratedAt()).isNull();
     }
 
+    @Test
+    void trustScore_delegatesToTrustService() {
+        var expected = new TrustQueryService.TrustScoreResponse("agent-1", 0.72, Map.of("security-review", 0.75), Map.of());
+        when(mockTrustService.trustScore("agent-1")).thenReturn(expected);
+
+        var result = resource.trustScore("agent-1");
+
+        assertSame(expected, result);
+        verify(mockTrustService).trustScore("agent-1");
+    }
+
+    @Test
+    void trustTrend_delegatesToTrustService() {
+        var expected = List.of(new TrustQueryService.TrustTrendPoint(Instant.now(), 0.75, 0.70));
+        when(mockTrustService.trustTrend("agent-1", "security-review", 30)).thenReturn(expected);
+
+        var result = resource.trustTrend("agent-1", "security-review", 30);
+
+        assertSame(expected, result);
+        verify(mockTrustService).trustTrend("agent-1", "security-review", 30);
+    }
+
+    @Test
+    void routingHistory_delegatesToTrustService() {
+        var expected = List.of(new TrustQueryService.RoutingDecisionSummary(
+                UUID.randomUUID(), Instant.now(), "security-review", "agent-1", 0.74, "QUALIFIED"));
+        when(mockTrustService.routingHistory("agent-1", null, 50)).thenReturn(expected);
+
+        var result = resource.routingHistory("agent-1", null, 50);
+
+        assertSame(expected, result);
+        verify(mockTrustService).routingHistory("agent-1", null, 50);
+    }
+
+    @Test
+    void routingDetail_returns200_whenDetailExists() {
+        UUID entryId = UUID.randomUUID();
+        var rationale = new TrustQueryService.RoutingRationale("security-review", "trust-weighted",
+                new TrustQueryService.CandidateScore("agent-1", 0.72, 0.8, "QUALIFIED", 14, 0.74, null),
+                List.of(), new TrustQueryService.RoutingPolicySummary(0.70, 0.05, 0.70, 10, Map.of(), 0.0, false));
+        var expected = new TrustQueryService.RoutingDecisionDetail(rationale, List.of());
+        when(mockTrustService.routingDetail("agent-1", entryId)).thenReturn(expected);
+
+        var response = resource.routingDetail("agent-1", entryId);
+
+        assertThat(response.getStatus()).isEqualTo(200);
+        assertThat(response.getEntity()).isSameAs(expected);
+    }
+
+    @Test
+    void routingDetail_returns404_whenDetailNull() {
+        UUID entryId = UUID.randomUUID();
+        when(mockTrustService.routingDetail("agent-1", entryId)).thenReturn(null);
+
+        var response = resource.routingDetail("agent-1", entryId);
+
+        assertThat(response.getStatus()).isEqualTo(404);
+    }
 }

@@ -1,29 +1,30 @@
 package io.casehub.devtown.app;
 
-import io.casehub.api.spi.routing.AgentRoutingStrategy;
+import io.casehub.api.spi.routing.ImplementationRoutingStrategy;
 import io.casehub.api.spi.routing.TrustRoutingPolicy;
 import io.casehub.api.spi.routing.TrustRoutingPolicyProvider;
 import io.casehub.devtown.app.routing.DevtownTrustRoutingPolicyProvider;
-import io.casehub.devtown.domain.ReviewDomain;
 import io.casehub.devtown.domain.AgentQualification;
-import io.casehub.ledger.routing.TrustWeightedAgentStrategy;
+import io.casehub.devtown.domain.ReviewDomain;
+import io.casehub.ledger.routing.TrustWeightedImplementationRoutingStrategy;
 import io.quarkus.test.junit.QuarkusTest;
 import jakarta.inject.Inject;
 import org.junit.jupiter.api.Test;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
 @QuarkusTest
 class TrustRoutingActivationTest {
 
     @Inject
-    AgentRoutingStrategy agentRoutingStrategy;
+    ImplementationRoutingStrategy implementationRoutingStrategy;
 
     @Inject
     TrustRoutingPolicyProvider policyProvider;
 
     @Test
     void trustWeightedStrategyActivated() {
-        assertThat(agentRoutingStrategy).isInstanceOf(TrustWeightedAgentStrategy.class);
+        assertThat(implementationRoutingStrategy).isInstanceOf(TrustWeightedImplementationRoutingStrategy.class);
     }
 
     @Test

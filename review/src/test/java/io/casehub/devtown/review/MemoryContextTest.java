@@ -1,5 +1,9 @@
 package io.casehub.devtown.review;
 
+import io.casehub.devtown.domain.cbr.CapabilityOutcome;
+import io.casehub.devtown.domain.cbr.Precedent;
+import io.casehub.devtown.domain.cbr.PrFeatureVector;
+import io.casehub.devtown.domain.cbr.SimilarityScore;
 import io.casehub.devtown.domain.memory.DevtownMemoryKeys;
 import io.casehub.devtown.domain.memory.ReviewOutcome;
 import io.casehub.neocortex.memory.Memory;
@@ -7,10 +11,12 @@ import io.casehub.neocortex.memory.MemoryAttributeKeys;
 import io.casehub.neocortex.memory.MemoryDomain;
 import org.junit.jupiter.api.Test;
 
+import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -80,7 +86,7 @@ class MemoryContextTest {
             "Some review text.",
             Map.of(MemoryAttributeKeys.OUTCOME, ReviewOutcome.COMPLETED.name(),
                    DevtownMemoryKeys.CAPABILITY, "security-review"),
-            Instant.parse("2026-06-01T10:00:00Z"));
+            Instant.parse("2026-06-01T10:00:00Z"), null);
         MemoryContext ctx = new MemoryContext(List.of(m), List.of(), List.of(), Set.of());
         assertThat(ctx.hasRiskSignals()).isTrue();
     }
@@ -99,7 +105,8 @@ class MemoryContextTest {
                 DevtownMemoryKeys.OUTCOME_DETAIL, "APPROVED",
                 DevtownMemoryKeys.CAPABILITY, "security-review"
             ),
-            Instant.parse("2026-06-01T10:00:00Z")
+            Instant.parse("2026-06-01T10:00:00Z"),
+            null
         );
 
         MemoryContext ctx = new MemoryContext(List.of(m), List.of(), List.of(), Set.of());
@@ -145,6 +152,33 @@ class MemoryContextTest {
         assertThat(activations).containsExactlyInAnyOrder("security-review", "architecture-review");
     }
 
+    @Test
+    void precedentCapabilityDurationSerializedWhenPresent() {
+        var vector     = PrFeatureVector.from("repo", 1, "dev", 100, List.of("src/Main.java"));
+        var similarity = new SimilarityScore(0.9, Map.of());
+        var outcomes = Map.of(
+                "code-analysis", new CapabilityOutcome("COMPLETED", "approved", Duration.ofMinutes(5)),
+                "security-review", new CapabilityOutcome("COMPLETED", "approved", null)
+                             );
+        var                 precedent = new Precedent(UUID.randomUUID(), similarity, vector, "COMPLETED", outcomes, Duration.ofMinutes(15));
+        var                 ctx       = new MemoryContext(List.of(), List.of(), List.of(precedent), Set.of());
+        Map<String, Object> map       = ctx.toContextMap();
+
+        @SuppressWarnings("unchecked")
+        List<Map<String, Object>> precedents = (List<Map<String, Object>>) map.get("precedents");
+        assertThat(precedents).hasSize(1);
+
+        @SuppressWarnings("unchecked")
+        Map<String, Map<String, Object>> capOutcomes =
+                (Map<String, Map<String, Object>>) precedents.get(0).get("capabilityOutcomes");
+
+        assertThat(capOutcomes.get("code-analysis")).containsEntry("durationSeconds", 300L);
+        assertThat(capOutcomes.get("code-analysis")).containsEntry("outcome", "COMPLETED");
+
+        assertThat(capOutcomes.get("security-review")).doesNotContainKey("durationSeconds");
+        assertThat(capOutcomes.get("security-review")).containsEntry("outcome", "COMPLETED");
+    }
+
 
     private Memory memory(String outcome, String outcomeDetail) {
         return new Memory(
@@ -159,7 +193,8 @@ class MemoryContextTest {
                 DevtownMemoryKeys.OUTCOME_DETAIL, outcomeDetail,
                 DevtownMemoryKeys.CAPABILITY, "security-review"
             ),
-            Instant.parse("2026-06-01T10:00:00Z")
+            Instant.parse("2026-06-01T10:00:00Z"),
+            null
         );
     }
 }

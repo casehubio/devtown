@@ -64,7 +64,7 @@ class CaseMemoryRecallerPreferenceTest {
                 tenantId,
                 UUID.randomUUID().toString(),
                 "Review " + i,
-                Map.of()));
+                Map.of(), null));
         }
 
         var pr = new PrPayload("repo1", 1, "sha", "main", 100, "alice", List.of());
@@ -83,7 +83,7 @@ class CaseMemoryRecallerPreferenceTest {
                 tenantId,
                 UUID.randomUUID().toString(),
                 "review history for app in repo1 entry " + i,
-                Map.of()));
+                Map.of(), null));
         }
 
         var pr = new PrPayload("repo1", 1, "sha", "main", 100, "bob",
@@ -104,7 +104,7 @@ class CaseMemoryRecallerPreferenceTest {
             String id = UUID.randomUUID().toString();
             memories.add(new Memory(id, input.entityId(), input.domain(),
                 input.tenantId(), input.caseId(), input.text(),
-                input.attributes(), Instant.now()));
+                input.attributes(), Instant.now(), input.importance()));
             return id;
         }
 

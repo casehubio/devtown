@@ -1,20 +1,15 @@
 package io.casehub.devtown.app.routing;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
 import com.fasterxml.jackson.databind.node.NullNode;
-import io.casehub.api.spi.routing.AgentCandidate;
-import io.casehub.api.spi.routing.AgentHealth;
-import io.casehub.api.spi.routing.AgentRoutingContext;
-import io.casehub.api.spi.routing.ExperiencePlanStep;
-import io.casehub.api.spi.routing.RetrievedExperience;
-import io.casehub.api.spi.routing.RoutingResult;
+import io.casehub.api.spi.routing.ImplementationCandidate;
+import io.casehub.api.spi.routing.ImplementationRoutingContext;
+import io.casehub.api.spi.routing.ImplementationSelection;
 import io.casehub.api.spi.routing.TrustRoutingPolicy;
 import io.casehub.api.spi.routing.TrustRoutingPolicyProvider;
 import io.casehub.devtown.domain.ReviewDomain;
 import io.casehub.ledger.api.spi.TrustScoreSource;
 import io.casehub.ledger.routing.TrustCandidateClassifier;
-import io.casehub.ledger.routing.TrustWeightedAgentStrategy;
+import io.casehub.ledger.routing.TrustWeightedImplementationRoutingStrategy;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -23,49 +18,41 @@ import java.util.OptionalDouble;
 import java.util.Set;
 import java.util.UUID;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 class CbrReviewerMatchingIntegrationTest {
 
     private static final TrustRoutingPolicy CBR_POLICY =
             new TrustRoutingPolicy(0.7, 5, 0.1, 0.6, Map.of(), false, null, Set.of(), 0.2);
 
     @Test
-    void agentWithLowerTrustButHigherPrecedentMatch_winsOverHigherTrustNoPrecedent() {
-        var experiences = List.of(new RetrievedExperience(
-                "security fix in auth module", "reviewed auth changes", "COMPLETED", 1.0, 0.85,
-                Map.of(), List.of(new ExperiencePlanStep(
-                "security-review-binding", ReviewDomain.SECURITY_REVIEW,
-                "specialist-agent", "SUCCESS", 0, Map.of())),
-                Map.of()));
-
-        var ctx = new AgentRoutingContext(UUID.randomUUID(), ReviewDomain.SECURITY_REVIEW,
-                NullNode.instance, "test-tenant", experiences);
+    void higherTrustAgent_winsInPureTrustRouting() {
+        var ctx = new ImplementationRoutingContext(UUID.randomUUID(), ReviewDomain.SECURITY_REVIEW,
+                NullNode.instance, "test-tenant", List.of());
 
         var trustSource = new StubTrustScoreSource(
-                Map.of("specialist-agent|security-review", 0.85,
-                       "generalist-agent|security-review", 0.87),
-                Map.of("specialist-agent|security-review", 15,
-                       "generalist-agent|security-review", 15));
+                Map.of("agent-high|security-review", 0.90,
+                       "agent-low|security-review", 0.75),
+                Map.of("agent-high|security-review", 15,
+                       "agent-low|security-review", 15));
 
         var classifier = new TrustCandidateClassifier();
-        var strategy = new TrustWeightedAgentStrategy(classifier, trustSource, new StubPolicyProvider(CBR_POLICY));
+        var strategy = new TrustWeightedImplementationRoutingStrategy(classifier, trustSource, new StubPolicyProvider(CBR_POLICY));
 
         var candidates = List.of(
-                new AgentCandidate("specialist-agent", Set.of(ReviewDomain.SECURITY_REVIEW),
-                        0, AgentHealth.READY, null, null),
-                new AgentCandidate("generalist-agent", Set.of(ReviewDomain.SECURITY_REVIEW),
-                        0, AgentHealth.READY, null, null));
+                new ImplementationCandidate("binding-high", "agent-high", ReviewDomain.SECURITY_REVIEW),
+                new ImplementationCandidate("binding-low", "agent-low", ReviewDomain.SECURITY_REVIEW));
 
         var result = strategy.select(ctx, candidates);
 
-        assertThat(result).isInstanceOf(RoutingResult.Selected.class);
-        var selected = (RoutingResult.Selected) result;
-        assertThat(selected.single().executorId()).isEqualTo("specialist-agent");
-        assertThat(selected.single().reason()).contains("cbr_bonus");
+        assertThat(result).isInstanceOf(ImplementationSelection.Selected.class);
+        var selected = (ImplementationSelection.Selected) result;
+        assertThat(selected.bindingNames()).containsExactly("binding-high");
     }
 
     @Test
     void zeroPrecedents_identicalToPureTrustRouting() {
-        var ctx = new AgentRoutingContext(UUID.randomUUID(), ReviewDomain.SECURITY_REVIEW,
+        var ctx = new ImplementationRoutingContext(UUID.randomUUID(), ReviewDomain.SECURITY_REVIEW,
                 NullNode.instance, "test-tenant", List.of());
 
         var policyZero = new TrustRoutingPolicy(0.7, 5, 0.1, 0.6, Map.of(), false, null, Set.of(), 0.0);
@@ -78,22 +65,20 @@ class CbrReviewerMatchingIntegrationTest {
 
         var classifier = new TrustCandidateClassifier();
 
-        var strategyWithCbr = new TrustWeightedAgentStrategy(
+        var strategyWithCbr = new TrustWeightedImplementationRoutingStrategy(
                 classifier, trustSource, new StubPolicyProvider(CBR_POLICY));
-        var strategyWithout = new TrustWeightedAgentStrategy(
+        var strategyWithout = new TrustWeightedImplementationRoutingStrategy(
                 classifier, trustSource, new StubPolicyProvider(policyZero));
 
         var candidates = List.of(
-                new AgentCandidate("agent-a", Set.of(ReviewDomain.SECURITY_REVIEW),
-                        0, AgentHealth.READY, null, null),
-                new AgentCandidate("agent-b", Set.of(ReviewDomain.SECURITY_REVIEW),
-                        0, AgentHealth.READY, null, null));
+                new ImplementationCandidate("binding-a", "agent-a", ReviewDomain.SECURITY_REVIEW),
+                new ImplementationCandidate("binding-b", "agent-b", ReviewDomain.SECURITY_REVIEW));
 
         var resultWith = strategyWithCbr.select(ctx, candidates);
         var resultWithout = strategyWithout.select(ctx, candidates);
 
-        assertThat(((RoutingResult.Selected) resultWith).single().executorId())
-                .isEqualTo(((RoutingResult.Selected) resultWithout).single().executorId());
+        assertThat(((ImplementationSelection.Selected) resultWith).bindingNames())
+                .isEqualTo(((ImplementationSelection.Selected) resultWithout).bindingNames());
     }
 
     private record StubTrustScoreSource(

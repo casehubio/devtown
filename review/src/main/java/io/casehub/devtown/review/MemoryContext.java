@@ -33,9 +33,10 @@ public record MemoryContext(
                                                          Map.Entry::getKey,
                                                          e -> {
                                                              var co = e.getValue();
-                                                             var cm = new java.util.LinkedHashMap<String, String>();
+                                                             var cm = new java.util.LinkedHashMap<String, Object>();
                                                              cm.put("outcome", co.outcome());
                                                              if (co.detail() != null) {cm.put("detail", co.detail());}
+                                                             if (co.duration() != null) {cm.put("durationSeconds", co.duration().toSeconds());}
                                                              return cm;
                                                          })));
                     if (p.completionTime() != null) {

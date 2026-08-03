@@ -107,7 +107,7 @@ class TrustFeedbackClosedLoopTest {
         // Phase 5: Routing shift — Agent B wins (Agent A degraded)
         AgentCandidate candidateA = new AgentCandidate(AGENT_A, Set.of(ReviewDomain.SECURITY_REVIEW), 0, AgentHealth.READY, null, null);
         AgentCandidate candidateB = new AgentCandidate(AGENT_B, Set.of(ReviewDomain.SECURITY_REVIEW), 0, AgentHealth.READY, null, null);
-        AgentRoutingContext context = new AgentRoutingContext(UUID.randomUUID(), ReviewDomain.SECURITY_REVIEW, null, TENANT, List.of());
+        AgentRoutingContext context = new AgentRoutingContext(UUID.randomUUID(), ReviewDomain.SECURITY_REVIEW, null, TENANT, List.of(), null, null);
 
         RoutingResult routingResult = routingStrategy.select(context, List.of(candidateA, candidateB));
 

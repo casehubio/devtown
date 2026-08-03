@@ -51,7 +51,8 @@ class AsyncTenantAssertionTest {
             TenancyConstants.DEFAULT_TENANT_ID,
             UUID.randomUUID().toString(),
             "async tenant test",
-            Map.of()
+            Map.of(),
+            null
         );
 
         storeRequests.fireAsync(new StoreRequest(input));

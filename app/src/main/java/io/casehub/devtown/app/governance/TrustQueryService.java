@@ -10,14 +10,14 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.persistence.EntityManager;
 import jakarta.transaction.Transactional;
+import org.jboss.logging.Logger;
+
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.OptionalDouble;
 import java.util.UUID;
-import org.jboss.logging.Logger;
 
 @ApplicationScoped
 public class TrustQueryService {
@@ -50,6 +50,24 @@ public class TrustQueryService {
 
     public record GateDecision(String decision, String actor, String attestation,
         double trustScoreBefore, double trustScoreAfter, String dimension) {}
+
+    public record ContributorOutcomeSummary(String repo, int prNumber, String outcome,
+                                            Instant occurredAt) {}
+
+    @Transactional
+    public List<ContributorOutcomeSummary> contributorOutcomes(String actorId, int limit) {
+        List<io.casehub.devtown.app.ledger.ContributorOutcomeLedgerEntry> entries = em
+                                                                                            .createQuery("SELECT c FROM ContributorOutcomeLedgerEntry c WHERE c.actorId = :actorId"
+                                                                                                         + " ORDER BY c.occurredAt DESC",
+                                                                                                         io.casehub.devtown.app.ledger.ContributorOutcomeLedgerEntry.class)
+                                                                                            .setParameter("actorId", actorId)
+                                                                                            .setMaxResults(Math.min(limit, 100))
+                                                                                            .getResultList();
+        return entries.stream()
+                      .map(e -> new ContributorOutcomeSummary(e.repository, e.prNumber, e.outcome, e.occurredAt))
+                      .toList();
+    }
+
 
     @Transactional
     public TrustScoreResponse trustScore(String actorId) {

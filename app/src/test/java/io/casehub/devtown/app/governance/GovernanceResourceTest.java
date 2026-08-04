@@ -282,4 +282,32 @@ class GovernanceResourceTest {
 
         assertThat(response.getStatus()).isEqualTo(404);
     }
+
+    @Test
+    void contributorFleet_delegatesToService() {
+        var expected = List.of(
+                new GovernanceQueryService.ContributorFleetEntry("contributor-1", 0.80, "FAST_TRACK", 15, 0.90, 0.75)
+                              );
+        when(mockService.contributorFleet()).thenReturn(expected);
+
+        var result = resource.contributorFleet(null, 50);
+
+        assertThat(result.items()).isEqualTo(expected);
+        verify(mockService).contributorFleet();
+    }
+
+    @Test
+    void contributorDetail_delegatesToService() {
+        var intakeEntry = new GovernanceQueryService.IntakeClassificationEntry(
+                "FAST_TRACK", 0.80, 15, "score 0.80 >= fast-track", 0.75, 0.50);
+        var expected = new GovernanceQueryService.ContributorDetail(
+                "contributor-1", 0.80, Map.of("pr-contribution", 0.80), Map.of("merge-rate", 0.90),
+                intakeEntry, List.of());
+        when(mockService.contributorDetail("contributor-1")).thenReturn(expected);
+
+        var result = resource.contributorDetail("contributor-1");
+
+        assertSame(expected, result);
+        verify(mockService).contributorDetail("contributor-1");
+    }
 }

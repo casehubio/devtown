@@ -46,26 +46,29 @@ class GovernanceQueryServiceTest {
     SlaCalibrationStore slaCalibrationStore;
     PreferenceProvider preferenceProvider;
     Preferences prefs;
+    TrustQueryService trustQueryService;
+
 
     GovernanceQueryService service;
 
     @BeforeEach
     void setUp() {
-        tracker = new PrReviewCaseTracker();
-        commitmentStore = mock(CommitmentStore.class);
-        trustExportService = mock(TrustExportService.class);
-        trustGateService = mock(TrustGateService.class);
-        workItemStore = mock(WorkItemStore.class);
-        mergeQueueService = mock(MergeQueueService.class);
-        caseHubRuntime = mock(CaseHubRuntime.class);
+        tracker             = new PrReviewCaseTracker();
+        commitmentStore     = mock(CommitmentStore.class);
+        trustExportService  = mock(TrustExportService.class);
+        trustGateService    = mock(TrustGateService.class);
+        workItemStore       = mock(WorkItemStore.class);
+        mergeQueueService   = mock(MergeQueueService.class);
+        caseHubRuntime      = mock(CaseHubRuntime.class);
         slaCalibrationStore = mock(SlaCalibrationStore.class);
-        preferenceProvider = mock(PreferenceProvider.class);
-        prefs = mock(Preferences.class);
+        preferenceProvider  = mock(PreferenceProvider.class);
+        prefs               = mock(Preferences.class);
+        trustQueryService   = mock(TrustQueryService.class);
 
         service = new GovernanceQueryService(
-            tracker, commitmentStore, trustExportService, trustGateService,
-            workItemStore, mergeQueueService, caseHubRuntime,
-            slaCalibrationStore, preferenceProvider
+                tracker, commitmentStore, trustExportService, trustGateService,
+                workItemStore, mergeQueueService, caseHubRuntime,
+                slaCalibrationStore, preferenceProvider, trustQueryService
         );
     }
 
@@ -190,4 +193,98 @@ class GovernanceQueryServiceTest {
     }
 
 
+    @Test
+    void contributorFleet_returnsEntriesWithIntakeLaneAndDimensions() {
+        var actor = new ActorExport("contributor-1", ActorType.HUMAN, null, List.of(), List.of(), List.of());
+        when(trustExportService.exportAll(0.0)).thenReturn(
+                new TrustExportPayload(Instant.now(), "test", List.of(actor)));
+        when(trustGateService.allCapabilityScores("contributor-1"))
+                .thenReturn(Map.of("pr-contribution", 0.80));
+        when(trustGateService.decisionCount("contributor-1", "pr-contribution")).thenReturn(15);
+        when(trustGateService.allDimensionScores("contributor-1"))
+                .thenReturn(Map.of("merge-rate", 0.90, "first-attempt-quality", 0.75));
+        when(preferenceProvider.resolve(any())).thenReturn(prefs);
+        when(prefs.getOrDefault(any())).thenAnswer(inv -> {
+            var key = inv.getArgument(0, io.casehub.platform.api.preferences.PreferenceKey.class);
+            return key.defaultValue();
+        });
+
+        var fleet = service.contributorFleet();
+
+        assertThat(fleet).hasSize(1);
+        var entry = fleet.get(0);
+        assertThat(entry.actorId()).isEqualTo("contributor-1");
+        assertThat(entry.trustScore()).isEqualTo(0.80);
+        assertThat(entry.intakeLane()).isEqualTo("FAST_TRACK");
+        assertThat(entry.observationCount()).isEqualTo(15);
+        assertThat(entry.mergeRate()).isEqualTo(0.90);
+        assertThat(entry.firstAttemptQuality()).isEqualTo(0.75);
+    }
+
+    @Test
+    void contributorFleet_newContributorFromCaseTrackerGetsTriage() {
+        when(trustExportService.exportAll(0.0)).thenReturn(
+                new TrustExportPayload(Instant.now(), "test", List.of()));
+        when(preferenceProvider.resolve(any())).thenReturn(prefs);
+        when(prefs.getOrDefault(any())).thenAnswer(inv -> {
+            var key = inv.getArgument(0, io.casehub.platform.api.preferences.PreferenceKey.class);
+            return key.defaultValue();
+        });
+
+        var payload = new PrPayload("casehubio/devtown", 42, "abc123", "main", 150, "new-contributor", 0L, List.of());
+        tracker.register(UUID.randomUUID(), "default", payload);
+
+        var fleet = service.contributorFleet();
+
+        assertThat(fleet).hasSize(1);
+        var entry = fleet.get(0);
+        assertThat(entry.actorId()).isEqualTo("new-contributor");
+        assertThat(entry.trustScore()).isNull();
+        assertThat(entry.intakeLane()).isEqualTo("TRIAGE");
+        assertThat(entry.observationCount()).isZero();
+    }
+
+    @Test
+    void contributorDetail_returnsCompositeWithClassification() {
+        when(trustGateService.currentScore("contributor-1")).thenReturn(java.util.OptionalDouble.of(0.80));
+        when(trustGateService.allCapabilityScores("contributor-1"))
+                .thenReturn(Map.of("pr-contribution", 0.80));
+        when(trustGateService.allDimensionScores("contributor-1"))
+                .thenReturn(Map.of("merge-rate", 0.90));
+        when(trustGateService.decisionCount("contributor-1", "pr-contribution")).thenReturn(15);
+        when(preferenceProvider.resolve(any())).thenReturn(prefs);
+        when(prefs.getOrDefault(any())).thenAnswer(inv -> {
+            var key = inv.getArgument(0, io.casehub.platform.api.preferences.PreferenceKey.class);
+            return key.defaultValue();
+        });
+        when(trustQueryService.contributorOutcomes("contributor-1", 50)).thenReturn(List.of());
+
+        var detail = service.contributorDetail("contributor-1");
+
+        assertThat(detail.actorId()).isEqualTo("contributor-1");
+        assertThat(detail.globalScore()).isEqualTo(0.80);
+        assertThat(detail.intakeClassification().lane()).isEqualTo("FAST_TRACK");
+        assertThat(detail.intakeClassification().fastTrackThreshold()).isEqualTo(0.75);
+        assertThat(detail.intakeClassification().standardThreshold()).isEqualTo(0.50);
+        assertThat(detail.recentOutcomes()).isEmpty();
+    }
+
+    @Test
+    void contributorDetail_unknownActorReturnsTriageWithEmptyOutcomes() {
+        when(trustGateService.currentScore("unknown")).thenReturn(java.util.OptionalDouble.empty());
+        when(trustGateService.allCapabilityScores("unknown")).thenReturn(Map.of());
+        when(trustGateService.allDimensionScores("unknown")).thenReturn(Map.of());
+        when(trustGateService.decisionCount("unknown", "pr-contribution")).thenReturn(0);
+        when(preferenceProvider.resolve(any())).thenReturn(prefs);
+        when(prefs.getOrDefault(any())).thenAnswer(inv -> {
+            var key = inv.getArgument(0, io.casehub.platform.api.preferences.PreferenceKey.class);
+            return key.defaultValue();
+        });
+        when(trustQueryService.contributorOutcomes("unknown", 50)).thenReturn(List.of());
+
+        var detail = service.contributorDetail("unknown");
+
+        assertThat(detail.intakeClassification().lane()).isEqualTo("TRIAGE");
+        assertThat(detail.recentOutcomes()).isEmpty();
+    }
 }

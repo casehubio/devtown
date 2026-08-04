@@ -255,4 +255,43 @@ class TrustQueryServiceTest {
         assertThat(gate.actor()).isEqualTo("devtown:incident-feedback");
         assertThat(gate.dimension()).isEqualTo("review-thoroughness");
     }
+
+    @SuppressWarnings("unchecked")
+    @Test
+    void contributorOutcomes_returnsEmptyForUnknownActor() {
+        final TypedQuery<io.casehub.devtown.app.ledger.ContributorOutcomeLedgerEntry> mockQuery = mock(TypedQuery.class);
+        when(em.createQuery(anyString(), eq(io.casehub.devtown.app.ledger.ContributorOutcomeLedgerEntry.class)))
+                .thenReturn(mockQuery);
+        when(mockQuery.setParameter(anyString(), any())).thenReturn(mockQuery);
+        when(mockQuery.setMaxResults(anyInt())).thenReturn(mockQuery);
+        when(mockQuery.getResultList()).thenReturn(List.of());
+
+        var outcomes = service.contributorOutcomes("unknown", 50);
+
+        assertThat(outcomes).isEmpty();
+    }
+
+    @SuppressWarnings("unchecked")
+    @Test
+    void contributorOutcomes_mapsLedgerEntryFields() {
+        var entry = new io.casehub.devtown.app.ledger.ContributorOutcomeLedgerEntry();
+        entry.repository = "casehubio/devtown";
+        entry.prNumber   = 42;
+        entry.outcome    = "MERGED";
+        entry.occurredAt = Instant.parse("2026-08-01T10:00:00Z");
+
+        final TypedQuery<io.casehub.devtown.app.ledger.ContributorOutcomeLedgerEntry> mockQuery = mock(TypedQuery.class);
+        when(em.createQuery(anyString(), eq(io.casehub.devtown.app.ledger.ContributorOutcomeLedgerEntry.class)))
+                .thenReturn(mockQuery);
+        when(mockQuery.setParameter(anyString(), any())).thenReturn(mockQuery);
+        when(mockQuery.setMaxResults(anyInt())).thenReturn(mockQuery);
+        when(mockQuery.getResultList()).thenReturn(List.of(entry));
+
+        var outcomes = service.contributorOutcomes("contributor-1", 50);
+
+        assertThat(outcomes).hasSize(1);
+        assertThat(outcomes.get(0).repo()).isEqualTo("casehubio/devtown");
+        assertThat(outcomes.get(0).prNumber()).isEqualTo(42);
+        assertThat(outcomes.get(0).outcome()).isEqualTo("MERGED");
+    }
 }

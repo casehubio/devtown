@@ -7,10 +7,14 @@ import io.casehub.devtown.app.MergeQueueService;
 import io.casehub.devtown.app.mcp.CaseInfo;
 import io.casehub.devtown.app.mcp.PrReviewCaseTracker;
 import io.casehub.devtown.app.mcp.TrackedEvent;
+import io.casehub.devtown.domain.ContributorIntakePolicy;
+import io.casehub.devtown.domain.ContributorTrustCapability;
+import io.casehub.devtown.domain.ContributorTrustDimension;
+import io.casehub.devtown.domain.sla.SlaPreferenceKeys;
+import io.casehub.devtown.domain.trust.ContributorIntakePreferenceKeys;
 import io.casehub.devtown.merge.BatchRecord;
 import io.casehub.devtown.queue.QueuedPr;
 import io.casehub.devtown.review.PrPayload;
-import io.casehub.devtown.domain.sla.SlaPreferenceKeys;
 import io.casehub.devtown.review.sla.SlaCalibrationRecord;
 import io.casehub.devtown.review.sla.SlaCalibrationStore;
 import io.casehub.ledger.runtime.service.TrustGateService;
@@ -35,6 +39,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.OptionalDouble;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -60,6 +65,8 @@ public class GovernanceQueryService {
     private final CaseHubRuntime caseHubRuntime;
     private final SlaCalibrationStore slaCalibrationStore;
     private final PreferenceProvider preferenceProvider;
+    private final TrustQueryService  trustQueryService;
+
 
     @Inject
     public GovernanceQueryService(
@@ -71,16 +78,18 @@ public class GovernanceQueryService {
             MergeQueueService mergeQueueService,
             CaseHubRuntime caseHubRuntime,
             SlaCalibrationStore slaCalibrationStore,
-            PreferenceProvider preferenceProvider) {
-        this.tracker = tracker;
-        this.commitmentStore = commitmentStore;
-        this.trustExportService = trustExportService;
-        this.trustGateService = trustGateService;
-        this.workItemStore = workItemStore;
-        this.mergeQueueService = mergeQueueService;
-        this.caseHubRuntime = caseHubRuntime;
+            PreferenceProvider preferenceProvider,
+            TrustQueryService trustQueryService) {
+        this.tracker             = tracker;
+        this.commitmentStore     = commitmentStore;
+        this.trustExportService  = trustExportService;
+        this.trustGateService    = trustGateService;
+        this.workItemStore       = workItemStore;
+        this.mergeQueueService   = mergeQueueService;
+        this.caseHubRuntime      = caseHubRuntime;
         this.slaCalibrationStore = slaCalibrationStore;
-        this.preferenceProvider = preferenceProvider;
+        this.preferenceProvider  = preferenceProvider;
+        this.trustQueryService   = trustQueryService;
     }
 
     // ── Records ──────────────────────────────────────────────
@@ -131,6 +140,19 @@ public class GovernanceQueryService {
 
     public record ReviewerFleetEntry(String actorId, Map<String, Double> trustByCapability,
                                      String maturityPhase, int openCommitments, int totalDecisions) {}
+
+    public record ContributorFleetEntry(String actorId, Double trustScore, String intakeLane,
+                                        int observationCount, Double mergeRate, Double firstAttemptQuality) {}
+
+    public record ContributorDetail(String actorId, Double globalScore,
+                                    Map<String, Double> capabilityScores, Map<String, Double> dimensionScores,
+                                    IntakeClassificationEntry intakeClassification,
+                                    List<TrustQueryService.ContributorOutcomeSummary> recentOutcomes) {}
+
+    public record IntakeClassificationEntry(String lane, double trustScore, int observationCount,
+                                            String classificationReason, double fastTrackThreshold,
+                                            double standardThreshold) {}
+
 
     public record TriageItem(UUID workItemId, String prRef, String decisionType, String candidateGroup,
                              Instant expiresAt, String escalationStage, Instant createdAt, UUID caseId) {}
@@ -469,6 +491,74 @@ public class GovernanceQueryService {
             return new ReviewerFleetEntry(actor.actorId(), capScores, phase, openCommitments, totalDecisions);
         }).toList();
     }
+
+    public List<ContributorFleetEntry> contributorFleet() {
+        Preferences prefs = preferenceProvider.resolve(
+                SettingsScope.root("casehubio"));
+        double ftThreshold  = prefs.getOrDefault(ContributorIntakePreferenceKeys.FAST_TRACK_THRESHOLD).value();
+        int    ftMinObs     = prefs.getOrDefault(ContributorIntakePreferenceKeys.FAST_TRACK_MIN_OBSERVATIONS).value();
+        double stdThreshold = prefs.getOrDefault(ContributorIntakePreferenceKeys.STANDARD_THRESHOLD).value();
+        int    stdMinObs    = prefs.getOrDefault(ContributorIntakePreferenceKeys.STANDARD_MIN_OBSERVATIONS).value();
+        var    policy       = new ContributorIntakePolicy(ftThreshold, ftMinObs, stdThreshold, stdMinObs, "preference-driven");
+
+        var                         trustExport = trustExportService.exportAll(0.0);
+        Map<String, Boolean>        seen        = new HashMap<>();
+        List<ContributorFleetEntry> entries     = new ArrayList<>();
+
+        for (var actor : trustExport.actors()) {
+            var capScores = trustGateService.allCapabilityScores(actor.actorId());
+            if (!capScores.containsKey(ContributorTrustCapability.PR_CONTRIBUTION)) {continue;}
+
+            seen.put(actor.actorId(), true);
+            Double score          = capScores.get(ContributorTrustCapability.PR_CONTRIBUTION);
+            int    observations   = trustGateService.decisionCount(actor.actorId(), ContributorTrustCapability.PR_CONTRIBUTION);
+            var    classification = policy.classify(score != null ? OptionalDouble.of(score) : OptionalDouble.empty(), observations);
+            var    dimScores      = trustGateService.allDimensionScores(actor.actorId());
+
+            entries.add(new ContributorFleetEntry(
+                    actor.actorId(), score, classification.lane().name(), observations,
+                    dimScores.get(ContributorTrustDimension.MERGE_RATE),
+                    dimScores.get(ContributorTrustDimension.FIRST_ATTEMPT_QUALITY)));
+        }
+
+        for (var caseInfo : tracker.activeCases()) {
+            String contributor = caseInfo.payload().contributor();
+            if (contributor != null && !seen.containsKey(contributor)) {
+                seen.put(contributor, true);
+                var classification = policy.classify(OptionalDouble.empty(), 0);
+                entries.add(new ContributorFleetEntry(contributor, null, classification.lane().name(), 0, null, null));
+            }
+        }
+
+        return entries;
+    }
+
+    public ContributorDetail contributorDetail(String actorId) {
+        var                 globalOpt        = trustGateService.currentScore(actorId);
+        Double              globalScore      = globalOpt.isPresent() ? globalOpt.getAsDouble() : null;
+        Map<String, Double> capabilityScores = trustGateService.allCapabilityScores(actorId);
+        Map<String, Double> dimensionScores  = trustGateService.allDimensionScores(actorId);
+
+        Preferences prefs        = preferenceProvider.resolve(SettingsScope.root("casehubio"));
+        double      ftThreshold  = prefs.getOrDefault(ContributorIntakePreferenceKeys.FAST_TRACK_THRESHOLD).value();
+        int         ftMinObs     = prefs.getOrDefault(ContributorIntakePreferenceKeys.FAST_TRACK_MIN_OBSERVATIONS).value();
+        double      stdThreshold = prefs.getOrDefault(ContributorIntakePreferenceKeys.STANDARD_THRESHOLD).value();
+        int         stdMinObs    = prefs.getOrDefault(ContributorIntakePreferenceKeys.STANDARD_MIN_OBSERVATIONS).value();
+        var         policy       = new ContributorIntakePolicy(ftThreshold, ftMinObs, stdThreshold, stdMinObs, "preference-driven");
+
+        Double capScore       = capabilityScores.get(ContributorTrustCapability.PR_CONTRIBUTION);
+        int    observations   = trustGateService.decisionCount(actorId, ContributorTrustCapability.PR_CONTRIBUTION);
+        var    classification = policy.classify(capScore != null ? OptionalDouble.of(capScore) : OptionalDouble.empty(), observations);
+
+        var intakeEntry = new IntakeClassificationEntry(
+                classification.lane().name(), classification.trustScore(), classification.observationCount(),
+                classification.classificationReason(), ftThreshold, stdThreshold);
+
+        var outcomes = trustQueryService.contributorOutcomes(actorId, 50);
+
+        return new ContributorDetail(actorId, globalScore, capabilityScores, dimensionScores, intakeEntry, outcomes);
+    }
+
 
     public List<TriageItem> triageItems() {
         if (workItemStore == null) return List.of();

@@ -85,6 +85,22 @@ public class GovernanceResource {
     }
 
     @GET
+    @Path("/contributors")
+    public PagedResult<GovernanceQueryService.ContributorFleetEntry> contributorFleet(
+            @QueryParam("cursor") String cursor,
+            @QueryParam("limit") @DefaultValue("50") int limit) {
+        return PagedResult.paginate(queryService.contributorFleet(), cursor, limit);
+    }
+
+    @GET
+    @Path("/contributors/{actorId}")
+    public GovernanceQueryService.ContributorDetail contributorDetail(
+            @PathParam("actorId") String actorId) {
+        return queryService.contributorDetail(actorId);
+    }
+
+
+    @GET
     @Path("/merge-queue")
     public GovernanceQueryService.MergeQueueStatus mergeQueue() {
         return queryService.mergeQueue();

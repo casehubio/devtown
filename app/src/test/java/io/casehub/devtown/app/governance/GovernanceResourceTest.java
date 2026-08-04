@@ -194,4 +194,31 @@ class GovernanceResourceTest {
         assertThat(result.items()).isEqualTo(expected);
         verify(mockService).triageItems();
     }
+
+    @Test
+    void slaComparison_delegatesToService() {
+        var entries = List.of(
+                new GovernanceQueryService.SlaComparisonEntry(
+                        "pr-review", 86400L, 64800L, 43200L, 108000L, 10, -25.0)
+                             );
+        var expected = new GovernanceQueryService.SlaComparison(entries, Instant.now());
+        when(mockService.slaComparison()).thenReturn(expected);
+
+        var result = resource.slaComparison();
+
+        assertSame(expected, result);
+        verify(mockService).slaComparison();
+    }
+
+    @Test
+    void slaComparison_emptyWhenNoCalibrationData() {
+        var expected = new GovernanceQueryService.SlaComparison(List.of(), null);
+        when(mockService.slaComparison()).thenReturn(expected);
+
+        var result = resource.slaComparison();
+
+        assertThat(result.entries()).isEmpty();
+        assertThat(result.calibratedAt()).isNull();
+    }
+
 }

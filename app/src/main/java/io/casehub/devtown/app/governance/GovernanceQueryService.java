@@ -10,8 +10,14 @@ import io.casehub.devtown.app.mcp.TrackedEvent;
 import io.casehub.devtown.merge.BatchRecord;
 import io.casehub.devtown.queue.QueuedPr;
 import io.casehub.devtown.review.PrPayload;
+import io.casehub.devtown.domain.sla.SlaPreferenceKeys;
+import io.casehub.devtown.review.sla.SlaCalibrationRecord;
+import io.casehub.devtown.review.sla.SlaCalibrationStore;
 import io.casehub.ledger.runtime.service.TrustGateService;
 import io.casehub.ledger.runtime.service.federation.TrustExportService;
+import io.casehub.platform.api.preferences.PreferenceProvider;
+import io.casehub.platform.api.preferences.Preferences;
+import io.casehub.platform.api.preferences.SettingsScope;
 import io.casehub.qhorus.api.message.Commitment;
 import io.casehub.qhorus.api.store.CommitmentStore;
 import io.casehub.work.api.WorkItemStatus;
@@ -23,7 +29,14 @@ import jakarta.inject.Inject;
 
 import java.time.Duration;
 import java.time.Instant;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @ApplicationScoped
@@ -45,6 +58,8 @@ public class GovernanceQueryService {
     private final WorkItemStore workItemStore;
     private final MergeQueueService mergeQueueService;
     private final CaseHubRuntime caseHubRuntime;
+    private final SlaCalibrationStore slaCalibrationStore;
+    private final PreferenceProvider preferenceProvider;
 
     @Inject
     public GovernanceQueryService(
@@ -54,7 +69,9 @@ public class GovernanceQueryService {
             TrustGateService trustGateService,
             WorkItemStore workItemStore,
             MergeQueueService mergeQueueService,
-            CaseHubRuntime caseHubRuntime) {
+            CaseHubRuntime caseHubRuntime,
+            SlaCalibrationStore slaCalibrationStore,
+            PreferenceProvider preferenceProvider) {
         this.tracker = tracker;
         this.commitmentStore = commitmentStore;
         this.trustExportService = trustExportService;
@@ -62,6 +79,8 @@ public class GovernanceQueryService {
         this.workItemStore = workItemStore;
         this.mergeQueueService = mergeQueueService;
         this.caseHubRuntime = caseHubRuntime;
+        this.slaCalibrationStore = slaCalibrationStore;
+        this.preferenceProvider = preferenceProvider;
     }
 
     // ── Records ──────────────────────────────────────────────
@@ -118,6 +137,20 @@ public class GovernanceQueryService {
 
     public record ReviewListEntry(UUID caseId, String repo, int prNumber, String contributor,
                                   String status, Instant startedAt, Instant lastEventAt) {}
+
+    public record SlaComparisonEntry(
+            String capability,
+            long configuredSeconds,
+            Long estimatedMedianSeconds,
+            Long estimatedMinSeconds,
+            Long estimatedMaxSeconds,
+            int sampleCount,
+            Double deviationPercent) {}
+
+    public record SlaComparison(
+            List<SlaComparisonEntry> entries,
+            Instant calibratedAt) {}
+
 
     // ── Query methods ────────────────────────────────────────
 
@@ -462,6 +495,38 @@ public class GovernanceQueryService {
             c.startedAt(), c.lastEventAt()
         )).toList();
     }
+
+    public SlaComparison slaComparison() {
+        var records = slaCalibrationStore.findLatestCalibration("casehubio/devtown/pr-review");
+        if (records.isEmpty()) {
+            return new SlaComparison(List.of(), null);
+        }
+
+        Preferences prefs = preferenceProvider.resolve(
+                SettingsScope.root("casehubio"));
+        long configuredSeconds = prefs.getOrDefault(SlaPreferenceKeys.COMPLETION_HOURS)
+                                      .value() * 3600L;
+
+        Instant calibratedAt = records.stream()
+                                      .map(SlaCalibrationRecord::computedAt)
+                                      .max(Instant::compareTo)
+                                      .orElse(null);
+
+        var entries = records.stream()
+                             .map(r -> {
+                                 long medianSec = r.median().toSeconds();
+                                 double deviation = ((double) (medianSec - configuredSeconds))
+                                                    / configuredSeconds * 100.0;
+                                 return new SlaComparisonEntry(
+                                         r.capability(), configuredSeconds,
+                                         medianSec, r.min().toSeconds(), r.max().toSeconds(),
+                                         r.precedentCount(), deviation);
+                             })
+                             .toList();
+
+        return new SlaComparison(entries, calibratedAt);
+    }
+
 
     public ReviewDetail reviewDetail(UUID caseId) {
         return reviewDetail(caseId, "default");

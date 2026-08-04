@@ -36,5 +36,20 @@ export const systemView = page("System",
       sortable: true,
       filter: { enabled: true },
     }),
+
+    // SLA Calibration — estimated vs configured comparison
+    title("SLA Calibration", "h3"),
+    dataTable({
+      lookup: lookup("sla-comparison", groupBy(null,
+        col("capability"),
+        col("configuredSeconds"),
+        col("estimatedMedianSeconds"),
+        col("estimatedMinSeconds"),
+        col("estimatedMaxSeconds"),
+        col("sampleCount"),
+        col("deviationPercent"),
+      )),
+      sortable: true,
+    }),
   ),
 );

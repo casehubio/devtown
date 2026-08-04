@@ -1,8 +1,6 @@
 package io.casehub.devtown.app.governance;
 
 import io.casehub.devtown.app.mcp.TrackedEvent;
-import io.casehub.devtown.domain.DevtownRoles;
-import jakarta.annotation.security.RolesAllowed;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.DefaultValue;
 import jakarta.ws.rs.GET;
@@ -107,4 +105,11 @@ public class GovernanceResource {
             @QueryParam("limit") @DefaultValue("50") int limit) {
         return PagedResult.paginate(queryService.triageItems(), cursor, limit);
     }
+
+    @GET
+    @Path("/sla-comparison")
+    public GovernanceQueryService.SlaComparison slaComparison() {
+        return queryService.slaComparison();
+    }
+
 }

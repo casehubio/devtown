@@ -3,7 +3,8 @@ package io.casehub.devtown.app;
 import io.casehub.devtown.domain.memory.ReviewOutcome;
 import io.casehub.devtown.review.ReviewCompletedEvent;
 import io.casehub.engine.common.spi.CrossTenantCaseInstanceRepository;
-import io.casehub.engine.common.spi.event.PlanItemCompletedEvent;
+import io.casehub.api.model.TaskStatus;
+import io.casehub.engine.common.spi.event.PlanItemStateChangedEvent;
 import io.quarkus.test.junit.QuarkusTest;
 import jakarta.enterprise.event.Event;
 import jakarta.inject.Inject;
@@ -24,7 +25,7 @@ class ReviewOutcomeObserverTest {
 
     @Inject PrReviewCaseHub caseHub;
     @Inject CrossTenantCaseInstanceRepository caseInstanceRepository;
-    @Inject Event<PlanItemCompletedEvent> planItemCompletedEvents;
+    @Inject Event<PlanItemStateChangedEvent> planItemStateChangedEvents;
     @Inject ReviewCompletedEventCapture capture;
 
     @BeforeEach
@@ -72,8 +73,8 @@ class ReviewOutcomeObserverTest {
         // Fire PlanItemCompletedEvent directly — simulating what the engine does
         // when a worker finishes. Context signals don't go through PlanItemCompletionHandler,
         // so we fire the CDI event manually.
-        planItemCompletedEvents.fireAsync(
-                new PlanItemCompletedEvent(caseId, "style-check", "style-bot", "test-tenant"));
+        planItemStateChangedEvents.fireAsync(
+                new PlanItemStateChangedEvent(caseId, "pi-style", "style-check", TaskStatus.RUNNING, TaskStatus.COMPLETED, "test-tenant"));
 
         // Wait for the ReviewCompletedEvent to be captured
         await().atMost(5, SECONDS).pollInterval(100, MILLISECONDS).untilAsserted(() ->
@@ -82,7 +83,7 @@ class ReviewOutcomeObserverTest {
         ReviewCompletedEvent event = capture.getEvents().get(0);
         assertThat(event.caseId()).isEqualTo(caseId);
         assertThat(event.capability()).isEqualTo("style-review"); // style-check -> style-review
-        assertThat(event.reviewerId()).isEqualTo("style-bot");
+        assertThat(event.reviewerId()).isEqualTo("unknown");
         assertThat(event.outcome()).isEqualTo(ReviewOutcome.COMPLETED);
         assertThat(event.outcomeDetail()).isEqualTo("APPROVED");
 
@@ -103,16 +104,16 @@ class ReviewOutcomeObserverTest {
                 ;
 
         // "initial-analysis" is an infrastructure binding — not in the planItem-to-context map
-        planItemCompletedEvents.fireAsync(
-                new PlanItemCompletedEvent(caseId, "initial-analysis", "analysis-bot", "test-tenant"));
+        planItemStateChangedEvents.fireAsync(
+                new PlanItemStateChangedEvent(caseId, "pi-ia", "initial-analysis", TaskStatus.RUNNING, TaskStatus.COMPLETED, "test-tenant"));
 
         // "run-ci" is another infrastructure binding
-        planItemCompletedEvents.fireAsync(
-                new PlanItemCompletedEvent(caseId, "run-ci", "ci-runner", "test-tenant"));
+        planItemStateChangedEvents.fireAsync(
+                new PlanItemStateChangedEvent(caseId, "pi-ci", "run-ci", TaskStatus.RUNNING, TaskStatus.COMPLETED, "test-tenant"));
 
         // "merge-direct" is an infrastructure binding (renamed from "merge" when enqueue-for-merge was added)
-        planItemCompletedEvents.fireAsync(
-                new PlanItemCompletedEvent(caseId, "merge-direct", "merge-bot", "test-tenant"));
+        planItemStateChangedEvents.fireAsync(
+                new PlanItemStateChangedEvent(caseId, "pi-merge", "merge-direct", TaskStatus.RUNNING, TaskStatus.COMPLETED, "test-tenant"));
 
         // Give enough time for any event to propagate
         Thread.sleep(500);
@@ -135,8 +136,8 @@ class ReviewOutcomeObserverTest {
                     .isEqualTo("APPROVED");
         });
 
-        planItemCompletedEvents.fireAsync(
-                new PlanItemCompletedEvent(caseId, "test-coverage", null, "test-tenant"));
+        planItemStateChangedEvents.fireAsync(
+                new PlanItemStateChangedEvent(caseId, "pi-tc", "test-coverage", TaskStatus.RUNNING, TaskStatus.COMPLETED, "test-tenant"));
 
         await().atMost(5, SECONDS).pollInterval(100, MILLISECONDS).untilAsserted(() ->
                 assertThat(capture.getEvents()).isNotEmpty());
@@ -159,8 +160,8 @@ class ReviewOutcomeObserverTest {
                     .isEqualTo("approved");
         });
 
-        planItemCompletedEvents.fireAsync(
-                new PlanItemCompletedEvent(caseId, "human-approval", "reviewer-alice", "test-tenant"));
+        planItemStateChangedEvents.fireAsync(
+                new PlanItemStateChangedEvent(caseId, "pi-ha", "human-approval", TaskStatus.RUNNING, TaskStatus.COMPLETED, "test-tenant"));
 
         await().atMost(5, SECONDS).pollInterval(100, MILLISECONDS).untilAsserted(() ->
                 assertThat(capture.getEvents()).isNotEmpty());
@@ -168,15 +169,15 @@ class ReviewOutcomeObserverTest {
         ReviewCompletedEvent event = capture.getEvents().get(0);
         assertThat(event.capability()).isEqualTo("human-decision:pr-approval");
         assertThat(event.outcomeDetail()).isEqualTo("approved");
-        assertThat(event.reviewerId()).isEqualTo("reviewer-alice");
+        assertThat(event.reviewerId()).isEqualTo("unknown");
     }
 
     @Test
     void observerSkipsWhenCaseNotFound() throws Exception {
         // Non-existent caseId — observer should log WARN and not fire event
         UUID fakeCaseId = UUID.randomUUID();
-        planItemCompletedEvents.fireAsync(
-                new PlanItemCompletedEvent(fakeCaseId, "style-check", "bot", "test-tenant"));
+        planItemStateChangedEvents.fireAsync(
+                new PlanItemStateChangedEvent(fakeCaseId, "pi-fake", "style-check", TaskStatus.RUNNING, TaskStatus.COMPLETED, "test-tenant"));
 
         Thread.sleep(500);
 

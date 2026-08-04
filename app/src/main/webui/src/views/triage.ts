@@ -5,7 +5,7 @@ import { lookup, groupBy, col } from "@casehubio/pages-ui";
 
 export const triageView = page("Human Triage",
   rows(
-    title("Human Triage", 2),
+    title("Human Triage", "h2"),
 
     dataTable({
       lookup: lookup("triage", groupBy("workItemId",

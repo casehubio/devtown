@@ -50,7 +50,8 @@ const reviewDetail = rows(
   dataTable({
     lookup: lookup("plan-items", groupBy("planItemId",
       col("bindingName"), col("targetType"),
-      col("status"), col("executorName"), col("createdAt")
+      col("status"), col("executorName"), col("createdAt"),
+      col("activationContext"),
     )),
     sortable: true,
   }),

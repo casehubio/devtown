@@ -1,7 +1,8 @@
 package io.casehub.devtown.app;
 
 import io.casehub.api.context.CaseContext;
-import io.casehub.engine.common.spi.event.PlanItemCompletedEvent;
+import io.casehub.api.model.TaskStatus;
+import io.casehub.engine.common.spi.event.PlanItemStateChangedEvent;
 import io.casehub.devtown.domain.memory.ReviewOutcome;
 import io.casehub.devtown.review.PrPayload;
 import io.casehub.devtown.review.ReviewCompletedEvent;
@@ -16,7 +17,7 @@ import java.util.Map;
 import org.jboss.logging.Logger;
 
 /**
- * Observes {@link PlanItemCompletedEvent} from the engine blackboard, extracts
+ * Observes {@link PlanItemStateChangedEvent} from the engine blackboard, extracts
  * structured review data from the case context, and fires a typed
  * {@link ReviewCompletedEvent}.
  *
@@ -26,7 +27,7 @@ import org.jboss.logging.Logger;
  * <p><strong>Tech debt:</strong> Uses {@link CrossTenantCaseInstanceRepository}
  * because there is no request-scoped tenant in the async observer context.
  * The repository's contract says "for startup recovery services only" — this
- * is accepted tech debt until {@code PlanItemCompletedEvent} carries tenantId.
+ * is accepted tech debt until {@code PlanItemStateChangedEvent} carries tenantId.
  */
 @ApplicationScoped
 public class ReviewOutcomeObserver {
@@ -53,18 +54,18 @@ public class ReviewOutcomeObserver {
     @Inject CrossTenantCaseInstanceRepository caseInstanceRepository;
     @Inject Event<ReviewCompletedEvent> reviewCompletedEvents;
 
-    void onPlanItemCompleted(@ObservesAsync PlanItemCompletedEvent event) {
+    void onPlanItemStateChanged(@ObservesAsync PlanItemStateChangedEvent event) {
+        if (event.newStatus() != TaskStatus.COMPLETED) return;
         try {
             handleEvent(event);
         } catch (Exception e) {
-            LOG.warnf(e, "ReviewOutcomeObserver failed for caseId=%s planItemId=%s",
-                    event.caseId(), event.planItemId());
+            LOG.warnf(e, "ReviewOutcomeObserver failed for caseId=%s bindingName=%s",
+                    event.caseId(), event.bindingName());
         }
     }
 
-    private void handleEvent(PlanItemCompletedEvent event) {
-        // Filter: skip infrastructure bindings not in the map
-        String contextKeyPath = PLAN_ITEM_TO_CONTEXT_KEY.get(event.planItemId());
+    private void handleEvent(PlanItemStateChangedEvent event) {
+        String contextKeyPath = PLAN_ITEM_TO_CONTEXT_KEY.get(event.bindingName());
         if (contextKeyPath == null) {
             return;
         }
@@ -102,10 +103,9 @@ public class ReviewOutcomeObserver {
         String outcomeDetail = rawOutcome;
 
         // Resolve capability (binding name != capability name in some cases)
-        String capability = resolveCapability(event.planItemId());
+        String capability = resolveCapability(event.bindingName());
 
-        // Resolve reviewer identity
-        String reviewerId = event.trackingKey() != null ? event.trackingKey() : "unknown";
+        String reviewerId = "unknown";
 
         // Fire typed event
         reviewCompletedEvents.fireAsync(new ReviewCompletedEvent(

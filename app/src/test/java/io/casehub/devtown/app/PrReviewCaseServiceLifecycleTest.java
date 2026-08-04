@@ -41,6 +41,9 @@ class PrReviewCaseServiceLifecycleTest {
         service = new PrReviewCaseService();
         service.caseHub = caseHub;
         service.caseTracker = tracker;
+        service.mergedEvent = mock(jakarta.enterprise.event.Event.class);
+        service.rejectedEvent = mock(jakarta.enterprise.event.Event.class);
+        service.changesRequestedEvent = mock(jakarta.enterprise.event.Event.class);
     }
 
     @Test

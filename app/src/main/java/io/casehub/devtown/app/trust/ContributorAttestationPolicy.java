@@ -8,11 +8,14 @@ import io.casehub.devtown.review.PrLifecycleEvent;
 import io.casehub.ledger.api.model.AttestationVerdict;
 import io.casehub.platform.api.identity.ActorType;
 
+import jakarta.enterprise.context.ApplicationScoped;
+
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+@ApplicationScoped
 public class ContributorAttestationPolicy {
 
     static final String ATTESTOR_ID = "system:devtown";

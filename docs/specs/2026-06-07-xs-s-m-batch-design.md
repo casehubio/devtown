@@ -19,7 +19,7 @@ Six issues triaged and resolved in a single branch. Three close with no code cha
 
 ledger#76 shipped `ScoreType.CAPABILITY_DIMENSION`. The issue anticipated needing to "extend RoutingPolicy with per-capability dimension floors" — but this was completed as part of the trust routing implementation:
 
-- `TrustRoutingPolicyKeys` defines per-dimension floor keys (`FLOOR_REVIEW_THOROUGHNESS`, `FLOOR_PRECISION`, `FLOOR_SCOPE_CALIBRATION`) mapped to `ReviewerTrustDimension` constants.
+- `TrustRoutingPolicyKeys` defines per-dimension floor keys (`FLOOR_REVIEW_THOROUGHNESS`, `FLOOR_PRECISION`, `FLOOR_SCOPE_CALIBRATION`) mapped to `DevtownTrustDimension` constants.
 - `DevtownTrustRoutingPolicyProvider.forCapability()` builds a `qualityFloors` map from these keys and passes it to `TrustRoutingPolicy`.
 - The YAML config (`trust-routing.yaml`) already declares per-dimension floors per capability.
 - The engine's `TrustWeightedAgentStrategy` queries CAPABILITY_DIMENSION scores automatically when floor keys are present.

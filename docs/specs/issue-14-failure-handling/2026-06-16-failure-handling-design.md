@@ -420,7 +420,7 @@ The trust dimension mapping for failure outcomes is:
 | FAILED | review-thoroughness | Agent attempted but couldn't complete — negative signal |
 | EXPIRED | responsiveness (new) | Agent went silent — negative signal |
 
-`responsiveness` is a new trust dimension — requires adding a constant to `ReviewerTrustDimension` (domain model change, noted in §14).
+`responsiveness` is a new trust dimension — requires adding a constant to `DevtownTrustDimension` (domain model change, noted in §14).
 
 The mechanism: commitment terminal state (`CommitmentState.DECLINED/FAILED/EXPIRED`) already flows to the ledger via P0.2 wiring (qhorus#123). The trust dimension mapping is application-layer configuration in devtown.
 

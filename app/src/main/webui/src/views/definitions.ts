@@ -4,7 +4,7 @@ import {
 import { lookup, groupBy, col } from "@casehubio/pages-ui";
 
 const definitionsList = rows(
-  title("Case Definitions", 2),
+  title("Case Definitions", "h2"),
   dataTable({
     lookup: lookup("case-definitions", groupBy("name",
       col("namespace"), col("name"), col("version"), col("title")
@@ -15,9 +15,9 @@ const definitionsList = rows(
 );
 
 const definitionDetail = rows(
-  title("Definition Detail", 2),
+  title("Definition Detail", "h2"),
 
-  title("Goals", 3),
+  title("Goals", "h3"),
   dataTable({
     lookup: lookup("case-definitions", groupBy("goalName",
       col("goalName"), col("goalKind"), col("goalCondition")
@@ -25,7 +25,7 @@ const definitionDetail = rows(
     sortable: true,
   }),
 
-  title("Bindings", 3),
+  title("Bindings", "h3"),
   dataTable({
     lookup: lookup("case-definitions", groupBy("bindingName",
       col("bindingName"), col("targetType"), col("targetName"),
@@ -34,7 +34,7 @@ const definitionDetail = rows(
     sortable: true,
   }),
 
-  title("Capabilities", 3),
+  title("Capabilities", "h3"),
   dataTable({
     lookup: lookup("case-definitions", groupBy("capabilityName",
       col("capabilityName"), col("inputSchema"), col("outputSchema")

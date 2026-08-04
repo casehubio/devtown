@@ -5,7 +5,7 @@ import { lookup, groupBy, col } from "@casehubio/pages-ui";
 
 export const reviewersView = page("Reviewers",
   rows(
-    title("Reviewer Fleet", 2),
+    title("Reviewer Fleet", "h2"),
 
     dataTable({
       lookup: lookup("reviewers", groupBy("actorId",

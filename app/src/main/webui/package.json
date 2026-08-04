@@ -7,22 +7,22 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@casehubio/blocks-ui-session-workbench": "*",
-    "@casehubio/pages-runtime": "*",
-    "@casehubio/pages-ui": "*"
-  },
-  "resolutions": {
-    "@casehubio/pages-component": "portal:./.casehub-packages/packages/pages-component",
-    "@casehubio/pages-data": "portal:./.casehub-packages/packages/pages-data",
-    "@casehubio/pages-primitives": "portal:./.casehub-packages/packages/pages-primitives",
-    "@casehubio/pages-runtime": "portal:./.casehub-packages/packages/pages-runtime",
-    "@casehubio/pages-table": "portal:./.casehub-packages/packages/pages-table",
-    "@casehubio/pages-ui": "portal:./.casehub-packages/packages/pages-ui",
-    "@casehubio/pages-ui-components": "portal:./.casehub-packages/packages/pages-ui-components",
-    "@casehubio/pages-ui-tokens": "portal:./.casehub-packages/packages/pages-ui-tokens",
-    "@casehubio/pages-viz": "portal:./.casehub-packages/packages/pages-viz",
-    "@casehubio/blocks-ui-core": "portal:./.casehub-packages/packages/blocks-ui-core",
-    "@casehubio/blocks-ui-session-workbench": "portal:./.casehub-packages/packages/session-workbench"
+    "@casehubio/blocks-ui-core": "file:.tarballs/casehubio-blocks-ui-core-0.2.2.tgz",
+    "@casehubio/blocks-ui-detail-pane": "file:.tarballs/casehubio-blocks-ui-detail-pane-0.2.2.tgz",
+    "@casehubio/blocks-ui-list-pane": "file:.tarballs/casehubio-blocks-ui-list-pane-0.2.2.tgz",
+    "@casehubio/blocks-ui-session-detail": "file:.tarballs/casehubio-blocks-ui-session-detail-0.2.0.tgz",
+    "@casehubio/blocks-ui-session-list": "file:.tarballs/casehubio-blocks-ui-session-list-0.2.0.tgz",
+    "@casehubio/blocks-ui-session-workbench": "file:.tarballs/casehubio-blocks-ui-session-workbench-0.2.0.tgz",
+    "@casehubio/blocks-ui-split-workbench": "file:.tarballs/casehubio-blocks-ui-split-workbench-0.2.2.tgz",
+    "@casehubio/pages-component": "file:.tarballs/casehubio-pages-component-0.2.3.tgz",
+    "@casehubio/pages-data": "file:.tarballs/casehubio-pages-data-0.2.3.tgz",
+    "@casehubio/pages-primitives": "file:.tarballs/casehubio-pages-primitives-0.2.3.tgz",
+    "@casehubio/pages-runtime": "file:.tarballs/casehubio-pages-runtime-0.2.3.tgz",
+    "@casehubio/pages-table": "file:.tarballs/casehubio-pages-table-0.2.3.tgz",
+    "@casehubio/pages-ui": "file:.tarballs/casehubio-pages-ui-0.2.3.tgz",
+    "@casehubio/pages-ui-components": "file:.tarballs/casehubio-pages-ui-components-0.2.3.tgz",
+    "@casehubio/pages-ui-tokens": "file:.tarballs/casehubio-pages-ui-tokens-0.3.0.tgz",
+    "@casehubio/pages-viz": "file:.tarballs/casehubio-pages-viz-0.2.3.tgz"
   },
   "devDependencies": {
     "esbuild": "^0.25.0",

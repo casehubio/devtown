@@ -4,7 +4,8 @@ import io.casehub.devtown.domain.memory.DevtownMemoryDomain;
 import io.casehub.devtown.domain.memory.DevtownMemoryKeys;
 import io.casehub.devtown.review.MemoryContext;
 import io.casehub.devtown.review.PrPayload;
-import io.casehub.engine.common.spi.event.PlanItemCompletedEvent;
+import io.casehub.api.model.TaskStatus;
+import io.casehub.engine.common.spi.event.PlanItemStateChangedEvent;
 import io.casehub.neocortex.memory.CaseMemoryStore;
 import io.casehub.neocortex.memory.MemoryOrder;
 import io.casehub.neocortex.memory.MemoryQuery;
@@ -43,7 +44,7 @@ class CaseMemoryIntegrationTest {
     @Inject PrReviewCaseHub caseHub;
     @Inject CaseMemoryStore store;
     @Inject CaseMemoryRecaller recaller;
-    @Inject Event<PlanItemCompletedEvent> planItemEvents;
+    @Inject Event<PlanItemStateChangedEvent> planItemEvents;
     @Inject FixedCurrentPrincipal principal;
     @Inject ReviewCompletedEventCapture capture;
 
@@ -78,8 +79,8 @@ class CaseMemoryIntegrationTest {
 
         // Fire PlanItemCompletedEvent directly via CDI — simulating what the engine
         // does when a worker completes. Context signals don't trigger PlanItemCompletedEvent.
-        planItemEvents.fireAsync(new PlanItemCompletedEvent(
-                caseId, "style-check", "style-agent-1", TenancyConstants.DEFAULT_TENANT_ID));
+        planItemEvents.fireAsync(new PlanItemStateChangedEvent(
+                caseId, "pi-style", "style-check", TaskStatus.RUNNING, TaskStatus.COMPLETED, TenancyConstants.DEFAULT_TENANT_ID));
 
         // Wait for ReviewCompletedEvent to be captured
         await().atMost(10, SECONDS).pollInterval(200, MILLISECONDS).untilAsserted(() ->

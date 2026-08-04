@@ -31,6 +31,7 @@ export function createDatasets(prefs: Record<string, string>) {
     rest("system-health", "/api/governance/system-health", { expression: "[$]", refreshTime: metRefresh }),
     rest("merge-queue-metrics", "/api/governance/merge-queue/metrics", { expression: "[$]", refreshTime: metRefresh }),
     rest("reviewers", "/api/governance/reviewers", { dataPath: "items", refreshTime: metRefresh }),
+    rest("contributors", "/api/governance/contributors", { dataPath: "items", refreshTime: metRefresh }),
     rest("sla-comparison", "/api/governance/sla-comparison", { dataPath: "entries", refreshTime: metRefresh }),
 
     rest("recent-events", "/api/governance/recent-events?limit=100", { refreshTime: opRefresh }),

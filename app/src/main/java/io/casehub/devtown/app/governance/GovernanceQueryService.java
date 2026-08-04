@@ -502,14 +502,14 @@ public class GovernanceQueryService {
         var    policy       = new ContributorIntakePolicy(ftThreshold, ftMinObs, stdThreshold, stdMinObs, "preference-driven");
 
         var                         trustExport = trustExportService.exportAll(0.0);
-        Map<String, Boolean>        seen        = new HashMap<>();
+        Set<String>                 seen        = new java.util.HashSet<>();
         List<ContributorFleetEntry> entries     = new ArrayList<>();
 
         for (var actor : trustExport.actors()) {
             var capScores = trustGateService.allCapabilityScores(actor.actorId());
             if (!capScores.containsKey(ContributorTrustCapability.PR_CONTRIBUTION)) {continue;}
 
-            seen.put(actor.actorId(), true);
+            seen.add(actor.actorId());
             Double score          = capScores.get(ContributorTrustCapability.PR_CONTRIBUTION);
             int    observations   = trustGateService.decisionCount(actor.actorId(), ContributorTrustCapability.PR_CONTRIBUTION);
             var    classification = policy.classify(score != null ? OptionalDouble.of(score) : OptionalDouble.empty(), observations);
@@ -523,8 +523,8 @@ public class GovernanceQueryService {
 
         for (var caseInfo : tracker.activeCases()) {
             String contributor = caseInfo.payload().contributor();
-            if (contributor != null && !seen.containsKey(contributor)) {
-                seen.put(contributor, true);
+            if (contributor != null && !seen.contains(contributor)) {
+                seen.add(contributor);
                 var classification = policy.classify(OptionalDouble.empty(), 0);
                 entries.add(new ContributorFleetEntry(contributor, null, classification.lane().name(), 0, null, null));
             }

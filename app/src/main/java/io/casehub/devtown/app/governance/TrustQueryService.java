@@ -57,12 +57,12 @@ public class TrustQueryService {
     @Transactional
     public List<ContributorOutcomeSummary> contributorOutcomes(String actorId, int limit) {
         List<io.casehub.devtown.app.ledger.ContributorOutcomeLedgerEntry> entries = em
-                                                                                            .createQuery("SELECT c FROM ContributorOutcomeLedgerEntry c WHERE c.actorId = :actorId"
-                                                                                                         + " ORDER BY c.occurredAt DESC",
-                                                                                                         io.casehub.devtown.app.ledger.ContributorOutcomeLedgerEntry.class)
-                                                                                            .setParameter("actorId", actorId)
-                                                                                            .setMaxResults(Math.min(limit, 100))
-                                                                                            .getResultList();
+                .createQuery("SELECT c FROM ContributorOutcomeLedgerEntry c WHERE c.actorId = :actorId"
+                             + " ORDER BY c.occurredAt DESC",
+                             io.casehub.devtown.app.ledger.ContributorOutcomeLedgerEntry.class)
+                .setParameter("actorId", actorId)
+                .setMaxResults(Math.min(limit, 100))
+                .getResultList();
         return entries.stream()
                       .map(e -> new ContributorOutcomeSummary(e.repository, e.prNumber, e.outcome, e.occurredAt))
                       .toList();

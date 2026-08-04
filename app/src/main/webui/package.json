@@ -7,6 +7,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@casehubio/blocks-ui-contributor-workbench": "file:.casehub-packages/tarballs/contributor-workbench.tgz",
     "@casehubio/blocks-ui-core": "file:.casehub-packages/tarballs/blocks-ui-core.tgz",
     "@casehubio/blocks-ui-detail-pane": "file:.casehub-packages/tarballs/detail-pane.tgz",
     "@casehubio/blocks-ui-list-pane": "file:.casehub-packages/tarballs/list-pane.tgz",

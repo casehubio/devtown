@@ -1,5 +1,5 @@
 import {
-  page, rows, gridTable, dataTable, title,
+  page, rows, gridTable, dataTable, title, hostPanel,
 } from "@casehubio/pages-ui";
 import { lookup, groupBy, col } from "@casehubio/pages-ui";
 
@@ -45,6 +45,11 @@ export const queueView = page("Merge Queue",
       )),
       sortable: true,
       filter: { enabled: true },
+    }),
+
+    hostPanel("contributor-workbench", {
+      endpoint: "/api/governance",
+      "actor-id": "#{row.author}",
     }),
   ),
 );

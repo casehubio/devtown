@@ -167,4 +167,5 @@ public class GovernanceResource {
         }
         return Response.ok(detail).build();
     }
+
 }

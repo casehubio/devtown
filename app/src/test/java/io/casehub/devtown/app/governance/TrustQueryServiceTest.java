@@ -38,6 +38,15 @@ class TrustQueryServiceTest {
         service.em = em;
     }
 
+    private static TrustScoreSnapshot snapshot(double score, double previousScore, Instant occurredAt) {
+        var s = new TrustScoreSnapshot() {};
+        s.score         = score;
+        s.previousScore = previousScore;
+        s.occurredAt    = occurredAt;
+        return s;
+    }
+
+
     @Test
     void trustScore_assemblesGlobalAndCapabilityAndDimensionScores() {
         when(trustGateService.currentScore("agent-1")).thenReturn(OptionalDouble.of(0.72));
@@ -237,6 +246,8 @@ class TrustQueryServiceTest {
         attestation.evidence = "Incident INC-001: Security bypass";
         attestation.occurredAt = Instant.parse("2026-08-02T15:00:00Z");
         attestation.trustDimension = "review-thoroughness";
+
+
 
         when(em.find(WorkerDecisionEntry.class, entryId)).thenReturn(entry);
 

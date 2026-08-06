@@ -42,3 +42,5 @@ wksp
 package-lock.json
 proj
 .mvn/maven.config
+.mvn/slot-settings.xml
+.playwright-mcp/

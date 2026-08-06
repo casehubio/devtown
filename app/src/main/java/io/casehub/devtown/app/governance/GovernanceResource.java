@@ -9,6 +9,7 @@ import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.QueryParam;
 import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
 
 import java.time.Instant;
 import java.util.List;
@@ -123,7 +124,7 @@ public class GovernanceResource {
 
     @GET
     @Path("/trust/{actorId}/trend")
-    public java.util.List<TrustQueryService.TrustTrendPoint> trustTrend(
+    public List<TrustQueryService.TrustTrendPoint> trustTrend(
             @PathParam("actorId") String actorId,
             @QueryParam("capability") String capability,
             @QueryParam("limit") @DefaultValue("30") int limit) {
@@ -132,7 +133,7 @@ public class GovernanceResource {
 
     @GET
     @Path("/trust/{actorId}/routing-history")
-    public java.util.List<TrustQueryService.RoutingDecisionSummary> routingHistory(
+    public List<TrustQueryService.RoutingDecisionSummary> routingHistory(
             @PathParam("actorId") String actorId,
             @QueryParam("capability") String capability,
             @QueryParam("limit") @DefaultValue("50") int limit) {
@@ -141,11 +142,13 @@ public class GovernanceResource {
 
     @GET
     @Path("/trust/{actorId}/routing-history/{entryId}")
-    public jakarta.ws.rs.core.Response routingDetail(
+    public Response routingDetail(
             @PathParam("actorId") String actorId,
             @PathParam("entryId") UUID entryId) {
         var detail = trustQueryService.routingDetail(actorId, entryId);
-        if (detail == null) {return jakarta.ws.rs.core.Response.status(404).build();}
-        return jakarta.ws.rs.core.Response.ok(detail).build();
+        if (detail == null) {
+            return Response.status(404).build();
+        }
+        return Response.ok(detail).build();
     }
 }

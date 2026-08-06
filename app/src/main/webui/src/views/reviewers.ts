@@ -1,26 +1,5 @@
-import {
-  page, rows, dataTable, title, hostPanel,
-} from "@casehubio/pages-ui";
-import { lookup, groupBy, col } from "@casehubio/pages-ui";
+import { page, hostPanel } from "@casehubio/pages-ui";
 
 export const reviewersView = page("Reviewers",
-  rows(
-    title("Reviewer Fleet", "h2"),
-
-    dataTable({
-      lookup: lookup("reviewers", groupBy("actorId",
-        col("actorId"),
-        col("maturityPhase"),
-        col("openCommitments"),
-        col("totalDecisions")
-      )),
-      sortable: true,
-      filter: { enabled: true },
-    }),
-
-    hostPanel("trust-workbench", {
-      endpoint: "/api/governance",
-      "actor-id": "#{row.actorId}",
-    }),
-  ),
+  hostPanel("reviewer-workbench", { endpoint: "/api/governance" }),
 );

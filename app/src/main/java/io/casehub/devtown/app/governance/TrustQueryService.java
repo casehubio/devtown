@@ -128,7 +128,8 @@ public class TrustQueryService {
                     phase = selected.path("phase").asText("UNKNOWN");
                     finalScore = selected.path("finalScore").asDouble(finalScore);
                 }
-            } catch (Exception ignored) {
+            } catch (Exception e) {
+                LOG.debugf("Skipping rationale parse in summary for entryId=%s: %s", entry.id, e.getMessage());
             }
         }
 

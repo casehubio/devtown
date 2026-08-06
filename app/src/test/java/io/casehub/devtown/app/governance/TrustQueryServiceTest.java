@@ -25,6 +25,8 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 class TrustQueryServiceTest {
+    static class TestSnapshot extends TrustScoreSnapshot {}
+
 
     TrustGateService trustGateService;
     EntityManager em;
@@ -70,12 +72,12 @@ class TrustQueryServiceTest {
     @SuppressWarnings("unchecked")
     @Test
     void trustTrend_returnsSnapshotsFromNamedQuery() {
-        final var snap1 = new TrustScoreSnapshot();
+        final var snap1 = new TestSnapshot();
         snap1.occurredAt = Instant.parse("2026-08-01T10:00:00Z");
         snap1.score = 0.75;
         snap1.previousScore = 0.70;
 
-        final var snap2 = new TrustScoreSnapshot();
+        final var snap2 = new TestSnapshot();
         snap2.occurredAt = Instant.parse("2026-08-02T10:00:00Z");
         snap2.score = 0.78;
         snap2.previousScore = 0.75;
@@ -259,7 +261,7 @@ class TrustQueryServiceTest {
         attestation.occurredAt = Instant.parse("2026-08-02T15:00:00Z");
         attestation.trustDimension = "review-thoroughness";
 
-        final var snapshot = new TrustScoreSnapshot();
+        final var snapshot = new TestSnapshot();
         snapshot.previousScore = 0.75;
         snapshot.score = 0.65;
 

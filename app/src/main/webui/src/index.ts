@@ -2,6 +2,7 @@ import { loadSite, registerPanel } from "@casehubio/pages-runtime";
 import { page, tabs, hostPanel } from "@casehubio/pages-ui";
 import "@casehubio/blocks-ui-session-workbench";
 import "@casehubio/blocks-ui-trust-workbench";
+import "./components/reviewer-workbench";
 import { createDatasets } from "./datasets";
 import { operationsView } from "./views/operations";
 import { reviewsView } from "./views/reviews";
@@ -15,6 +16,7 @@ const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
 
 registerPanel("session-workbench", "blocks-session-workbench");
 registerPanel("trust-workbench", "blocks-trust-workbench");
+registerPanel("reviewer-workbench", "devtown-reviewer-workbench");
 
 async function start() {
   const prefs = await fetch("/api/governance/preferences")

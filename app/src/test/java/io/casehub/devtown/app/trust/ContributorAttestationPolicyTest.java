@@ -27,8 +27,8 @@ class ContributorAttestationPolicyTest {
         assertThat(intent.verdict()).isEqualTo(AttestationVerdict.SOUND);
         assertThat(intent.confidence()).isEqualTo(1.0);
         assertThat(intent.capabilityTag()).isEqualTo(ContributorTrustCapability.PR_CONTRIBUTION);
-        assertThat(intent.dimensionScores()).containsEntry(ContributorTrustDimension.MERGE_RATE, 1.0);
-        assertThat(intent.dimensionScores()).containsEntry(ContributorTrustDimension.FIRST_ATTEMPT_QUALITY, 1.0);
+        assertThat(intent.dimensions()).containsEntry(ContributorTrustDimension.MERGE_RATE, 1.0);
+        assertThat(intent.dimensions()).containsEntry(ContributorTrustDimension.FIRST_ATTEMPT_QUALITY, 1.0);
     }
 
     @Test
@@ -39,8 +39,8 @@ class ContributorAttestationPolicyTest {
         assertThat(intents).hasSize(1);
         assertThat(intents.get(0).verdict()).isEqualTo(AttestationVerdict.SOUND);
         assertThat(intents.get(0).confidence()).isEqualTo(0.7);
-        assertThat(intents.get(0).dimensionScores()).containsEntry(ContributorTrustDimension.MERGE_RATE, 1.0);
-        assertThat(intents.get(0).dimensionScores()).doesNotContainKey(ContributorTrustDimension.FIRST_ATTEMPT_QUALITY);
+        assertThat(intents.get(0).dimensions()).containsEntry(ContributorTrustDimension.MERGE_RATE, 1.0);
+        assertThat(intents.get(0).dimensions()).doesNotContainKey(ContributorTrustDimension.FIRST_ATTEMPT_QUALITY);
     }
 
     @Test
@@ -51,7 +51,7 @@ class ContributorAttestationPolicyTest {
         assertThat(intents).hasSize(1);
         assertThat(intents.get(0).verdict()).isEqualTo(AttestationVerdict.FLAGGED);
         assertThat(intents.get(0).confidence()).isEqualTo(0.5);
-        assertThat(intents.get(0).dimensionScores()).containsEntry(ContributorTrustDimension.FIRST_ATTEMPT_QUALITY, 0.0);
+        assertThat(intents.get(0).dimensions()).containsEntry(ContributorTrustDimension.FIRST_ATTEMPT_QUALITY, 0.0);
     }
 
     @Test
@@ -63,7 +63,7 @@ class ContributorAttestationPolicyTest {
         assertThat(intents).hasSize(1);
         assertThat(intents.get(0).verdict()).isEqualTo(AttestationVerdict.FLAGGED);
         assertThat(intents.get(0).confidence()).isEqualTo(1.0);
-        assertThat(intents.get(0).dimensionScores()).containsEntry(ContributorTrustDimension.MERGE_RATE, 0.0);
+        assertThat(intents.get(0).dimensions()).containsEntry(ContributorTrustDimension.MERGE_RATE, 0.0);
     }
 
     @Test
@@ -74,7 +74,7 @@ class ContributorAttestationPolicyTest {
         assertThat(intents).hasSize(1);
         assertThat(intents.get(0).verdict()).isEqualTo(AttestationVerdict.FLAGGED);
         assertThat(intents.get(0).confidence()).isEqualTo(0.3);
-        assertThat(intents.get(0).dimensionScores()).containsEntry(ContributorTrustDimension.MERGE_RATE, 0.0);
+        assertThat(intents.get(0).dimensions()).containsEntry(ContributorTrustDimension.MERGE_RATE, 0.0);
     }
 
     @Test
@@ -86,7 +86,7 @@ class ContributorAttestationPolicyTest {
         assertThat(intents).hasSize(1);
         assertThat(intents.get(0).verdict()).isEqualTo(AttestationVerdict.FLAGGED);
         assertThat(intents.get(0).confidence()).isEqualTo(0.3);
-        assertThat(intents.get(0).dimensionScores()).containsEntry(ContributorTrustDimension.FIRST_ATTEMPT_QUALITY, 0.0);
+        assertThat(intents.get(0).dimensions()).containsEntry(ContributorTrustDimension.FIRST_ATTEMPT_QUALITY, 0.0);
     }
 
     @Test
@@ -95,9 +95,9 @@ class ContributorAttestationPolicyTest {
         List<AttestationIntent> intents = policy.evaluate(event, "MERGED", 0);
 
         assertThat(intents.get(0).attestorId()).isEqualTo("system:devtown");
-        assertThat(intents.get(0).attestorType()).isEqualTo(ActorType.SYSTEM);
+        assertThat(intents.get(0).actorType()).isEqualTo(ActorType.SYSTEM);
         assertThat(intents.get(0).attestorRole()).isEqualTo("lifecycle-pipeline");
-        assertThat(intents.get(0).deterministicNamespace()).isNotNull();
+        assertThat(intents.get(0).namespace()).isNotNull();
     }
 
     @Test

@@ -194,6 +194,10 @@ All governance endpoints are under `/api/governance` and currently `@PermitAll`:
 | `GET` | `/api/governance/reviews/{caseId}` | Detailed review status including timeline and capability progress |
 | `GET` | `/api/governance/reviewers` | Reviewer fleet -- trust scores by capability. Cursor-based pagination |
 | `GET` | `/api/governance/reviewers/{actorId}` | Individual reviewer health: commitments, trust scores, decision history |
+| `GET` | `/api/governance/trust/{actorId}` | Trust scores per capability with maturity phase and observation counts |
+| `GET` | `/api/governance/trust/{actorId}/trend` | Trust score trend over time (query params: `capability`, `limit`) |
+| `GET` | `/api/governance/trust/{actorId}/routing-history` | Routing decisions for a reviewer (query params: `capability`, `limit`) |
+| `GET` | `/api/governance/trust/{actorId}/routing-history/{entryId}` | Routing decision detail: rationale, scores, thresholds |
 | `GET` | `/api/governance/merge-queue` | Merge queue state: queued PRs, active batches |
 | `GET` | `/api/governance/merge-queue/metrics` | Operational metrics: queue depth, wait times, throughput, failure rate, trust scores |
 | `GET` | `/api/governance/merge-queue/batch/{batchId}` | Batch state: PRs in batch, risk level, bisection strategy |

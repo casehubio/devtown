@@ -75,7 +75,7 @@ public class ContributorAttestationPolicy {
                 ContributorTrustCapability.PR_CONTRIBUTION,
                 ATTESTOR_ID, ActorType.SYSTEM, ATTESTOR_ROLE,
                 dimensions, evidence,
-                CONTRIBUTOR_OUTCOME_NS);
+                CONTRIBUTOR_OUTCOME_NS, null);
     }
 
     public static UUID deterministicEntryId(String repo, int prNumber, String outcome) {

@@ -1,6 +1,9 @@
 package io.casehub.devtown.app.governance;
 
+import io.casehub.api.model.TaskStatus;
+import io.casehub.engine.common.spi.event.CaseContextUpdatedEvent;
 import io.casehub.engine.common.spi.event.CaseLifecycleEvent;
+import io.casehub.engine.common.spi.event.PlanItemStateChangedEvent;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 
@@ -79,5 +82,78 @@ class GovernanceEventBridgeTest {
         bridge.onCaseLifecycle(event);
 
         verifyNoInteractions(asyncRemote);
+    }
+
+    @Test
+    void onPlanItemChanged_sendsJsonToConnectedSessions() {
+        var bridge = new GovernanceEventBridge();
+        var session = mock(Session.class);
+        var asyncRemote = mock(RemoteEndpoint.Async.class);
+        when(session.getAsyncRemote()).thenReturn(asyncRemote);
+        when(session.isOpen()).thenReturn(true);
+
+        bridge.onOpen(session);
+
+        var event = new PlanItemStateChangedEvent(
+            UUID.randomUUID(), "pi-style", "style-check",
+            TaskStatus.RUNNING, TaskStatus.COMPLETED, "test-tenant");
+        bridge.onPlanItemChanged(event);
+
+        ArgumentCaptor<String> jsonCaptor = ArgumentCaptor.forClass(String.class);
+        verify(asyncRemote).sendText(jsonCaptor.capture());
+
+        String json = jsonCaptor.getValue();
+        assertThat(json).contains("\"op\":\"event\"");
+        assertThat(json).contains("\"topic\":\"planitem.state\"");
+        assertThat(json).contains("pi-style");
+        assertThat(json).contains("style-check");
+        assertThat(json).contains("COMPLETED");
+        assertThat(json).contains("RUNNING");
+    }
+
+    @Test
+    void onContextUpdated_sendsJsonToConnectedSessions() {
+        var bridge = new GovernanceEventBridge();
+        var session = mock(Session.class);
+        var asyncRemote = mock(RemoteEndpoint.Async.class);
+        when(session.getAsyncRemote()).thenReturn(asyncRemote);
+        when(session.isOpen()).thenReturn(true);
+
+        bridge.onOpen(session);
+
+        var event = new CaseContextUpdatedEvent(
+            UUID.randomUUID(), "analysis", "test-tenant");
+        bridge.onContextUpdated(event);
+
+        ArgumentCaptor<String> jsonCaptor = ArgumentCaptor.forClass(String.class);
+        verify(asyncRemote).sendText(jsonCaptor.capture());
+
+        String json = jsonCaptor.getValue();
+        assertThat(json).contains("\"op\":\"event\"");
+        assertThat(json).contains("\"topic\":\"context.update\"");
+        assertThat(json).contains("analysis");
+    }
+
+    @Test
+    void onPlanItemChanged_handlesNullPreviousStatus() {
+        var bridge = new GovernanceEventBridge();
+        var session = mock(Session.class);
+        var asyncRemote = mock(RemoteEndpoint.Async.class);
+        when(session.getAsyncRemote()).thenReturn(asyncRemote);
+        when(session.isOpen()).thenReturn(true);
+
+        bridge.onOpen(session);
+
+        var event = new PlanItemStateChangedEvent(
+            UUID.randomUUID(), "pi-new", "initial-analysis",
+            null, TaskStatus.PENDING, "test-tenant");
+        bridge.onPlanItemChanged(event);
+
+        ArgumentCaptor<String> jsonCaptor = ArgumentCaptor.forClass(String.class);
+        verify(asyncRemote).sendText(jsonCaptor.capture());
+
+        String json = jsonCaptor.getValue();
+        assertThat(json).contains("\"topic\":\"planitem.state\"");
+        assertThat(json).contains("PENDING");
     }
 }

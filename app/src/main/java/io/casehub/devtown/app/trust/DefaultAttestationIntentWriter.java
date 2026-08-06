@@ -4,7 +4,6 @@ import io.casehub.blocks.attestation.AttestationIntent;
 import io.casehub.blocks.attestation.AttestationIntentWriter;
 import io.casehub.ledger.api.model.LedgerAttestation;
 import io.casehub.ledger.api.spi.LedgerEntryRepository;
-import io.quarkus.arc.DefaultBean;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
@@ -15,7 +14,6 @@ import java.time.Instant;
 import java.util.UUID;
 
 @ApplicationScoped
-@DefaultBean
 public class DefaultAttestationIntentWriter implements AttestationIntentWriter {
 
     private static final Logger LOG = Logger.getLogger(DefaultAttestationIntentWriter.class);

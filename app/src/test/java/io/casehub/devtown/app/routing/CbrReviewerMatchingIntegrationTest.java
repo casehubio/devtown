@@ -52,8 +52,8 @@ class CbrReviewerMatchingIntegrationTest {
         var strategy = new TrustWeightedImplementationRoutingStrategy(classifier, trustSource, new StubPolicyProvider(CBR_POLICY));
 
         var candidates = List.of(
-                new ImplementationCandidate("specialist-agent", ReviewDomain.SECURITY_REVIEW, "specialist-agent"),
-                new ImplementationCandidate("generalist-agent", ReviewDomain.SECURITY_REVIEW, "generalist-agent"));
+                new ImplementationCandidate("specialist-agent", "specialist-agent", ReviewDomain.SECURITY_REVIEW),
+                new ImplementationCandidate("generalist-agent", "generalist-agent", ReviewDomain.SECURITY_REVIEW));
 
         var result = strategy.select(ctx, candidates);
 
@@ -83,8 +83,8 @@ class CbrReviewerMatchingIntegrationTest {
                 classifier, trustSource, new StubPolicyProvider(policyZero));
 
         var candidates = List.of(
-                new ImplementationCandidate("agent-a", ReviewDomain.SECURITY_REVIEW, "agent-a"),
-                new ImplementationCandidate("agent-b", ReviewDomain.SECURITY_REVIEW, "agent-b"));
+                new ImplementationCandidate("agent-a", "agent-a", ReviewDomain.SECURITY_REVIEW),
+                new ImplementationCandidate("agent-b", "agent-b", ReviewDomain.SECURITY_REVIEW));
 
         var resultWith = strategyWithCbr.select(ctx, candidates);
         var resultWithout = strategyWithout.select(ctx, candidates);

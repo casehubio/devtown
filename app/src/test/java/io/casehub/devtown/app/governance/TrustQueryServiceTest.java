@@ -3,7 +3,6 @@ package io.casehub.devtown.app.governance;
 import io.casehub.ledger.api.model.AttestationVerdict;
 import io.casehub.ledger.model.WorkerDecisionEntry;
 import io.casehub.ledger.runtime.model.LedgerAttestation;
-import io.casehub.ledger.runtime.model.TrustScoreSnapshot;
 import io.casehub.ledger.runtime.service.TrustGateService;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.TypedQuery;
@@ -25,8 +24,6 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 class TrustQueryServiceTest {
-    static class TestSnapshot extends TrustScoreSnapshot {}
-
 
     TrustGateService trustGateService;
     EntityManager em;
@@ -69,31 +66,11 @@ class TrustQueryServiceTest {
         assertThat(result.capabilityScores()).isEmpty();
     }
 
-    @SuppressWarnings("unchecked")
+    // TODO: TrustScoreSnapshot removed from ledger SNAPSHOT — restore when replacement entity available
     @Test
-    void trustTrend_returnsSnapshotsFromNamedQuery() {
-        final var snap1 = new TestSnapshot();
-        snap1.occurredAt = Instant.parse("2026-08-01T10:00:00Z");
-        snap1.score = 0.75;
-        snap1.previousScore = 0.70;
-
-        final var snap2 = new TestSnapshot();
-        snap2.occurredAt = Instant.parse("2026-08-02T10:00:00Z");
-        snap2.score = 0.78;
-        snap2.previousScore = 0.75;
-
-        final TypedQuery<TrustScoreSnapshot> mockQuery = mock(TypedQuery.class);
-        when(em.createNamedQuery("TrustScoreSnapshot.findByActorAndCapability", TrustScoreSnapshot.class))
-                .thenReturn(mockQuery);
-        when(mockQuery.setParameter(anyString(), any())).thenReturn(mockQuery);
-        when(mockQuery.setMaxResults(anyInt())).thenReturn(mockQuery);
-        when(mockQuery.getResultList()).thenReturn(List.of(snap2, snap1));
-
+    void trustTrend_returnsEmptyUntilSnapshotEntityRestored() {
         final var result = service.trustTrend("agent-1", "security-review", 30);
-
-        assertThat(result).hasSize(2);
-        assertThat(result.get(0).score()).isEqualTo(0.78);
-        assertThat(result.get(1).score()).isEqualTo(0.75);
+        assertThat(result).isEmpty();
     }
 
     @SuppressWarnings("unchecked")
@@ -243,7 +220,7 @@ class TrustQueryServiceTest {
 
     @SuppressWarnings("unchecked")
     @Test
-    void routingDetail_mapsFeedbackWithTrustBeforeAfter() {
+    void routingDetail_mapsFeedbackFromAttestations() {
         final UUID entryId = UUID.randomUUID();
         final var entry = new WorkerDecisionEntry();
         entry.id = entryId;
@@ -261,25 +238,14 @@ class TrustQueryServiceTest {
         attestation.occurredAt = Instant.parse("2026-08-02T15:00:00Z");
         attestation.trustDimension = "review-thoroughness";
 
-        final var snapshot = new TestSnapshot();
-        snapshot.previousScore = 0.75;
-        snapshot.score = 0.65;
-
         when(em.find(WorkerDecisionEntry.class, entryId)).thenReturn(entry);
 
-        @SuppressWarnings("unchecked")
         final TypedQuery<Object> attestationQuery = mock(TypedQuery.class, "attestationQuery");
-        @SuppressWarnings("unchecked")
-        final TypedQuery<Object> snapshotQuery = mock(TypedQuery.class, "snapshotQuery");
 
         when(em.createQuery(anyString(), any(Class.class)))
-                .thenReturn(attestationQuery)
-                .thenReturn(snapshotQuery);
+                .thenReturn(attestationQuery);
         when(attestationQuery.setParameter(anyString(), any())).thenReturn(attestationQuery);
         when(attestationQuery.getResultList()).thenReturn(List.of(attestation));
-        when(snapshotQuery.setParameter(anyString(), any())).thenReturn(snapshotQuery);
-        when(snapshotQuery.setMaxResults(anyInt())).thenReturn(snapshotQuery);
-        when(snapshotQuery.getResultList()).thenReturn(List.of(snapshot));
 
         final var detail = service.routingDetail("agent-1", entryId);
 
@@ -287,8 +253,6 @@ class TrustQueryServiceTest {
         final var gate = detail.feedback().get(0);
         assertThat(gate.decision()).isEqualTo("FLAGGED");
         assertThat(gate.actor()).isEqualTo("devtown:incident-feedback");
-        assertThat(gate.trustScoreBefore()).isEqualTo(0.75);
-        assertThat(gate.trustScoreAfter()).isEqualTo(0.65);
         assertThat(gate.dimension()).isEqualTo("review-thoroughness");
     }
 }

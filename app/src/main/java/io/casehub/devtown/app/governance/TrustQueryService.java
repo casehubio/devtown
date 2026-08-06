@@ -4,7 +4,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.casehub.ledger.api.model.LedgerAttestation;
 import io.casehub.ledger.model.WorkerDecisionEntry;
-import io.casehub.ledger.runtime.model.TrustScoreSnapshot;
 import io.casehub.ledger.runtime.persistence.LedgerPersistenceUnit;
 import io.casehub.ledger.runtime.service.TrustGateService;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -61,17 +60,10 @@ public class TrustQueryService {
         return new TrustScoreResponse(actorId, globalScore, capabilityScores, dimensionScores);
     }
 
+    // TODO: TrustScoreSnapshot removed from ledger SNAPSHOT — restore when replacement entity available
     @Transactional
     public List<TrustTrendPoint> trustTrend(String actorId, String capabilityTag, int limit) {
-        List<TrustScoreSnapshot> snapshots = em
-                .createNamedQuery("TrustScoreSnapshot.findByActorAndCapability", TrustScoreSnapshot.class)
-                .setParameter("actorId", actorId)
-                .setParameter("capabilityTag", capabilityTag)
-                .setMaxResults(Math.min(limit, 200))
-                .getResultList();
-        return snapshots.stream()
-                .map(s -> new TrustTrendPoint(s.occurredAt, s.score, s.previousScore))
-                .toList();
+        return Collections.emptyList();
     }
 
     @Transactional
@@ -187,26 +179,13 @@ public class TrustQueryService {
             return Collections.emptyList();
         }
 
-        return attestations.stream().map(a -> {
-            double before = 0.0;
-            double after = 0.0;
-            List<TrustScoreSnapshot> snapshots = em
-                    .createQuery("SELECT s FROM TrustScoreSnapshot s WHERE s.actorId = :actorId"
-                            + " AND s.occurredAt <= :ts ORDER BY s.occurredAt DESC", TrustScoreSnapshot.class)
-                    .setParameter("actorId", a.attestorId)
-                    .setParameter("ts", a.occurredAt)
-                    .setMaxResults(1)
-                    .getResultList();
-            if (!snapshots.isEmpty()) {
-                before = snapshots.get(0).previousScore;
-                after = snapshots.get(0).score;
-            }
-            return new GateDecision(
+        // TODO: TrustScoreSnapshot removed from ledger — before/after scores unavailable until replacement entity
+        return attestations.stream().map(a -> new GateDecision(
                     a.verdict != null ? a.verdict.name() : "",
                     a.attestorId,
                     a.evidence,
-                    before, after,
-                    a.trustDimension != null ? a.trustDimension : "");
-        }).toList();
+                    0.0, 0.0,
+                    a.trustDimension != null ? a.trustDimension : ""))
+                .toList();
     }
 }

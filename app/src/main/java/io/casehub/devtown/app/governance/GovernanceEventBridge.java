@@ -2,7 +2,9 @@ package io.casehub.devtown.app.governance;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import io.casehub.engine.common.spi.event.CaseContextUpdatedEvent;
 import io.casehub.engine.common.spi.event.CaseLifecycleEvent;
+import io.casehub.engine.common.spi.event.PlanItemStateChangedEvent;
 import io.casehub.ledger.runtime.service.routing.TrustScoreActorUpdatedEvent;
 import io.casehub.qhorus.api.message.CommitmentDeclinedEvent;
 import io.casehub.qhorus.api.message.CommitmentExpiredEvent;
@@ -86,6 +88,24 @@ public class GovernanceEventBridge {
         broadcast("sla.breach", MAPPER.createObjectNode()
             .put("taskId", event.context().task().taskId().toString())
             .put("breachType", event.context().breachType().name())
+            .put("timestamp", java.time.Instant.now().toString()));
+    }
+
+    void onPlanItemChanged(@ObservesAsync PlanItemStateChangedEvent event) {
+        broadcast("planitem.state", MAPPER.createObjectNode()
+            .put("caseId", event.caseId().toString())
+            .put("planItemId", event.planItemId())
+            .put("bindingName", event.bindingName())
+            .put("previousStatus", event.previousStatus() != null
+                ? event.previousStatus().name() : null)
+            .put("newStatus", event.newStatus().name())
+            .put("timestamp", java.time.Instant.now().toString()));
+    }
+
+    void onContextUpdated(@ObservesAsync CaseContextUpdatedEvent event) {
+        broadcast("context.update", MAPPER.createObjectNode()
+            .put("caseId", event.caseId().toString())
+            .put("changedLayer", event.changedLayer())
             .put("timestamp", java.time.Instant.now().toString()));
     }
 

@@ -1,6 +1,7 @@
 # CaseHub vs Gastown: Architectural Analysis v5
 
 > **Date:** 2026-07-07
+> **Superseded by:** [v6](gastown-casehub-analysis-v6.md) (2026-08-07) — comparison target changed from Gas Town to Gas City
 > **Previous versions:** [v4](gastown-casehub-analysis-v4.md) (2026-06-26), [v3](gastown-casehub-analysis-v3.md) (2026-06-18), [v2](gastown-casehub-analysis-v2.md) (2026-05-25), [v1](gastown-casehub-analysis.md) (2026-04-27, archived — uses obsolete naming)
 
 ---

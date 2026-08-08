@@ -38,14 +38,6 @@ class TrustQueryServiceTest {
         service.em = em;
     }
 
-    private static TrustScoreSnapshot snapshot(double score, double previousScore, Instant occurredAt) {
-        var s = new TrustScoreSnapshot() {};
-        s.score         = score;
-        s.previousScore = previousScore;
-        s.occurredAt    = occurredAt;
-        return s;
-    }
-
 
     @Test
     void trustScore_assemblesGlobalAndCapabilityAndDimensionScores() {

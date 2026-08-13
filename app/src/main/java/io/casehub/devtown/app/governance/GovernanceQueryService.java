@@ -25,7 +25,7 @@ import io.casehub.platform.api.preferences.SettingsScope;
 import io.casehub.qhorus.api.message.Commitment;
 import io.casehub.qhorus.api.store.CommitmentStore;
 import io.casehub.work.api.WorkItemStatus;
-import io.casehub.work.runtime.model.WorkItemEntity;
+import io.casehub.work.api.WorkItem;
 import io.casehub.work.api.WorkItemQuery;
 import io.casehub.work.api.spi.WorkItemStore;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -567,13 +567,13 @@ public class GovernanceQueryService {
         var humanOversight = workItemStore.scan(
             WorkItemQuery.builder().status(WorkItemStatus.PENDING).type("human-oversight").build());
 
-        var all = new ArrayList<WorkItemEntity>();
+        var all = new ArrayList<WorkItem>();
         all.addAll(humanDecisions);
         all.addAll(humanOversight);
 
         return all.stream().map(wi -> new TriageItem(
-            wi.id, "", firstTypePath(wi), wi.candidateGroups,
-            wi.expiresAt, "", wi.createdAt, wi.parentId
+            wi.id(), "", firstTypePath(wi), wi.candidateGroups(),
+            wi.expiresAt(), "", wi.createdAt(), wi.parentId()
         )).sorted(Comparator.comparing(t -> t.expiresAt() != null ? t.expiresAt() : Instant.MAX))
         .toList();
     }
@@ -622,8 +622,8 @@ public class GovernanceQueryService {
         return reviewDetail(caseId, "default");
     }
 
-    private static String firstTypePath(WorkItemEntity wi) {
-        if (wi.types == null || wi.types.isEmpty()) return "";
-        return wi.types.iterator().next().path;
+    private static String firstTypePath(WorkItem wi) {
+        if (wi.types() == null || wi.types().isEmpty()) return "";
+        return wi.types().iterator().next();
     }
 }

@@ -656,7 +656,7 @@ Not a module in casehub-engine — a separate **application** built on top of Ca
 | What the app provides | Built on which CaseHub primitive |
 |----------------------|----------------------------------|
 | Merge queue as a process | `CasePlanModel` — each case is a batch of MRs |
-| MR human review step | `WorkItem` with SLA + form schema |
+| MR human review step | `WorkItemEntity` with SLA + form schema |
 | Automated CI / lint / security check | Lambda worker or Quarkus Flow workflow |
 | Batch-then-bisect strategy | Choreography binding: tip-of-batch fails → binding condition routes to bisect sub-case |
 | Agent-to-agent review communication | qhorus typed channels |

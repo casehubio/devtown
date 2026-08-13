@@ -189,7 +189,7 @@ These were in the original Gastown-derived 13-tag vocabulary and removed. They a
 
 ### What it adds
 
-Layer 2 adds `casehub-work` to the PR review case. The gap it closes: human review can stall indefinitely with no escalation. After Layer 2, every human review assignment is a `WorkItem` with a configurable `claimDeadline` (24h default), routed to `pr-reviewers`. When the reviewer misses the deadline, `SlaBreachPolicy` fires: escalate to `pr-leads` with a new 8h deadline; if they miss it too, fail with reason `"sla-breach"` and signal the case context.
+Layer 2 adds `casehub-work` to the PR review case. The gap it closes: human review can stall indefinitely with no escalation. After Layer 2, every human review assignment is a `WorkItemEntity` with a configurable `claimDeadline` (24h default), routed to `pr-reviewers`. When the reviewer misses the deadline, `SlaBreachPolicy` fires: escalate to `pr-leads` with a new 8h deadline; if they miss it too, fail with reason `"sla-breach"` and signal the case context.
 
 The escalation is stateless — `DefaultSlaBreachPolicy` reads `candidateGroups` from the expired WorkItem to detect the current tier. No decision tree serialization; no state storage. `SlaBreachHandler` observes the `SlaBreachEvent` and calls `caseHub.signal()` on `Fail`, writing `humanApproval.status = "sla-breach"` into the case context.
 
@@ -200,7 +200,7 @@ The escalation is stateless — `DefaultSlaBreachPolicy` reads `candidateGroups`
 | Gap | What breaks | Closed by |
 |-----|-------------|-----------|
 | No response SLA | Human reviewer misses a security finding; no escalation, no record | `WorkItem.claimDeadline` + `SlaBreachPolicy` |
-| No formal human task lifecycle | Review assigned to a group with no individual accountability | `WorkItem` claim → individual assignment → completion record |
+| No formal human task lifecycle | Review assigned to a group with no individual accountability | `WorkItemEntity` claim → individual assignment → completion record |
 
 ### Key files
 

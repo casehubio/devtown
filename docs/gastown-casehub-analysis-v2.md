@@ -423,7 +423,7 @@ These capabilities are operational and battle-tested at v1.0.1. For the software
 | Application capability | CaseHub primitive used | Status |
 |-----------------------|----------------------|--------|
 | Content-driven PR routing | `CasePlanModel` — security review fires on code content, not author labels | ✅ Layer 5 (devtown#10) |
-| MR human review gate with SLA | `WorkItem` with SLA + escalation via `SlaBreachPolicy` SPI | ✅ Layer 2 (devtown#41) |
+| MR human review gate with SLA | `WorkItemEntity` with SLA + escalation via `SlaBreachPolicy` SPI | ✅ Layer 2 (devtown#41) |
 | Human + CI parallel execution | WAITING state — both fire simultaneously, total time = max not sum | ✅ Layer 5 (devtown#10) |
 | HITL case resumption (happy path) | `casehub-work-adapter` wired; `WorkItemLifecycleEvent(COMPLETED)` → case signal | ✅ devtown#33 |
 | Cryptographic audit per case event | `CaseLedgerEntry` Merkle ledger entry | ✅ P1.4 (engine) |
@@ -762,7 +762,7 @@ Application work is distinct from foundation work. These items are built on top 
 | Application capability | CaseHub primitive | Foundation gate | devtown status |
 |-----------------------|------------------|----------------|----------------|
 | Content-driven PR routing | `CasePlanModel` — bindings gate on code content | P0 ✅ | ✅ Layer 5 (devtown#10) |
-| MR human review gate with SLA | `WorkItem` + `SlaBreachPolicy` SPI | P0 ✅ | ✅ Layer 2 (devtown#41) |
+| MR human review gate with SLA | `WorkItemEntity` + `SlaBreachPolicy` SPI | P0 ✅ | ✅ Layer 2 (devtown#41) |
 | CI / lint / security check | Lambda binding worker | P0 ✅ | ✅ Layer 5 (devtown#10) |
 | HITL case resumption (happy path) | `casehub-work-adapter` wired | P0 ✅ | ✅ devtown#33 |
 | Cryptographic audit per case event | `CaseLedgerEntry`, Merkle ledger | P1.4 ✅ | ✅ Inherited from foundation |

@@ -2,8 +2,8 @@ package io.casehub.devtown.app;
 
 import io.casehub.engine.common.spi.CrossTenantCaseInstanceRepository;
 import io.casehub.work.api.WorkItemStatus;
-import io.casehub.work.runtime.model.WorkItem;
-import io.casehub.work.runtime.repository.WorkItemStore;
+import io.casehub.work.runtime.model.WorkItemEntity;
+import io.casehub.work.api.spi.WorkItemStore;
 import io.casehub.work.runtime.service.ExpiryLifecycleService;
 import io.quarkus.test.junit.QuarkusTest;
 import jakarta.inject.Inject;
@@ -123,7 +123,7 @@ class SlaBreachLifecycleTest {
                 });
     }
 
-    private static boolean isHumanApprovalFor(WorkItem item, UUID caseId) {
+    private static boolean isHumanApprovalFor(WorkItemEntity item, UUID caseId) {
         return item.callerRef != null && item.callerRef.startsWith("case:" + caseId);
     }
 }

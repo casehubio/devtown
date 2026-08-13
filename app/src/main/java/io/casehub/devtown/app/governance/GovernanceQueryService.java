@@ -25,9 +25,9 @@ import io.casehub.platform.api.preferences.SettingsScope;
 import io.casehub.qhorus.api.message.Commitment;
 import io.casehub.qhorus.api.store.CommitmentStore;
 import io.casehub.work.api.WorkItemStatus;
-import io.casehub.work.runtime.model.WorkItem;
-import io.casehub.work.runtime.repository.WorkItemQuery;
-import io.casehub.work.runtime.repository.WorkItemStore;
+import io.casehub.work.runtime.model.WorkItemEntity;
+import io.casehub.work.api.WorkItemQuery;
+import io.casehub.work.api.spi.WorkItemStore;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
@@ -567,7 +567,7 @@ public class GovernanceQueryService {
         var humanOversight = workItemStore.scan(
             WorkItemQuery.builder().status(WorkItemStatus.PENDING).type("human-oversight").build());
 
-        var all = new ArrayList<WorkItem>();
+        var all = new ArrayList<WorkItemEntity>();
         all.addAll(humanDecisions);
         all.addAll(humanOversight);
 
@@ -622,7 +622,7 @@ public class GovernanceQueryService {
         return reviewDetail(caseId, "default");
     }
 
-    private static String firstTypePath(WorkItem wi) {
+    private static String firstTypePath(WorkItemEntity wi) {
         if (wi.types == null || wi.types.isEmpty()) return "";
         return wi.types.iterator().next().path;
     }

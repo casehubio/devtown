@@ -4,7 +4,7 @@ import io.casehub.api.model.CaseStatus;
 import io.casehub.engine.common.spi.CrossTenantCaseInstanceRepository;
 import io.casehub.work.engine.WorkItemLifecycleAdapter;
 import io.casehub.work.runtime.event.WorkItemLifecycleEvent;
-import io.casehub.work.runtime.model.WorkItem;
+import io.casehub.work.runtime.model.WorkItemEntity;
 import io.casehub.work.runtime.service.WorkItemService;
 import io.quarkus.test.junit.QuarkusTest;
 import jakarta.inject.Inject;
@@ -144,7 +144,7 @@ class HumanApprovalLifecycleTest {
                 });
     }
 
-    private static boolean isHumanApprovalFor(final WorkItem item, final UUID caseId) {
+    private static boolean isHumanApprovalFor(final WorkItemEntity item, final UUID caseId) {
         return item.callerRef != null && item.callerRef.contains(caseId.toString());
     }
 }

@@ -7,7 +7,7 @@ import io.casehub.platform.api.preferences.PreferenceProvider;
 import io.casehub.platform.api.preferences.Preferences;
 import io.casehub.platform.api.preferences.SettingsScope;
 import io.casehub.work.runtime.event.WorkItemLifecycleEvent;
-import io.casehub.work.runtime.model.WorkItem;
+import io.casehub.work.runtime.model.WorkItemEntity;
 import io.casehub.work.runtime.model.WorkItemType;
 import io.casehub.work.api.WorkItemStatus;
 import jakarta.enterprise.event.Event;
@@ -68,7 +68,7 @@ class ReviewAssignmentNotificationBridgeTest {
     }
 
     private WorkItemLifecycleEvent workItemEvent(String eventName, Set<String> typeStrings, String assigneeId) {
-        WorkItem wi = new WorkItem();
+        WorkItemEntity wi = new WorkItemEntity();
         wi.id = UUID.randomUUID();
         wi.tenancyId = "tenant-1";
         wi.assigneeId = assigneeId;

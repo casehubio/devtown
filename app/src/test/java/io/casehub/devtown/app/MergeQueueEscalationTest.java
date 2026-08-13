@@ -4,7 +4,7 @@ import io.casehub.api.model.CaseStatus;
 import io.casehub.engine.common.spi.CrossTenantCaseInstanceRepository;
 import io.casehub.work.engine.WorkItemLifecycleAdapter;
 import io.casehub.work.runtime.event.WorkItemLifecycleEvent;
-import io.casehub.work.runtime.model.WorkItem;
+import io.casehub.work.runtime.model.WorkItemEntity;
 import io.casehub.work.runtime.service.WorkItemService;
 import io.casehub.worker.api.Worker;
 import io.casehub.worker.api.WorkerResult;
@@ -268,7 +268,7 @@ class MergeQueueEscalationTest {
     // ── WorkItem completion helper ───────────────────────────────────────────
 
     private void completeWorkItems(UUID caseId,
-                                    java.util.function.BiPredicate<WorkItem, UUID> filter,
+                                    java.util.function.BiPredicate<WorkItemEntity, UUID> filter,
                                     String resolution) {
         var toComplete = workItemQueries.scanAll().stream()
             .filter(i -> filter.test(i, caseId))
@@ -287,21 +287,21 @@ class MergeQueueEscalationTest {
 
     // ── WorkItem matching predicates ─────────────────────────────────────────
 
-    private boolean isMergeApprovalFor(WorkItem item, UUID caseId) {
+    private boolean isMergeApprovalFor(WorkItemEntity item, UUID caseId) {
         return item.callerRef != null
             && item.callerRef.contains(caseId.toString())
             && item.title != null
             && item.title.contains("High-risk");
     }
 
-    private boolean isMergeEscalationFor(WorkItem item, UUID caseId) {
+    private boolean isMergeEscalationFor(WorkItemEntity item, UUID caseId) {
         return item.callerRef != null
             && item.callerRef.contains(caseId.toString())
             && item.title != null
             && item.title.contains("Merge execution failed");
     }
 
-    private boolean isTipTestEscalationFor(WorkItem item, UUID caseId) {
+    private boolean isTipTestEscalationFor(WorkItemEntity item, UUID caseId) {
         return item.callerRef != null
             && item.callerRef.contains(caseId.toString())
             && item.title != null

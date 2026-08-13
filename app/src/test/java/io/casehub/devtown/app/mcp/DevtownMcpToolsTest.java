@@ -18,6 +18,7 @@ import io.casehub.neocortex.memory.CaseMemoryStore;
 import io.casehub.platform.api.identity.CurrentPrincipal;
 import io.casehub.platform.api.identity.TenancyConstants;
 import io.casehub.qhorus.api.store.CommitmentStore;
+import io.casehub.work.api.spi.WorkItemStore;
 import jakarta.enterprise.inject.Instance;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -69,7 +70,7 @@ class DevtownMcpToolsTest {
     Instance<CaseMemoryStore> memoryStoreInstance;
 
     @Mock
-    Instance<io.casehub.work.runtime.repository.WorkItemStore> workItemStoreInstance;
+    Instance<WorkItemStore> workItemStoreInstance;
 
     @Mock
     MergeQueueService mergeQueueService;

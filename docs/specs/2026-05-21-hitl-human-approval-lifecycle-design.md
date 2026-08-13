@@ -15,7 +15,7 @@ test. Until one exists, the wiring is unverified below unit level.
 ## What the test covers
 
 1. A PR review case with `linesChanged > humanApprovalThreshold` causes the
-   `human-approval` binding to fire and create a `WorkItem`.
+   `human-approval` binding to fire and create a `WorkItemEntity`.
 2. The WorkItem carries the correct `callerRef` (`case:{id}/pi:{planItemId}`) and
    title (`PR approval required`).
 3. Completing the WorkItem via `WorkItemService.completeFromSystem()` with resolution

@@ -1,0 +1,6 @@
+spec:
+  bindings:
+    - name: human-approval
+      humanTask:
+        candidateGroups: [devtown-reviewers]
+        expiresIn: PT48H

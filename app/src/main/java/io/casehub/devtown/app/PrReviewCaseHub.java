@@ -1,23 +1,23 @@
 package io.casehub.devtown.app;
 
-import io.casehub.api.engine.YamlCaseHub;
 import io.casehub.api.model.CaseDefinition;
-import io.casehub.worker.api.Worker;
-import io.casehub.worker.api.WorkerResult;
 import io.casehub.devtown.domain.MergeClient;
 import io.casehub.devtown.domain.MergeOutcome;
+import io.casehub.devtown.template.PrReviewTemplateCaseHub;
+import io.casehub.worker.api.Worker;
+import io.casehub.worker.api.WorkerResult;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import java.util.Map;
 
 @ApplicationScoped
-public class PrReviewCaseHub extends YamlCaseHub {
+public class PrReviewCaseHub extends PrReviewTemplateCaseHub {
 
     @Inject
     MergeClient mergeClient;
 
     public PrReviewCaseHub() {
-        super("devtown/pr-review.yaml");
+        super("devtown/pr-review-overrides.yaml");
     }
 
     @Override

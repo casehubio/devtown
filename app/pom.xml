@@ -26,6 +26,10 @@
     </dependency>
     <dependency>
       <groupId>io.casehub</groupId>
+      <artifactId>casehub-devtown-pr-review-template</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>io.casehub</groupId>
       <artifactId>casehub-devtown-queue</artifactId>
     </dependency>
     <dependency>

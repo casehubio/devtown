@@ -1,0 +1,437 @@
+dsl: "0.1"
+version: "1.0.0"
+name: pr-review
+namespace: devtown
+title: PR Review — content-driven routing with failure cascade
+
+spec:
+
+  ## ─── Capabilities ──────────────────────────────────────────────────
+  capabilities:
+    - name: code-analysis
+      description: "Characterises the code: crypto, auth, cross-API changes, scope"
+      inputProjection: "{ pr: .pr }"
+      outputProjection: "{ codeAnalysis: . }"
+
+    - name: security-review
+      description: "Security specialist review — fires only on security-sensitive code"
+      inputProjection: "{ pr: .pr, codeAnalysis: .codeAnalysis }"
+      outputProjection: "{ securityReview: { outcome: . } }"
+
+    - name: architecture-review
+      description: "Architecture review — fires only when cross-API changes are detected"
+      inputProjection: "{ pr: .pr, codeAnalysis: .codeAnalysis }"
+      outputProjection: "{ architectureReview: { outcome: . } }"
+
+    - name: style-review
+      description: "Style and formatting check"
+      inputProjection: "{ pr: .pr }"
+      outputProjection: "{ styleCheck: { outcome: . } }"
+
+    - name: test-coverage
+      description: "Test coverage analysis"
+      inputProjection: "{ pr: .pr }"
+      outputProjection: "{ testCoverage: { outcome: . } }"
+
+    - name: performance-analysis
+      description: "Performance impact analysis"
+      inputProjection: "{ pr: .pr }"
+      outputProjection: "{ performanceAnalysis: { outcome: . } }"
+
+    - name: ci-runner
+      description: "Runs the CI suite for the PR"
+      inputProjection: "{ pr: .pr }"
+      outputProjection: "{ ci: { status: . } }"
+
+    - name: merge-executor
+      description: "Executes the merge when all goals are satisfied"
+      inputProjection: "{ pr: .pr }"
+
+    - name: merge-queue-enqueue
+      description: "Enqueues the PR into the merge queue"
+      inputProjection: "{ pr: .pr, codeAnalysis: .codeAnalysis }"
+      outputProjection: "{ enqueueResult: . }"
+
+  ## ─── Goals ──────────────────────────────────────────────────────────
+  goals:
+    - name: pr-approved
+      kind: success
+      condition: >-
+        .pr.status == "merged" or
+        (((.codeAnalysis.securitySensitive == false and .securityReview == null) or
+          .securityReview.outcome == "APPROVED") and
+         ((.codeAnalysis.architectureCrossing == false and .architectureReview == null) or
+          .architectureReview.outcome == "APPROVED") and
+         .styleCheck.outcome == "APPROVED" and
+         .testCoverage.outcome == "APPROVED" and
+         .performanceAnalysis.outcome == "APPROVED")
+
+    - name: security-verified
+      kind: success
+      condition: >-
+        .pr.status == "merged" or
+        (.codeAnalysis.securitySensitive == false and .securityReview == null) or
+        .securityReview.outcome == "APPROVED"
+
+    - name: ci-passing
+      kind: success
+      condition: '.pr.status == "merged" or .ci.status == "passing"'
+
+    - name: review-blocked
+      kind: failure
+      condition: >-
+        [.securityReview.outcome, .architectureReview.outcome,
+         .styleCheck.outcome, .testCoverage.outcome,
+         .performanceAnalysis.outcome, .humanApproval.outcome] | any(. == "BLOCKED")
+
+    - name: review-rejected
+      kind: failure
+      condition: >-
+        [.securityReview.outcome, .architectureReview.outcome,
+         .styleCheck.outcome, .testCoverage.outcome,
+         .performanceAnalysis.outcome, .humanApproval.outcome] | any(. == "REJECTED")
+
+    - name: review-abandoned
+      kind: failure
+      condition: '.pr.status == "closed" or .pr.status == "superseded"'
+
+    - name: merge-completed
+      kind: success
+      condition: '.coordinatedChange == true or .pr.status == "merged" or .merge_sha != null'
+
+  completion:
+    success:
+      allOf:
+        - pr-approved
+        - security-verified
+        - ci-passing
+        - merge-completed
+    failure:
+      anyOf:
+        - review-blocked
+        - review-rejected
+        - review-abandoned
+
+  ## ─── CBR ─────────────────────────────────────────────────────────────
+  cbr:
+    timing: case-lifetime
+    topK: 5
+    minSimilarity: 0.3
+    features:
+      repo: ".pr.repo"
+      lines-changed: ".pr.linesChanged"
+      contributor: ".pr.contributor"
+      changed-paths: "[.pr.changedPaths[]]"
+
+  ## ─── Bindings ────────────────────────────────────────────────────────
+  bindings:
+
+    ## ── Tier 1-2: Capability dispatch with OutcomePolicy reroute loop ──
+
+    - name: initial-analysis
+      on: { contextChange: {} }
+      when: ".pr != null and .codeAnalysis == null"
+      capability: code-analysis
+      conflictResolverStrategy: DEEP_MERGE
+      outcomePolicy:
+        onDecline: REROUTE
+        onFailure: REROUTE
+        onExpired: REROUTE
+        maxRerouteAttempts: 2
+
+    - name: run-ci
+      on: { contextChange: {} }
+      when: ".pr != null and .ci == null"
+      capability: ci-runner
+      conflictResolverStrategy: DEEP_MERGE
+      outcomePolicy:
+        onDecline: REROUTE
+        onFailure: REROUTE
+        onExpired: REROUTE
+        maxRerouteAttempts: 2
+
+    - name: security-review
+      on: { contextChange: {} }
+      when: >-
+        .codeAnalysis.complete == true and
+        .codeAnalysis.securitySensitive == true and
+        .securityReview == null
+      contextWrite:
+        securityReview:
+          activationSource: content-analysis
+      capability: security-review
+      conflictResolverStrategy: DEEP_MERGE
+      outcomePolicy:
+        onDecline: REROUTE
+        onFailure: REROUTE
+        onExpired: REROUTE
+        maxRerouteAttempts: 2
+
+    - name: architecture-review
+      on: { contextChange: {} }
+      when: >-
+        .codeAnalysis.complete == true and
+        .codeAnalysis.architectureCrossing == true and
+        .architectureReview == null
+      contextWrite:
+        architectureReview:
+          activationSource: content-analysis
+      capability: architecture-review
+      conflictResolverStrategy: DEEP_MERGE
+      outcomePolicy:
+        onDecline: REROUTE
+        onFailure: REROUTE
+        onExpired: REROUTE
+        maxRerouteAttempts: 2
+
+    - name: style-check
+      on: { contextChange: {} }
+      when: ".codeAnalysis.complete == true and .styleCheck == null"
+      capability: style-review
+      conflictResolverStrategy: DEEP_MERGE
+      outcomePolicy:
+        onDecline: REROUTE
+        onFailure: REROUTE
+        onExpired: REROUTE
+        maxRerouteAttempts: 2
+
+    - name: test-coverage
+      on: { contextChange: {} }
+      when: ".codeAnalysis.complete == true and .testCoverage == null"
+      capability: test-coverage
+      conflictResolverStrategy: DEEP_MERGE
+      outcomePolicy:
+        onDecline: REROUTE
+        onFailure: REROUTE
+        onExpired: REROUTE
+        maxRerouteAttempts: 2
+
+    - name: performance-analysis
+      on: { contextChange: {} }
+      when: ".codeAnalysis.complete == true and .performanceAnalysis == null"
+      capability: performance-analysis
+      conflictResolverStrategy: DEEP_MERGE
+      outcomePolicy:
+        onDecline: REROUTE
+        onFailure: REROUTE
+        onExpired: REROUTE
+        maxRerouteAttempts: 2
+
+    ## ── Precedent-triggered capability activation ──
+
+    - name: precedent-security-review
+      on: { contextChange: {} }
+      when: >-
+        .codeAnalysis.complete == true and
+        .codeAnalysis.securitySensitive == false and
+        (.memory.precedentActivations // [] | any(. == "security-review")) and
+        .securityReview == null
+      contextWrite:
+        securityReview:
+          activationSource: precedent
+      capability: security-review
+      conflictResolverStrategy: DEEP_MERGE
+      outcomePolicy:
+        onDecline: REROUTE
+        onFailure: REROUTE
+        onExpired: REROUTE
+        maxRerouteAttempts: 2
+
+    - name: precedent-architecture-review
+      on: { contextChange: {} }
+      when: >-
+        .codeAnalysis.complete == true and
+        .codeAnalysis.architectureCrossing == false and
+        (.memory.precedentActivations // [] | any(. == "architecture-review")) and
+        .architectureReview == null
+      contextWrite:
+        architectureReview:
+          activationSource: precedent
+      capability: architecture-review
+      conflictResolverStrategy: DEEP_MERGE
+      outcomePolicy:
+        onDecline: REROUTE
+        onFailure: REROUTE
+        onExpired: REROUTE
+        maxRerouteAttempts: 2
+
+    ## ── Human gate — fires alongside CI when PR exceeds threshold ──
+
+    - name: human-approval
+      on: { contextChange: {} }
+      when: ".pr.linesChanged > .policy.humanApprovalThreshold and .humanApproval == null"
+      conflictResolverStrategy: DEEP_MERGE
+      humanTask:
+        title: "PR approval required"
+        candidateGroups: [pr-reviewers]
+        expiresIn: PT24H
+        outputMapping: "{ humanApproval: . }"
+        outcomes: [APPROVED, REJECTED, BLOCKED]
+
+    ## ── Tier 3: Scope reduction — fires when reroutes exhausted ──
+
+    - name: security-review-reduced-scope
+      on: { contextChange: {} }
+      when: >-
+        .securityReview.status == "REROUTES_EXHAUSTED" and
+        .securityReview.reducedScope == null
+      contextWrite:
+        securityReview:
+          status: PENDING
+          reducedScope: true
+          excludedAgents: []
+      capability: security-review
+      inputProjectionOverride: "{ flaggedFiles: .codeAnalysis.flaggedFiles }"
+      conflictResolverStrategy: DEEP_MERGE
+      outcomePolicy:
+        onDecline: REROUTE
+        onFailure: REROUTE
+        onExpired: REROUTE
+        maxRerouteAttempts: 2
+
+    - name: architecture-review-reduced-scope
+      on: { contextChange: {} }
+      when: >-
+        .architectureReview.status == "REROUTES_EXHAUSTED" and
+        .architectureReview.reducedScope == null
+      contextWrite:
+        architectureReview:
+          status: PENDING
+          reducedScope: true
+          excludedAgents: []
+      capability: architecture-review
+      inputProjectionOverride: "{ crossingPoints: .codeAnalysis.crossingPoints }"
+      conflictResolverStrategy: DEEP_MERGE
+      outcomePolicy:
+        onDecline: REROUTE
+        onFailure: REROUTE
+        onExpired: REROUTE
+        maxRerouteAttempts: 2
+
+    ## ── Tier 4: Human escalation — fires when all automated tiers exhausted ──
+
+    - name: security-review-human-escalation
+      on: { contextChange: {} }
+      when: >-
+        .securityReview.status == "REROUTES_EXHAUSTED" and
+        .securityReview.reducedScope == true
+      conflictResolverStrategy: DEEP_MERGE
+      humanTask:
+        title: "Security review escalation — all automated reviewers exhausted"
+        candidateGroups: [security-reviewers]
+        expiresIn: PT4H
+        outputMapping: "{ securityReview: { outcome: . } }"
+        outcomes: [APPROVED, REJECTED, BLOCKED]
+
+    - name: architecture-review-human-escalation
+      on: { contextChange: {} }
+      when: >-
+        .architectureReview.status == "REROUTES_EXHAUSTED" and
+        .architectureReview.reducedScope == true
+      conflictResolverStrategy: DEEP_MERGE
+      humanTask:
+        title: "Architecture review escalation — all automated reviewers exhausted"
+        candidateGroups: [architecture-reviewers]
+        expiresIn: PT4H
+        outputMapping: "{ architectureReview: { outcome: . } }"
+        outcomes: [APPROVED, REJECTED, BLOCKED]
+
+    - name: style-check-human-escalation
+      on: { contextChange: {} }
+      when: '.styleCheck.status == "REROUTES_EXHAUSTED"'
+      conflictResolverStrategy: DEEP_MERGE
+      humanTask:
+        title: "Style review escalation"
+        candidateGroups: [pr-reviewers]
+        expiresIn: PT2H
+        outputMapping: "{ styleCheck: { outcome: . } }"
+        outcomes: [APPROVED, REJECTED, BLOCKED]
+
+    - name: test-coverage-human-escalation
+      on: { contextChange: {} }
+      when: '.testCoverage.status == "REROUTES_EXHAUSTED"'
+      conflictResolverStrategy: DEEP_MERGE
+      humanTask:
+        title: "Test coverage escalation"
+        candidateGroups: [pr-reviewers]
+        expiresIn: PT2H
+        outputMapping: "{ testCoverage: { outcome: . } }"
+        outcomes: [APPROVED, REJECTED, BLOCKED]
+
+    - name: performance-analysis-human-escalation
+      on: { contextChange: {} }
+      when: '.performanceAnalysis.status == "REROUTES_EXHAUSTED"'
+      conflictResolverStrategy: DEEP_MERGE
+      humanTask:
+        title: "Performance analysis escalation"
+        candidateGroups: [pr-reviewers]
+        expiresIn: PT2H
+        outputMapping: "{ performanceAnalysis: { outcome: . } }"
+        outcomes: [APPROVED, REJECTED, BLOCKED]
+
+    - name: code-analysis-human-escalation
+      on: { contextChange: {} }
+      when: '.codeAnalysis.status == "REROUTES_EXHAUSTED"'
+      conflictResolverStrategy: DEEP_MERGE
+      humanTask:
+        title: "Code analysis escalation"
+        candidateGroups: [pr-reviewers]
+        expiresIn: PT1H
+        outputMapping: "{ codeAnalysis: { outcome: . } }"
+        outcomes: [APPROVED, REJECTED, BLOCKED]
+
+    - name: ci-runner-human-escalation
+      on: { contextChange: {} }
+      when: '.ci.status == "REROUTES_EXHAUSTED"'
+      conflictResolverStrategy: DEEP_MERGE
+      humanTask:
+        title: "CI escalation — automated CI failed"
+        candidateGroups: [pr-reviewers]
+        expiresIn: PT1H
+        outputMapping: "{ ci: { outcome: . } }"
+        outcomes: [APPROVED, REJECTED, BLOCKED]
+
+    ## ── Merge bindings — mutually exclusive based on merge queue enablement ──
+
+    - name: enqueue-for-merge
+      on: { contextChange: {} }
+      when: >-
+        .coordinatedChange != true and
+        .merge_sha == null and
+        .enqueueResult == null and
+        .pr.status != "merged" and
+        ((.codeAnalysis.securitySensitive == false and .securityReview == null) or .securityReview.outcome == "APPROVED") and
+        ((.codeAnalysis.architectureCrossing == false and .architectureReview == null) or .architectureReview.outcome == "APPROVED") and
+        .styleCheck.outcome == "APPROVED" and
+        .testCoverage.outcome == "APPROVED" and
+        .performanceAnalysis.outcome == "APPROVED" and
+        (.pr.linesChanged <= .policy.humanApprovalThreshold or .humanApproval.outcome == "APPROVED") and
+        .ci.status == "passing" and
+        .policy.mergeQueueEnabled == true
+      capability: merge-queue-enqueue
+      conflictResolverStrategy: DEEP_MERGE
+      outcomePolicy:
+        onDecline: FAULT
+        onFailure: FAULT
+        onExpired: FAULT
+
+    - name: merge-direct
+      on: { contextChange: {} }
+      when: >-
+        .coordinatedChange != true and
+        .merge_sha == null and
+        .pr.status != "merged" and
+        ((.codeAnalysis.securitySensitive == false and .securityReview == null) or .securityReview.outcome == "APPROVED") and
+        ((.codeAnalysis.architectureCrossing == false and .architectureReview == null) or .architectureReview.outcome == "APPROVED") and
+        .styleCheck.outcome == "APPROVED" and
+        .testCoverage.outcome == "APPROVED" and
+        .performanceAnalysis.outcome == "APPROVED" and
+        (.pr.linesChanged <= .policy.humanApprovalThreshold or .humanApproval.outcome == "APPROVED") and
+        .ci.status == "passing" and
+        .policy.mergeQueueEnabled != true
+      capability: merge-executor
+      conflictResolverStrategy: DEEP_MERGE
+      outcomePolicy:
+        onDecline: FAULT
+        onFailure: FAULT
+        onExpired: FAULT

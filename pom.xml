@@ -25,6 +25,7 @@
     <module>merge</module>
     <module>github</module>
     <module>app</module>
+    <module>templates/pr-review</module>
   </modules>
 
   <properties>
@@ -43,6 +44,11 @@
       <dependency>
         <groupId>io.casehub</groupId>
         <artifactId>casehub-devtown-review</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>io.casehub</groupId>
+        <artifactId>casehub-devtown-pr-review-template</artifactId>
         <version>${project.version}</version>
       </dependency>
       <dependency>

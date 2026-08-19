@@ -1,8 +1,6 @@
 package io.casehub.devtown.app;
 
-import io.casehub.api.context.CaseContext;
-import io.casehub.engine.common.internal.model.CaseInstance;
-import io.casehub.engine.common.spi.CrossTenantCaseInstanceRepository;
+import com.fasterxml.jackson.databind.JsonNode;
 import io.casehub.engine.common.spi.event.CaseLifecycleEvent;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.event.ObservesAsync;
@@ -10,7 +8,6 @@ import jakarta.inject.Inject;
 import org.jboss.logging.Logger;
 
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 /**
@@ -27,20 +24,12 @@ import java.util.Set;
  * <p>Filters out PR review cases (context has {@code pr.*}) and sub-case lifecycle
  * events (no {@code batch.*} context). Only root batch cases with {@code batch.*}
  * trigger queue cleanup.
- *
- * <p><strong>Tech debt:</strong> Uses {@link CrossTenantCaseInstanceRepository}
- * because there is no request-scoped tenant in the async observer context.
- * The repository's contract says "for startup recovery services only" — this
- * is accepted tech debt, identical to {@code MergeDecisionObserver} and
- * {@code ReviewOutcomeObserver}. Resolution: when {@code CaseLifecycleEvent}
- * carries case metadata directly, the lookup becomes unnecessary.
  */
 @ApplicationScoped
 public class MergeBatchCompletionObserver {
 
     private static final Logger LOG = Logger.getLogger(MergeBatchCompletionObserver.class);
 
-    @Inject CrossTenantCaseInstanceRepository caseInstanceRepo;
     @Inject MergeQueueService mergeQueueService;
 
     void onCaseLifecycle(@ObservesAsync CaseLifecycleEvent event) {
@@ -65,54 +54,41 @@ public class MergeBatchCompletionObserver {
         };
         if (batchSucceeded == null) {return;}
 
-        CaseInstance ci;
-        try {
-            ci = caseInstanceRepo.findByUuid(event.caseId());
-        } catch (Exception e) {
-            LOG.warnf(e, "Failed to lookup CaseInstance for caseId=%s", event.caseId());
-            return;
-        }
-        if (ci == null) {
-            LOG.warnf("CaseInstance not found for caseId=%s", event.caseId());
+        JsonNode snapshot = event.contextSnapshot();
+        if (snapshot == null) {
+            LOG.warnf("contextSnapshot is null for caseId=%s", event.caseId());
             return;
         }
 
-        CaseContext ctx = ci.getCaseContext();
-        if (ctx == null) {
-            LOG.warnf("CaseContext is null for caseId=%s", event.caseId());
-            return;
-        }
-
-        String batchId = ctx.getPathAsString("batch.id");
-        String prRepo  = ctx.getPathAsString("pr.repo");
+        String batchId = snapshot.path("batch").path("id").asText(null);
+        String prRepo  = snapshot.path("pr").path("repo").asText(null);
         if (batchId == null || prRepo != null) {
             return;
         }
 
-        Set<Integer> rejectedPrs = extractRejectedPrs(ctx);
+        Set<Integer> rejectedPrs = extractRejectedPrs(snapshot);
 
         mergeQueueService.handleBatchCompletion(event.caseId(), batchSucceeded, rejectedPrs);
         LOG.debugf("Batch completion handled: caseId=%s succeeded=%s rejected=%s",
-                   event.caseId(), batchSucceeded, rejectedPrs);}
+                   event.caseId(), batchSucceeded, rejectedPrs);
+    }
 
-    @SuppressWarnings("unchecked")
-    private static Set<Integer> extractRejectedPrs(CaseContext ctx) {
-        Object rejectedObj = ctx.getPath("batch.rejectedPrs");
-        if (rejectedObj instanceof List<?> list) {
-            Set<Integer> rejected = new HashSet<>();
-            for (Object item : list) {
-                if (item instanceof Number n) {
-                    rejected.add(n.intValue());
-                } else if (item instanceof String s) {
-                    try {
-                        rejected.add(Integer.parseInt(s));
-                    } catch (NumberFormatException ignored) {
-                        // Skip malformed entries
-                    }
+    private static Set<Integer> extractRejectedPrs(JsonNode snapshot) {
+        JsonNode rejectedNode = snapshot.path("batch").path("rejectedPrs");
+        if (!rejectedNode.isArray()) {
+            return Set.of();
+        }
+        Set<Integer> rejected = new HashSet<>();
+        for (JsonNode item : rejectedNode) {
+            if (item.isNumber()) {
+                rejected.add(item.intValue());
+            } else if (item.isTextual()) {
+                try {
+                    rejected.add(Integer.parseInt(item.asText()));
+                } catch (NumberFormatException ignored) {
                 }
             }
-            return rejected;
         }
-        return Set.of();
+        return rejected;
     }
 }

@@ -4,10 +4,9 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
 
-import io.casehub.engine.common.internal.model.CaseInstance;
-import io.casehub.engine.common.spi.CaseInstanceRepository;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.casehub.engine.common.spi.event.CaseLifecycleEvent;
-import io.casehub.engine.internal.context.CaseContextImpl;
 import io.casehub.ledger.api.model.LedgerEntryType;
 import io.casehub.ledger.api.spi.LedgerEntryRepository;
 import io.casehub.ledger.runtime.persistence.LedgerPersistenceUnit;
@@ -20,7 +19,6 @@ import jakarta.inject.Inject;
 import jakarta.persistence.EntityManager;
 import java.time.Duration;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 
@@ -29,19 +27,21 @@ import org.junit.jupiter.api.Test;
 class MergeDecisionObserverTest {
 
     @Inject Event<CaseLifecycleEvent> caseLifecycleEvents;
-    @Inject CaseInstanceRepository caseInstanceRepo;
     @Inject LedgerEntryRepository ledgerRepo;
     @Inject @LedgerPersistenceUnit EntityManager em;
+    @Inject ObjectMapper objectMapper;
 
     @Test
     void completedCase_writesApprovedMergeDecision() {
         UUID caseId = UUID.randomUUID();
         String tenancyId = "test-tenant";
-        seedCaseInstance(caseId, tenancyId, "casehubio/devtown", "42", "abc123def");
 
-        CaseLifecycleEvent event = CaseLifecycleEvent.of(
+        ObjectNode snapshot = buildPrSnapshot("casehubio/devtown", "42", "abc123def");
+
+        CaseLifecycleEvent event = new CaseLifecycleEvent(
                 caseId, tenancyId, "COMPLETE", "CASE_COMPLETED",
-                "COMPLETED", "system", "ORCHESTRATOR", "trace-1");
+                "COMPLETED", "system", "ORCHESTRATOR", "trace-1",
+                null, null, snapshot, null, null);
 
         caseLifecycleEvents.fireAsync(event);
 
@@ -63,9 +63,6 @@ class MergeDecisionObserverTest {
             assertThat(d.actorRole).isEqualTo("ORCHESTRATOR");
             assertThat(d.occurredAt).isNotNull();
 
-            // ComplianceSupplement is serialised to supplementJson (MergeDecisionLedgerEntry
-            // extends @MappedSuperclass LedgerEntry, not JpaLedgerEntry, so the transient
-            // supplements list is not hydrated on load — verify via supplementJson)
             assertThat(d.supplementJson).isNotNull();
             assertThat(d.supplementJson).contains("casehub-devtown:pr-review-v1");
             assertThat(d.supplementJson).contains("/api/reviews/42/contest");
@@ -76,11 +73,13 @@ class MergeDecisionObserverTest {
     void cancelledCase_writesRejectedMergeDecision() {
         UUID caseId = UUID.randomUUID();
         String tenancyId = "test-tenant";
-        seedCaseInstance(caseId, tenancyId, "casehubio/engine", "99", "def456");
 
-        CaseLifecycleEvent event = CaseLifecycleEvent.of(
+        ObjectNode snapshot = buildPrSnapshot("casehubio/engine", "99", "def456");
+
+        CaseLifecycleEvent event = new CaseLifecycleEvent(
                 caseId, tenancyId, "CANCEL", "CASE_CANCELLED",
-                "CANCELLED", "system", "ORCHESTRATOR", "trace-2");
+                "CANCELLED", "system", "ORCHESTRATOR", "trace-2",
+                null, null, snapshot, null, null);
 
         caseLifecycleEvents.fireAsync(event);
 
@@ -101,15 +100,16 @@ class MergeDecisionObserverTest {
     void faultedCase_writesNoMergeDecision() {
         UUID caseId = UUID.randomUUID();
         String tenancyId = "test-tenant";
-        seedCaseInstance(caseId, tenancyId, "casehubio/ledger", "7", "fff000");
 
-        CaseLifecycleEvent event = CaseLifecycleEvent.of(
+        ObjectNode snapshot = buildPrSnapshot("casehubio/ledger", "7", "fff000");
+
+        CaseLifecycleEvent event = new CaseLifecycleEvent(
                 caseId, tenancyId, "FAULT", "CASE_FAULTED",
-                "FAULTED", "system", "ORCHESTRATOR", "trace-3");
+                "FAULTED", "system", "ORCHESTRATOR", "trace-3",
+                null, null, snapshot, null, null);
 
         caseLifecycleEvents.fireAsync(event);
 
-        // Give async observer time to process (if it were to incorrectly fire)
         await().during(Duration.ofMillis(500))
                 .atMost(2, SECONDS)
                 .untilAsserted(() -> {
@@ -128,24 +128,16 @@ class MergeDecisionObserverTest {
         );
     }
 
-    private void seedCaseInstance(UUID caseId, String tenancyId,
-                                  String repo, String prId, String headSha) {
-        QuarkusTransaction.requiringNew().run(() -> {
-            CaseInstance ci = new CaseInstance();
-            ci.setUuid(caseId);
-
-            CaseContextImpl ctx = new CaseContextImpl();
-            ctx.set("pr", Map.of(
-                    "repo", repo,
-                    "id", prId,
-                    "headSha", headSha,
-                    "baseRef", "main",
-                    "linesChanged", 100,
-                    "contributor", "test-user",
-                    "changedPaths", List.of("src/Main.java")));
-            ci.setCaseContext(ctx);
-
-            caseInstanceRepo.save(ci, tenancyId);
-        });
+    private ObjectNode buildPrSnapshot(String repo, String prId, String headSha) {
+        ObjectNode snapshot = objectMapper.createObjectNode();
+        ObjectNode pr = snapshot.putObject("pr");
+        pr.put("repo", repo);
+        pr.put("id", prId);
+        pr.put("headSha", headSha);
+        pr.put("baseRef", "main");
+        pr.put("linesChanged", 100);
+        pr.put("contributor", "test-user");
+        pr.putArray("changedPaths").add("src/Main.java");
+        return snapshot;
     }
 }

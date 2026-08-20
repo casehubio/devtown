@@ -25,7 +25,26 @@ CREATE TABLE merge_queue_batch (
     pr_numbers      TEXT NOT NULL,
     repository      VARCHAR(255) NOT NULL,
     dispatched_at   TIMESTAMP NOT NULL,
+    completed_at    TIMESTAMP,
+    succeeded       BOOLEAN,
     CONSTRAINT pk_merge_queue_batch PRIMARY KEY (batch_id)
 );
 
 CREATE INDEX idx_merge_queue_batch_case_id ON merge_queue_batch(case_id);
+CREATE INDEX idx_merge_queue_batch_repo_completed ON merge_queue_batch(repository, completed_at);
+
+-- SLA calibration record table
+CREATE TABLE sla_calibration_record (
+    id              UUID         NOT NULL PRIMARY KEY,
+    capability      VARCHAR(255) NOT NULL,
+    scope_path      VARCHAR(512) NOT NULL,
+    median_seconds  BIGINT       NOT NULL,
+    min_seconds     BIGINT       NOT NULL,
+    max_seconds     BIGINT       NOT NULL,
+    precedent_count INTEGER      NOT NULL,
+    case_id         UUID,
+    computed_at     TIMESTAMP    NOT NULL
+);
+
+CREATE INDEX idx_sla_calibration_capability_scope ON sla_calibration_record(capability, scope_path, computed_at DESC);
+CREATE INDEX idx_sla_calibration_scope_computed ON sla_calibration_record(scope_path, computed_at DESC);

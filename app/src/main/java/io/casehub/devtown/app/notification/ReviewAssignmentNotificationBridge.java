@@ -4,7 +4,7 @@ import io.casehub.devtown.domain.notification.NotificationPreferenceKeys;
 import io.casehub.devtown.review.notification.ReviewAssignedEvent;
 import io.casehub.platform.api.preferences.PreferenceProvider;
 import io.casehub.platform.api.preferences.SettingsScope;
-import io.casehub.work.runtime.event.WorkItemLifecycleEvent;
+import io.casehub.work.api.WorkItemLifecycleEvent;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.event.Event;
 import jakarta.enterprise.event.Observes;
@@ -33,8 +33,8 @@ public class ReviewAssignmentNotificationBridge {
         if (!event.type().endsWith(".created")) return;
         if (event.types() == null || !event.types().contains("human-decision:pr-approval")) return;
         String targetChannel = preferenceProvider
-            .resolve(event.workItem() != null && event.workItem().scope != null
-                ? SettingsScope.root(event.workItem().scope)
+            .resolve(event.workItem() != null && event.workItem().scope() != null
+                ? SettingsScope.root(event.workItem().scope())
                 : SettingsScope.root("devtown"))
             .getOrDefault(NotificationPreferenceKeys.SLACK_CHANNEL).value();
         reviewAssignedEvents.fire(new ReviewAssignedEvent(

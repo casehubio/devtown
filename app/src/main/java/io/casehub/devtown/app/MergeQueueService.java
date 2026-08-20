@@ -125,9 +125,9 @@ public class MergeQueueService implements MergeQueuePort {
                 .build();
 
             var workItem = workItemService.create(request);
-            store.updateWorkItemId(pr.number(), pr.repository(), workItem.id);
+            store.updateWorkItemId(pr.number(), pr.repository(), workItem.id());
             LOG.infof("Created WorkItem %s for PR %s#%d (SLA: %s)",
-                workItem.id, pr.repository(), pr.number(), slaDuration);
+                workItem.id(), pr.repository(), pr.number(), slaDuration);
         }
 
         LOG.infof("Enqueued PR #%d from %s (trust=%.2f, lane=%s)",

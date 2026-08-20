@@ -3,8 +3,8 @@ package io.casehub.devtown.app;
 import io.casehub.api.model.CaseStatus;
 import io.casehub.engine.common.spi.CrossTenantCaseInstanceRepository;
 import io.casehub.work.engine.WorkItemLifecycleAdapter;
-import io.casehub.work.runtime.event.WorkItemLifecycleEvent;
-import io.casehub.work.runtime.model.WorkItemEntity;
+import io.casehub.work.api.WorkItemLifecycleEvent;
+import io.casehub.work.api.WorkItem;
 import io.casehub.work.runtime.service.WorkItemService;
 import io.casehub.worker.api.Worker;
 import io.casehub.worker.api.WorkerResult;
@@ -268,43 +268,43 @@ class MergeQueueEscalationTest {
     // ── WorkItem completion helper ───────────────────────────────────────────
 
     private void completeWorkItems(UUID caseId,
-                                    java.util.function.BiPredicate<WorkItemEntity, UUID> filter,
+                                    java.util.function.BiPredicate<WorkItem, UUID> filter,
                                     String resolution) {
         var toComplete = workItemQueries.scanAll().stream()
             .filter(i -> filter.test(i, caseId))
             .toList();
 
         toComplete.forEach(wi -> workItemService.completeFromSystem(
-            wi.id, "system", resolution));
+            wi.id(), "system", resolution));
 
         // Re-fetch and drive the adapter to propagate completion into case context
         var completed = workItemQueries.scanAll().stream()
             .filter(i -> filter.test(i, caseId))
             .toList();
         completed.forEach(wi -> lifecycleAdapter.onWorkItemLifecycle(
-            WorkItemLifecycleEvent.of("COMPLETED", wi, "system", wi.resolution)));
+            WorkItemLifecycleEvent.of("COMPLETED", wi, "system", wi.resolution())));
     }
 
     // ── WorkItem matching predicates ─────────────────────────────────────────
 
-    private boolean isMergeApprovalFor(WorkItemEntity item, UUID caseId) {
-        return item.callerRef != null
-            && item.callerRef.contains(caseId.toString())
-            && item.title != null
-            && item.title.contains("High-risk");
+    private boolean isMergeApprovalFor(WorkItem item, UUID caseId) {
+        return item.callerRef() != null
+            && item.callerRef().contains(caseId.toString())
+            && item.title() != null
+            && item.title().contains("High-risk");
     }
 
-    private boolean isMergeEscalationFor(WorkItemEntity item, UUID caseId) {
-        return item.callerRef != null
-            && item.callerRef.contains(caseId.toString())
-            && item.title != null
-            && item.title.contains("Merge execution failed");
+    private boolean isMergeEscalationFor(WorkItem item, UUID caseId) {
+        return item.callerRef() != null
+            && item.callerRef().contains(caseId.toString())
+            && item.title() != null
+            && item.title().contains("Merge execution failed");
     }
 
-    private boolean isTipTestEscalationFor(WorkItemEntity item, UUID caseId) {
-        return item.callerRef != null
-            && item.callerRef.contains(caseId.toString())
-            && item.title != null
-            && item.title.contains("Batch CI test failed");
+    private boolean isTipTestEscalationFor(WorkItem item, UUID caseId) {
+        return item.callerRef() != null
+            && item.callerRef().contains(caseId.toString())
+            && item.title() != null
+            && item.title().contains("Batch CI test failed");
     }
 }

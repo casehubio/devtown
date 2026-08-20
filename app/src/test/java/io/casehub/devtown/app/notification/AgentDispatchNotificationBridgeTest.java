@@ -33,7 +33,7 @@ class AgentDispatchNotificationBridgeTest {
                 1L, "work-channel", UUID.randomUUID(), "tenant-1",
                 MessageType.COMMAND, "coordinator", "agent-alice", null,
                 "corr-1", Instant.now(),
-                "{\"capability\":\"code-analysis\"}", null);
+                "{\"capability\":\"code-analysis\"}", null, null);
 
         bridge.onMessage(event);
 
@@ -51,7 +51,7 @@ class AgentDispatchNotificationBridgeTest {
         var event = new MessageReceivedEvent(
                 1L, "ch", UUID.randomUUID(), "t1",
                 MessageType.STATUS, "agent", null, null,
-                null, Instant.now(), "working", null);
+                null, Instant.now(), "working", null, null);
 
         bridge.onMessage(event);
 
@@ -63,7 +63,7 @@ class AgentDispatchNotificationBridgeTest {
         var event = new MessageReceivedEvent(
                 1L, "ch", UUID.randomUUID(), "t1",
                 MessageType.COMMAND, "coordinator", null, null,
-                "corr-1", Instant.now(), "{}", null);
+                "corr-1", Instant.now(), "{}", null, null);
 
         bridge.onMessage(event);
 
@@ -75,7 +75,7 @@ class AgentDispatchNotificationBridgeTest {
         var event = new MessageReceivedEvent(
                 1L, "ch", UUID.randomUUID(), "t1",
                 MessageType.COMMAND, "coordinator", "agent-bob", null,
-                "corr-1", Instant.now(), null, null);
+                "corr-1", Instant.now(), null, null, null);
 
         bridge.onMessage(event);
 

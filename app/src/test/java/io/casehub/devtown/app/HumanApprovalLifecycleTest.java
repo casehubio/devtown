@@ -3,8 +3,8 @@ package io.casehub.devtown.app;
 import io.casehub.api.model.CaseStatus;
 import io.casehub.engine.common.spi.CrossTenantCaseInstanceRepository;
 import io.casehub.work.engine.WorkItemLifecycleAdapter;
-import io.casehub.work.runtime.event.WorkItemLifecycleEvent;
-import io.casehub.work.runtime.model.WorkItemEntity;
+import io.casehub.work.api.WorkItemLifecycleEvent;
+import io.casehub.work.api.WorkItem;
 import io.casehub.work.runtime.service.WorkItemService;
 import io.quarkus.test.junit.QuarkusTest;
 import jakarta.inject.Inject;
@@ -78,7 +78,7 @@ class HumanApprovalLifecycleTest {
                             .filter(i -> isHumanApprovalFor(i, caseId))
                             .toList();
                     assertThat(items).as("human-approval WorkItem").isNotEmpty();
-                    assertThat(items.get(0).title).isEqualTo("PR approval required");
+                    assertThat(items.get(0).title()).isEqualTo("PR approval required");
                 });
 
         // ── Checkpoint 3: complete WorkItems and drive the adapter ─────────────
@@ -90,15 +90,15 @@ class HumanApprovalLifecycleTest {
                 .toList();
 
         toComplete.forEach(wi -> workItemService.completeFromSystem(
-                wi.id, "system", "{\"outcome\": \"APPROVED\"}"));
+                wi.id(), "system", "{\"outcome\": \"APPROVED\"}"));
 
         // CDI @ObservesAsync delivery is verified via test-scope bean (not the external
         // adapter — engine#315 tracks @ObservesAsync for indexed external jar observers).
         await().atMost(3, SECONDS)
                 .pollInterval(100, MILLISECONDS)
                 .untilAsserted(() -> toComplete.forEach(wi ->
-                        assertThat(completionCapture.wasCompleted(wi.id))
-                                .as("@ObservesAsync CDI delivery for WorkItem " + wi.id)
+                        assertThat(completionCapture.wasCompleted(wi.id()))
+                                .as("@ObservesAsync CDI delivery for WorkItem " + wi.id())
                                 .isTrue()));
 
         // Re-fetch completed WorkItems and invoke the adapter directly.
@@ -107,7 +107,7 @@ class HumanApprovalLifecycleTest {
                 .filter(i -> isHumanApprovalFor(i, caseId))
                 .toList();
         completedItems.forEach(wi -> lifecycleAdapter.onWorkItemLifecycle(
-                WorkItemLifecycleEvent.of("COMPLETED", wi, "system", wi.resolution)));
+                WorkItemLifecycleEvent.of("COMPLETED", wi, "system", wi.resolution())));
 
         // ── Checkpoint 4: case context updated via outputMapping ──────────────
         await().atMost(10, SECONDS)
@@ -144,7 +144,7 @@ class HumanApprovalLifecycleTest {
                 });
     }
 
-    private static boolean isHumanApprovalFor(final WorkItemEntity item, final UUID caseId) {
-        return item.callerRef != null && item.callerRef.contains(caseId.toString());
+    private static boolean isHumanApprovalFor(final WorkItem item, final UUID caseId) {
+        return item.callerRef() != null && item.callerRef().contains(caseId.toString());
     }
 }

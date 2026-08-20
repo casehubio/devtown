@@ -2,7 +2,7 @@ package io.casehub.devtown.app;
 
 import io.casehub.engine.common.spi.CrossTenantCaseInstanceRepository;
 import io.casehub.work.api.WorkItemStatus;
-import io.casehub.work.runtime.model.WorkItemEntity;
+import io.casehub.work.api.WorkItem;
 import io.casehub.work.api.spi.WorkItemStore;
 import io.casehub.work.runtime.service.ExpiryLifecycleService;
 import io.quarkus.test.junit.QuarkusTest;
@@ -59,9 +59,9 @@ class SlaBreachLifecycleTest {
             var items = workItemQueries.scanAll().stream()
                     .filter(i -> isHumanApprovalFor(i, caseId)).toList();
             assertThat(items).as("human-approval WorkItem").hasSize(1);
-            assertThat(items.get(0).candidateGroups)
-                    .as("candidateGroups from YAML").isEqualTo("pr-reviewers");
-            assertThat(items.get(0).expiresAt)
+            assertThat(items.get(0).candidateGroups())
+                    .as("candidateGroups from YAML").isEqualTo("devtown-reviewers");
+            assertThat(items.get(0).expiresAt())
                     .as("expiresAt set from expiresIn: PT24H").isNotNull();
         });
 
@@ -73,9 +73,9 @@ class SlaBreachLifecycleTest {
             var items = workItemQueries.scanAll().stream()
                     .filter(i -> isHumanApprovalFor(i, caseId)).toList();
             assertThat(items).hasSize(1);
-            assertThat(items.get(0).candidateGroups)
+            assertThat(items.get(0).candidateGroups())
                     .as("escalated to pr-leads").isEqualTo("pr-leads");
-            assertThat(items.get(0).status)
+            assertThat(items.get(0).status())
                     .as("WorkItem is PENDING again after in-place escalation")
                     .isEqualTo(WorkItemStatus.PENDING);
         });
@@ -106,24 +106,22 @@ class SlaBreachLifecycleTest {
         // Filter to the EXPIRED item to verify the breach lifecycle completed correctly.
         var expiredItems = workItemQueries.scanAll().stream()
                 .filter(i -> isHumanApprovalFor(i, caseId))
-                .filter(i -> i.status == WorkItemStatus.EXPIRED)
+                .filter(i -> i.status() == WorkItemStatus.EXPIRED)
                 .toList();
         assertThat(expiredItems).hasSize(1);
-        assertThat(expiredItems.get(0).resolution).isEqualTo("sla-breach");
+        assertThat(expiredItems.get(0).resolution()).isEqualTo("sla-breach");
     }
 
     @Transactional
     void expireWorkItem(UUID caseId) {
         workItemQueries.scanAll().stream()
                 .filter(i -> isHumanApprovalFor(i, caseId)
-                          && i.status == WorkItemStatus.PENDING)
-                .forEach(i -> {
-                    i.expiresAt = Instant.now().minusSeconds(60);
-                    workItemStore.put(i);
-                });
+                          && i.status() == WorkItemStatus.PENDING)
+                .forEach(i -> workItemStore.put(
+                    i.toBuilder().expiresAt(Instant.now().minusSeconds(60)).build()));
     }
 
-    private static boolean isHumanApprovalFor(WorkItemEntity item, UUID caseId) {
-        return item.callerRef != null && item.callerRef.startsWith("case:" + caseId);
+    private static boolean isHumanApprovalFor(WorkItem item, UUID caseId) {
+        return item.callerRef() != null && item.callerRef().startsWith("case:" + caseId);
     }
 }

@@ -8,7 +8,7 @@ import static org.awaitility.Awaitility.await;
 import io.casehub.devtown.domain.queue.PriorityLane;
 import io.casehub.devtown.queue.QueuedPr;
 import io.casehub.work.api.WorkItemStatus;
-import io.casehub.work.runtime.model.WorkItemEntity;
+import io.casehub.work.api.WorkItem;
 import io.casehub.work.runtime.model.WorkItemTemplate;
 import io.quarkus.test.junit.QuarkusTest;
 import jakarta.inject.Inject;
@@ -55,10 +55,10 @@ class MergeQueueSlaWorkItemTest {
         await().atMost(5, SECONDS).pollInterval(200, MILLISECONDS).untilAsserted(() -> {
             var items = scanMergeQueueWorkItems(500);
             assertThat(items).hasSize(1);
-            WorkItemEntity item = items.iterator().next();
-            assertThat(item.status).isEqualTo(WorkItemStatus.PENDING);
-            assertThat(item.callerRef).isEqualTo("casehubio/devtown#500");
-            Duration actualExpiry = Duration.between(item.createdAt, item.expiresAt);
+            WorkItem item = items.iterator().next();
+            assertThat(item.status()).isEqualTo(WorkItemStatus.PENDING);
+            assertThat(item.callerRef()).isEqualTo("casehubio/devtown#500");
+            Duration actualExpiry = Duration.between(item.createdAt(), item.expiresAt());
             assertThat(actualExpiry).isBetween(
                 Duration.ofHours(8).minusSeconds(10),
                 Duration.ofHours(8).plusSeconds(10)
@@ -104,16 +104,16 @@ class MergeQueueSlaWorkItemTest {
         await().atMost(5, SECONDS).pollInterval(200, MILLISECONDS).untilAsserted(() -> {
             var items = scanMergeQueueWorkItems(501);
             assertThat(items).hasSize(1);
-            WorkItemEntity item = items.iterator().next();
-            assertThat(item.status).isIn(WorkItemStatus.OBSOLETE, WorkItemStatus.EXPIRED);
+            WorkItem item = items.iterator().next();
+            assertThat(item.status()).isIn(WorkItemStatus.OBSOLETE, WorkItemStatus.EXPIRED);
         });
     }
 
-    private Set<WorkItemEntity> scanMergeQueueWorkItems(int prNumber) {
+    private Set<WorkItem> scanMergeQueueWorkItems(int prNumber) {
         var                 all    = workItemQueries.scanAll();
-        Set<WorkItemEntity> result = new HashSet<>();
-        for (WorkItemEntity item : all) {
-            if (item.callerRef != null && item.callerRef.endsWith("#" + prNumber)) {
+        Set<WorkItem> result = new HashSet<>();
+        for (WorkItem item : all) {
+            if (item.callerRef() != null && item.callerRef().endsWith("#" + prNumber)) {
                 result.add(item);
             }
         }

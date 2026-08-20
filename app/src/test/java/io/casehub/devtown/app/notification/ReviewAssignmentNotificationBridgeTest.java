@@ -6,16 +6,14 @@ import io.casehub.devtown.review.notification.ReviewAssignedEvent;
 import io.casehub.platform.api.preferences.PreferenceProvider;
 import io.casehub.platform.api.preferences.Preferences;
 import io.casehub.platform.api.preferences.SettingsScope;
-import io.casehub.work.runtime.event.WorkItemLifecycleEvent;
-import io.casehub.work.runtime.model.WorkItemEntity;
-import io.casehub.work.runtime.model.WorkItemType;
+import io.casehub.work.api.WorkItemLifecycleEvent;
+import io.casehub.work.api.WorkItem;
 import io.casehub.work.api.WorkItemStatus;
 import jakarta.enterprise.event.Event;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
@@ -68,19 +66,15 @@ class ReviewAssignmentNotificationBridgeTest {
     }
 
     private WorkItemLifecycleEvent workItemEvent(String eventName, Set<String> typeStrings, String assigneeId) {
-        WorkItemEntity wi = new WorkItemEntity();
-        wi.id = UUID.randomUUID();
-        wi.tenancyId = "tenant-1";
-        wi.assigneeId = assigneeId;
-        wi.callerRef = "devtown:pr-review";
-        wi.status = WorkItemStatus.PENDING;
-        wi.scope = "my-repo";
-        wi.types = new LinkedHashSet<>();
-        for (String t : typeStrings) {
-            WorkItemType wit = new WorkItemType();
-            wit.path = t;
-            wi.types.add(wit);
-        }
+        WorkItem wi = WorkItem.builder()
+            .id(UUID.randomUUID())
+            .tenancyId("tenant-1")
+            .assigneeId(assigneeId)
+            .callerRef("devtown:pr-review")
+            .status(WorkItemStatus.PENDING)
+            .scope("my-repo")
+            .types(typeStrings)
+            .build();
         return WorkItemLifecycleEvent.of(eventName, wi, "system", null);
     }
 

@@ -9,7 +9,7 @@ import io.casehub.ledger.runtime.service.routing.TrustScoreActorUpdatedEvent;
 import io.casehub.qhorus.api.message.CommitmentDeclinedEvent;
 import io.casehub.qhorus.api.message.CommitmentExpiredEvent;
 import io.casehub.work.runtime.event.SlaBreachEvent;
-import io.casehub.work.runtime.event.WorkItemLifecycleEvent;
+import io.casehub.work.api.WorkItemLifecycleEvent;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.event.ObservesAsync;
 import jakarta.websocket.OnClose;

@@ -154,6 +154,15 @@
       <groupId>io.casehub</groupId>
       <artifactId>casehub-platform-api</artifactId>
     </dependency>
+    <dependency>
+      <groupId>io.casehub</groupId>
+      <artifactId>casehub-platform-graphql</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>io.quarkus</groupId>
+      <artifactId>quarkus-smallrye-graphql</artifactId>
+    </dependency>
 
     <!-- test -->
     <dependency>

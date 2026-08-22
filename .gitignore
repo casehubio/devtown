@@ -45,3 +45,6 @@ proj
 .mvn/slot-settings.xml
 .playwright-mcp/
 .playwright-mcp
+.worktrees
+.worktrees/
+.claude/

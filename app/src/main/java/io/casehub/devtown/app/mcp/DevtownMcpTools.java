@@ -86,13 +86,19 @@ public class DevtownMcpTools {
     // Write method records stay here
 
     public record PriorDecision(
-        UUID caseId,
-        String repo,
-        int prNumber,
-        String capability,
-        String outcome,
-        Instant decidedAt
-    ) {}
+            UUID caseId,
+            String repo,
+            int prNumber,
+            String capability,
+            String outcome,
+            Instant decidedAt,
+            String reasoning
+    ) {
+        public PriorDecision(UUID caseId, String repo, int prNumber,
+                             String capability, String outcome, Instant decidedAt) {
+            this(caseId, repo, prNumber, capability, outcome, decidedAt, null);
+        }
+    }
 
     public record RetryResult(UUID caseId, String capability, String status) {}
 
@@ -172,13 +178,13 @@ public class DevtownMcpTools {
     }
 
     @Tool(
-        name = "get_prior_decisions",
-        description = "Find prior review decisions for a specific repository and file path"
+            name = "get_prior_decisions",
+            description = "Find prior review decisions for a specific repository and file path, with reasoning traces"
     )
     public List<PriorDecision> getPriorDecisions(
-        @ToolArg(name = "repo", description = "Repository name", required = true) String repo,
-        @ToolArg(name = "file_path", description = "File path within repo", required = true) String filePath
-    ) {
+            @ToolArg(name = "repo", description = "Repository name", required = true) String repo,
+            @ToolArg(name = "file_path", description = "File path within repo", required = true) String filePath
+                                                ) {
         String tenant = principal.tenancyId();
 
         if (!memoryStoreInstance.isResolvable()) {
@@ -187,28 +193,56 @@ public class DevtownMcpTools {
 
         var modules = ModulePathNormalizer.normalize(List.of(filePath));
         List<String> entityIds = modules.stream()
-            .map(m -> DevtownMemoryDomain.MODULE_PREFIX + repo + "/" + m)
-            .limit(MemoryQuery.MAX_ENTITY_IDS)
-            .toList();
+                                        .map(m -> DevtownMemoryDomain.MODULE_PREFIX + repo + "/" + m)
+                                        .limit(MemoryQuery.MAX_ENTITY_IDS)
+                                        .toList();
 
         if (entityIds.isEmpty()) {
             return List.of();
         }
 
         CaseMemoryStore memoryStore = memoryStoreInstance.get();
-        var memories = memoryStore.query(
-            MemoryQuery.forEntities(entityIds, DevtownMemoryDomain.SOFTWARE_REVIEW, tenant)
-                .withLimit(20)
-                .withOrder(MemoryOrder.CHRONOLOGICAL)
-        );
+        var outcomes = memoryStore.query(
+                MemoryQuery.forEntities(entityIds, DevtownMemoryDomain.SOFTWARE_REVIEW, tenant)
+                           .withLimit(20)
+                           .withOrder(MemoryOrder.CHRONOLOGICAL)
+                                        );
 
-        return memories.stream()
-            .map(m -> new PriorDecision(
-                null, repo, 0,
-                m.attributes().getOrDefault("capability", "unknown"),
-                m.text(),
-                m.createdAt()))
-            .toList();
+        // Join reasoning traces by caseId
+        Map<String, String> reasoningByCaseId = Map.of();
+        List<String> caseIds = outcomes.stream()
+                                       .map(io.casehub.neocortex.memory.Memory::caseId)
+                                       .filter(java.util.Objects::nonNull).distinct()
+                                       .limit(MemoryQuery.MAX_ENTITY_IDS).toList();
+        if (!caseIds.isEmpty()) {
+            List<String> reasoningEntityIds = caseIds.stream()
+                                                     .map(id -> "case:" + id).toList();
+            var traces = memoryStore.query(
+                    MemoryQuery.forEntities(reasoningEntityIds,
+                                            new io.casehub.neocortex.memory.MemoryDomain("worker-reasoning"), tenant)
+                               .withLimit(caseIds.size() * 5)
+                               .withOrder(MemoryOrder.CHRONOLOGICAL));
+            reasoningByCaseId = traces.stream()
+                                      .filter(m -> m.caseId() != null)
+                                      .collect(java.util.stream.Collectors.toMap(
+                                              m -> m.caseId() + ":" + m.attributes().getOrDefault("capability", ""),
+                                              io.casehub.neocortex.memory.Memory::text, (a, b) -> b));
+        }
+
+        Map<String, String> finalReasoningMap = reasoningByCaseId;
+        return outcomes.stream()
+                       .map(m -> {
+                           String capability = m.attributes().getOrDefault("capability", "unknown");
+                           UUID   caseUuid   = m.caseId() != null ? UUID.fromString(m.caseId()) : null;
+                           int    pr         = 0;
+                           try {
+                               pr = Integer.parseInt(m.attributes().getOrDefault("pr-number", "0"));
+                           } catch (NumberFormatException ignored) {}
+                           String key       = m.caseId() != null ? m.caseId() + ":" + capability : null;
+                           String reasoning = key != null ? finalReasoningMap.get(key) : null;
+                           return new PriorDecision(caseUuid, repo, pr, capability, m.text(),
+                                                    m.createdAt(), reasoning);
+                       }).toList();
     }
 
     @Tool(

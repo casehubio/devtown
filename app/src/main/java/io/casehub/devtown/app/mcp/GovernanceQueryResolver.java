@@ -7,14 +7,15 @@ import io.casehub.platform.api.identity.CurrentPrincipal;
 import io.casehub.platform.api.mcp.McpDomain;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
-import java.time.Instant;
-import java.util.List;
-import java.util.UUID;
 import org.eclipse.microprofile.graphql.DefaultValue;
 import org.eclipse.microprofile.graphql.Description;
 import org.eclipse.microprofile.graphql.GraphQLApi;
 import org.eclipse.microprofile.graphql.Name;
 import org.eclipse.microprofile.graphql.Query;
+
+import java.time.Instant;
+import java.util.List;
+import java.util.UUID;
 
 @McpDomain("devtown")
 @GraphQLApi
@@ -56,10 +57,17 @@ public class GovernanceQueryResolver {
 
     @Query
     @Description("Get detailed review status including timeline and capability progress")
-    public GovernanceQueryService.ReviewDetail reviewDetail(
+    public ReviewDetailResult reviewDetail(
             @Name("caseId") @Description("Case UUID") UUID caseId) {
         String tenant = principal.tenancyId();
-        return governanceQuery.reviewDetail(caseId, tenant);
+        var    detail = governanceQuery.reviewDetail(caseId, tenant);
+        var    pr     = detail.pr();
+        return new ReviewDetailResult(
+                detail.caseId(),
+                new PrInfo(pr.repo(), pr.prNumber(), pr.headSha(), pr.baseRef(),
+                           pr.linesChanged(), pr.contributor(), pr.changedPaths()),
+                detail.timeline(),
+                detail.capabilities());
     }
 
     @Query
@@ -132,4 +140,12 @@ public class GovernanceQueryResolver {
     @Inject io.casehub.devtown.app.MergeQueueService mergeQueueService;
 
     public record AgentMessage(Instant timestamp, String messageType, String payload) {}
+
+    public record PrInfo(String repo, int prNumber, String headSha, String baseRef,
+                         int linesChanged, String contributor, java.util.List<String> changedPaths) {}
+
+    public record ReviewDetailResult(UUID caseId, PrInfo pr,
+                                     java.util.List<GovernanceQueryService.EventEntry> timeline,
+                                     java.util.List<GovernanceQueryService.CapabilityStatus> capabilities) {}
+
 }

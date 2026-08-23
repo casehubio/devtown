@@ -6,7 +6,6 @@ import io.casehub.devtown.app.PrReviewCaseHub;
 import io.casehub.devtown.app.governance.GovernanceQueryService;
 import io.casehub.devtown.app.ledger.IncidentFeedbackService;
 import io.casehub.devtown.domain.IncidentFeedback;
-import io.casehub.devtown.domain.IncidentFeedbackResult;
 import io.casehub.devtown.domain.IncidentSeverity;
 import io.casehub.devtown.domain.queue.PriorityLane;
 import io.casehub.devtown.queue.QueuedPr;
@@ -14,15 +13,16 @@ import io.casehub.platform.api.identity.CurrentPrincipal;
 import io.casehub.platform.api.mcp.McpDomain;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+import org.eclipse.microprofile.graphql.Description;
+import org.eclipse.microprofile.graphql.GraphQLApi;
+import org.eclipse.microprofile.graphql.Mutation;
+import org.eclipse.microprofile.graphql.Name;
+
 import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
-import org.eclipse.microprofile.graphql.Description;
-import org.eclipse.microprofile.graphql.GraphQLApi;
-import org.eclipse.microprofile.graphql.Mutation;
-import org.eclipse.microprofile.graphql.Name;
 
 @McpDomain("devtown")
 @GraphQLApi
@@ -132,6 +132,7 @@ public class GovernanceMutationResolver {
         if (repo == null || repo.isBlank()) throw new IllegalArgumentException("repo is required");
         if (headSha == null || headSha.isBlank()) throw new IllegalArgumentException("head_sha is required");
         if (author == null || author.isBlank()) throw new IllegalArgumentException("author is required");
+        if (trustScore < 0 || trustScore > 1) throw new IllegalArgumentException("trustScore must be between 0.0 and 1.0");
 
         PriorityLane lane = PriorityLane.NORMAL;
         if (priority != null && !priority.isBlank()) {
@@ -179,7 +180,7 @@ public class GovernanceMutationResolver {
 
     @Mutation
     @Description("Report a production incident against a merged PR — writes FLAGGED attestation against the reviewer's trust score")
-    public IncidentFeedbackResult reportIncident(
+    public IncidentReport reportIncident(
             @Name("repository") @Description("GitHub repo slug") String repository,
             @Name("prNumber") @Description("PR number") int prNumber,
             @Name("incidentId") @Description("External incident tracker ID") String incidentId,
@@ -187,11 +188,17 @@ public class GovernanceMutationResolver {
             @Name("description") @Description("What went wrong") String description,
             @Name("reviewCapability") @Description("Which capability missed the issue") String reviewCapability,
             @Name("caseId") @Description("Optional — disambiguate when multiple cases exist") String caseId) {
-        IncidentSeverity sev = IncidentSeverity.valueOf(severity.toUpperCase());
-        UUID parsedCaseId = caseId != null ? UUID.fromString(caseId) : null;
+        IncidentSeverity sev          = IncidentSeverity.valueOf(severity.toUpperCase());
+        UUID             parsedCaseId = caseId != null ? UUID.fromString(caseId) : null;
         IncidentFeedback feedback = new IncidentFeedback(
                 repository, prNumber, incidentId, sev, description, reviewCapability, parsedCaseId);
-        return incidentFeedbackService.recordFeedback(feedback);
+        var result = incidentFeedbackService.recordFeedback(feedback);
+        return new IncidentReport(
+                result.caseId(),
+                result.attestationsWritten(),
+                result.flaggedAgents().stream()
+                      .map(fa -> new FlaggedAgentEntry(fa.agentId(), fa.capabilityTag(), fa.attestationId()))
+                      .toList());
     }
 
     public record RetryResult(UUID caseId, String capability, String status) {}
@@ -200,4 +207,10 @@ public class GovernanceMutationResolver {
     public record EnqueueResult(int prNumber, String lane, String status) {}
     public record DequeueResult(int prNumber, boolean removed, String status) {}
     public record SupersedeResult(UUID supersededCaseId, UUID replacementCaseId, String status) {}
+
+    public record IncidentReport(UUID caseId, int attestationsWritten,
+                                 java.util.List<FlaggedAgentEntry> flaggedAgents) {}
+
+    public record FlaggedAgentEntry(String agentId, String capabilityTag, UUID attestationId) {}
+
 }

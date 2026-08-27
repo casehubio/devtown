@@ -6,6 +6,14 @@ title: PR Review — content-driven routing with failure cascade
 
 spec:
 
+  ## ─── Memory Retrieval ─────────────────────────────────────────────
+  memoryRetrieval:
+    enabled: true
+    maxMemories: 15
+    maxCaseMemories: 5
+    domains: [experience, reflection]
+    caseScopedDomains: [worker-reasoning]
+
   ## ─── Capabilities ──────────────────────────────────────────────────
   capabilities:
     - name: code-analysis

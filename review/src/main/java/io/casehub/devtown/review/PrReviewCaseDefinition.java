@@ -122,6 +122,9 @@ public final class PrReviewCaseDefinition {
 
         CaseDefinition def = CaseDefinition.builder()
             .namespace("devtown").name("pr-review").version("1.0.0")
+            .memoryRetrieval(new io.casehub.api.model.MemoryRetrievalConfig(
+                true, 15, java.util.Set.of("experience", "reflection"),
+                java.util.Set.of("worker-reasoning"), 5))
             .completion(
                 GoalExpression.allOf(prApproved, securityVerified, ciPassing, mergeCompleted),
                 GoalExpression.anyOf(reviewBlocked, reviewRejected, reviewAbandoned))

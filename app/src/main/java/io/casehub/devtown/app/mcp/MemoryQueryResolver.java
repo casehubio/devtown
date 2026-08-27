@@ -3,7 +3,6 @@ package io.casehub.devtown.app.mcp;
 import io.casehub.devtown.domain.memory.DevtownMemoryDomain;
 import io.casehub.devtown.domain.memory.ModulePathNormalizer;
 import io.casehub.neocortex.memory.CaseMemoryStore;
-import io.casehub.neocortex.memory.MemoryDomain;
 import io.casehub.neocortex.memory.MemoryOrder;
 import io.casehub.neocortex.memory.MemoryQuery;
 import io.casehub.platform.api.identity.CurrentPrincipal;
@@ -54,7 +53,7 @@ public class MemoryQueryResolver {
                 MemoryQuery.forEntities(entityIds, DevtownMemoryDomain.SOFTWARE_REVIEW, tenant)
                         .withLimit(20).withOrder(MemoryOrder.CHRONOLOGICAL));
 
-        Map<String, String> reasoningByCaseId = Map.of();
+        Map<String, io.casehub.neocortex.memory.Memory> reasoningByCaseId = Map.of();
         List<String> caseIds = outcomes.stream()
                 .map(io.casehub.neocortex.memory.Memory::caseId)
                 .filter(Objects::nonNull).distinct()
@@ -64,17 +63,17 @@ public class MemoryQueryResolver {
                     .map(id -> "case:" + id).toList();
             var traces = memoryStore.query(
                     MemoryQuery.forEntities(reasoningEntityIds,
-                                    new MemoryDomain("worker-reasoning"), tenant)
+                                    DevtownMemoryDomain.WORKER_REASONING, tenant)
                             .withLimit(caseIds.size() * 5)
                             .withOrder(MemoryOrder.CHRONOLOGICAL));
             reasoningByCaseId = traces.stream()
                     .filter(m -> m.caseId() != null)
                     .collect(Collectors.toMap(
                             m -> m.caseId() + ":" + m.attributes().getOrDefault("capability", ""),
-                            io.casehub.neocortex.memory.Memory::text, (a, b) -> b));
+                            m -> m, (a, b) -> b));
         }
 
-        Map<String, String> finalReasoningMap = reasoningByCaseId;
+        Map<String, io.casehub.neocortex.memory.Memory> finalReasoningMap = reasoningByCaseId;
         return outcomes.stream()
                 .map(m -> {
                     String capability = m.attributes().getOrDefault("capability", "unknown");
@@ -83,7 +82,8 @@ public class MemoryQueryResolver {
                     try { pr = Integer.parseInt(m.attributes().getOrDefault("pr-number", "0")); }
                     catch (NumberFormatException ignored) {}
                     String key = m.caseId() != null ? m.caseId() + ":" + capability : null;
-                    String reasoning = key != null ? finalReasoningMap.get(key) : null;
+                    io.casehub.neocortex.memory.Memory reasoningMem = key != null ? finalReasoningMap.get(key) : null;
+                    ReasoningTrace reasoning = reasoningMem != null ? ReasoningTrace.from(reasoningMem) : null;
                     return new PriorDecision(caseUuid, repo, pr, capability, m.text(),
                             m.createdAt(), reasoning);
                 }).toList();
@@ -164,7 +164,7 @@ public class MemoryQueryResolver {
 
     public record PriorDecision(
             UUID caseId, String repo, int prNumber, String capability,
-            String outcome, Instant decidedAt, String reasoning) {
+            String outcome, Instant decidedAt, ReasoningTrace reasoning) {
         public PriorDecision(UUID caseId, String repo, int prNumber,
                              String capability, String outcome, Instant decidedAt) {
             this(caseId, repo, prNumber, capability, outcome, decidedAt, null);

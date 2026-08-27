@@ -26,6 +26,7 @@ public class GovernanceQueryResolver {
     @Inject LedgerProvExportService provExportService;
     @Inject CurrentPrincipal principal;
     @Inject CaseHubRuntime caseHubRuntime;
+    @Inject io.casehub.devtown.app.MergeQueueService mergeQueueService;
 
     @Query
     @Description("Get current PR review queue status with counts by status and active reviews")
@@ -136,8 +137,6 @@ public class GovernanceQueryResolver {
             @Name("caseId") @Description("Case UUID") UUID caseId) {
         return provExportService.exportSubject(caseId, principal.tenancyId());
     }
-
-    @Inject io.casehub.devtown.app.MergeQueueService mergeQueueService;
 
     public record AgentMessage(Instant timestamp, String messageType, String payload) {}
 

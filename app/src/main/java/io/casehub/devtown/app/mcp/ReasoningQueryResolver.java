@@ -3,7 +3,6 @@ package io.casehub.devtown.app.mcp;
 import io.casehub.devtown.domain.memory.DevtownMemoryDomain;
 import io.casehub.neocortex.memory.CaseMemoryStore;
 import io.casehub.neocortex.memory.Memory;
-import io.casehub.neocortex.memory.MemoryDomain;
 import io.casehub.neocortex.memory.MemoryOrder;
 import io.casehub.neocortex.memory.MemoryQuery;
 import io.casehub.platform.api.identity.CurrentPrincipal;
@@ -11,14 +10,15 @@ import io.casehub.platform.api.mcp.McpDomain;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.inject.Instance;
 import jakarta.inject.Inject;
-import java.util.List;
-import java.util.Objects;
-import java.util.UUID;
 import org.eclipse.microprofile.graphql.DefaultValue;
 import org.eclipse.microprofile.graphql.Description;
 import org.eclipse.microprofile.graphql.GraphQLApi;
 import org.eclipse.microprofile.graphql.Name;
 import org.eclipse.microprofile.graphql.Query;
+
+import java.util.List;
+import java.util.Objects;
+import java.util.UUID;
 
 @McpDomain("devtown")
 @GraphQLApi
@@ -39,7 +39,7 @@ public class ReasoningQueryResolver {
         if (!memoryStore.isResolvable()) return List.of();
         var memories = memoryStore.get().query(
                 MemoryQuery.forEntity("case:" + caseId,
-                                new MemoryDomain("worker-reasoning"), principal.tenancyId())
+                                DevtownMemoryDomain.WORKER_REASONING, principal.tenancyId())
                         .withLimit(limit)
                         .withOrder(MemoryOrder.CHRONOLOGICAL));
         return memories.stream().map(ReasoningTrace::from).toList();
@@ -70,7 +70,7 @@ public class ReasoningQueryResolver {
                 .map(id -> "case:" + id).toList();
         var reasoning = memoryStore.get().query(
                 MemoryQuery.forEntities(entityIds,
-                                new MemoryDomain("worker-reasoning"), tenantId)
+                                DevtownMemoryDomain.WORKER_REASONING, tenantId)
                         .withLimit(limit)
                         .withOrder(MemoryOrder.CHRONOLOGICAL));
         return reasoning.stream().map(ReasoningTrace::from).toList();

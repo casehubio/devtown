@@ -17,6 +17,6 @@ public class DevtownModelEnricher implements ModelEnricher {
 
     @Override
     public Map<String, Object> state() {
-        return Map.of("reasoningDomain", "worker-reasoning");
+        return Map.of("reasoningDomain", io.casehub.devtown.domain.memory.DevtownMemoryDomain.WORKER_REASONING.name());
     }
 }

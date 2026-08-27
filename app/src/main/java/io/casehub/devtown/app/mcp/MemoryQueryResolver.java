@@ -11,17 +11,18 @@ import io.casehub.platform.api.mcp.McpDomain;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.inject.Instance;
 import jakarta.inject.Inject;
+import org.eclipse.microprofile.graphql.DefaultValue;
+import org.eclipse.microprofile.graphql.Description;
+import org.eclipse.microprofile.graphql.GraphQLApi;
+import org.eclipse.microprofile.graphql.Name;
+import org.eclipse.microprofile.graphql.Query;
+
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
 import java.util.stream.Collectors;
-import org.eclipse.microprofile.graphql.DefaultValue;
-import org.eclipse.microprofile.graphql.Description;
-import org.eclipse.microprofile.graphql.GraphQLApi;
-import org.eclipse.microprofile.graphql.Name;
-import org.eclipse.microprofile.graphql.Query;
 
 @McpDomain("devtown")
 @GraphQLApi
@@ -141,25 +142,24 @@ public class MemoryQueryResolver {
 
     @Query
     @Description("Find cases similar to a PR using CBR similarity search — returns ranked precedents with similarity scores")
-    public List<io.casehub.devtown.domain.cbr.Precedent> similarCases(
+    public List<SimilarCaseResult> similarCases(
             @Name("repo") @Description("GitHub repo slug") String repo,
             @Name("prNumber") @Description("PR number") int prNumber,
             @Name("contributor") @Description("PR author username") String contributor,
             @Name("linesChanged") @Description("Total lines changed") int linesChanged,
             @Name("changedPaths") @Description("Comma-separated list of changed file paths") String changedPaths) {
-        if (!cbrRetrievalService.isResolvable()) return List.of();
+        if (!cbrRetrievalService.isResolvable()) {return List.of();}
         var vector = io.casehub.devtown.domain.cbr.PrFeatureVector.from(
                 repo, prNumber, contributor, linesChanged,
                 java.util.Arrays.stream(changedPaths.split(",")).map(String::trim).toList());
-        return cbrRetrievalService.get().findSimilar(vector, repo, principal.tenancyId());
+        return cbrRetrievalService.get().findSimilar(vector, repo, principal.tenancyId())
+                                  .stream().map(SimilarCaseResult::from).toList();
     }
 
     @Query
     @Description("Show current CBR similarity weights — base preferences plus any dynamic adjustments from outcome feedback")
-    public Map<String, Object> cbrWeightStatus() {
-        return Map.of(
-                "overrides", cbrWeightOverrides.currentOverrides(),
-                "sampleCount", cbrWeightOverrides.sampleCount());
+    public CbrWeightStatusResult cbrWeightStatus() {
+        return new CbrWeightStatusResult(cbrWeightOverrides.currentOverrides(), cbrWeightOverrides.sampleCount());
     }
 
     public record PriorDecision(
@@ -170,4 +170,52 @@ public class MemoryQueryResolver {
             this(caseId, repo, prNumber, capability, outcome, decidedAt, null);
         }
     }
+
+    public record SimilarCaseResult(
+            UUID caseId,
+            SimilarityScoreResult similarity,
+            PrFeatureVectorResult vector,
+            String outcome,
+            Map<String, CapabilityOutcomeResult> capabilityOutcomes,
+            java.time.Duration completionTime) {
+        static SimilarCaseResult from(io.casehub.devtown.domain.cbr.Precedent p) {
+            return new SimilarCaseResult(
+                    p.caseId(),
+                    SimilarityScoreResult.from(p.similarity()),
+                    PrFeatureVectorResult.from(p.vector()),
+                    p.outcome(),
+                    p.capabilityOutcomes().entrySet().stream()
+                     .collect(Collectors.toMap(Map.Entry::getKey,
+                                               e -> CapabilityOutcomeResult.from(e.getValue()))),
+                    p.completionTime());
+        }
+    }
+
+    public record SimilarityScoreResult(double score, Map<String, Double> breakdown) {
+        static SimilarityScoreResult from(io.casehub.devtown.domain.cbr.SimilarityScore s) {
+            return new SimilarityScoreResult(s.score(), s.breakdown());
+        }
+    }
+
+    public record PrFeatureVectorResult(
+            String repo, int prNumber, String contributor, int linesChanged,
+            java.util.Set<String> changedPaths, java.util.Set<String> modules,
+            java.util.Set<String> languages, boolean hasTests, boolean touchedConfigs) {
+        static PrFeatureVectorResult from(io.casehub.devtown.domain.cbr.PrFeatureVector v) {
+            return new PrFeatureVectorResult(
+                    v.repo(), v.prNumber(), v.contributor(), v.linesChanged(),
+                    v.changedPaths(), v.modules(), v.languages(),
+                    v.hasTests(), v.touchedConfigs());
+        }
+    }
+
+    public record CapabilityOutcomeResult(String outcome, String detail, java.time.Duration duration) {
+        static CapabilityOutcomeResult from(io.casehub.devtown.domain.cbr.CapabilityOutcome co) {
+            return new CapabilityOutcomeResult(co.outcome(), co.detail(), co.duration());
+        }
+    }
+
+    public record CbrWeightStatusResult(Map<String, Double> overrides, int sampleCount) {}
+
+
 }

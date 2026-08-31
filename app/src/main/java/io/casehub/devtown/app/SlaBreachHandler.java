@@ -5,7 +5,7 @@ import io.casehub.engine.common.spi.PlanItemStore;
 import io.casehub.work.api.BreachDecision;
 import io.casehub.work.runtime.event.SlaBreachEvent;
 import io.casehub.work.engine.CallerRef;
-import io.casehub.work.engine.PlanItemCallerRef;
+import io.casehub.work.engine.PlanItemRef;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.event.Observes;
 import jakarta.inject.Inject;
@@ -45,7 +45,7 @@ public class SlaBreachHandler {
     }
 
     private String resolveContextKey(CallerRef ref, String tenancyId) {
-        if (!(ref instanceof PlanItemCallerRef pi)) {return null;}
+        if (!(ref instanceof PlanItemRef pi)) {return null;}
 
         var records = planItemStore.findDelegated(pi.caseId(), tenancyId);
         for (var record : records) {

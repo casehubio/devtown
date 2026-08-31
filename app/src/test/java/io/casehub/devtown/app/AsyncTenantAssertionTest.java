@@ -52,7 +52,7 @@ class AsyncTenantAssertionTest {
             UUID.randomUUID().toString(),
             "async tenant test",
             Map.of(),
-            null
+            null, null, null, null
         );
 
         storeRequests.fireAsync(new StoreRequest(input));

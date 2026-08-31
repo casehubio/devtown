@@ -67,7 +67,7 @@ public class CaseMemoryEmitter {
             event.caseId().toString(),
             text,
             attributes,
-            null
+            null, null, null, null
         );
     }
 
@@ -97,7 +97,7 @@ public class CaseMemoryEmitter {
             event.caseId().toString(),
             text,
             attributes,
-            null
+            null, null, null, null
         );
     }
 
@@ -127,7 +127,7 @@ public class CaseMemoryEmitter {
             event.caseId().toString(),
             text,
             attributes,
-            null
+            null, null, null, null
         );
     }
 

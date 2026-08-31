@@ -81,7 +81,7 @@ class CaseMemoryRecallerTest {
             UUID.randomUUID().toString(),
             "Style review completed successfully",
             attrs,
-            null
+            null, null, null, null
         ));
 
         var result = recaller.recall(pr);
@@ -107,7 +107,7 @@ class CaseMemoryRecallerTest {
             UUID.randomUUID().toString(),
             "Test coverage passed",
             attrs,
-            null
+            null, null, null, null
         ));
 
         var result = recaller.recall(pr);
@@ -143,7 +143,7 @@ class CaseMemoryRecallerTest {
             UUID.randomUUID().toString(),
             "review history for app in repo1 — no critical findings",
             attrs,
-            null
+            null, null, null, null
         ));
 
         var result = recaller.recall(pr);
@@ -171,7 +171,7 @@ class CaseMemoryRecallerTest {
             UUID.randomUUID().toString(),
             "Test fact",
             attrs,
-            null
+            null, null, null, null
         ));
 
         // Query it back immediately

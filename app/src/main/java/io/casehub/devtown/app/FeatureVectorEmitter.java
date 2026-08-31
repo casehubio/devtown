@@ -36,6 +36,6 @@ public class FeatureVectorEmitter {
                 caseId.toString(),
                 text,
                 attributes,
-                null
+                null, null, null, null
         ));}
 }

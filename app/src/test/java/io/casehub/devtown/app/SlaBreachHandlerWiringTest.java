@@ -10,7 +10,7 @@ import io.casehub.work.api.BreachType;
 import io.casehub.work.api.BreachedTask;
 import io.casehub.work.api.SlaBreachContext;
 import io.casehub.work.api.spi.SlaBreachPolicy;
-import io.casehub.work.engine.PlanItemCallerRef;
+import io.casehub.work.engine.PlanItemRef;
 import io.casehub.work.runtime.event.SlaBreachEvent;
 import io.quarkus.test.junit.QuarkusTest;
 import jakarta.enterprise.event.Event;
@@ -67,7 +67,7 @@ class SlaBreachHandlerWiringTest {
                     .orElse(null);
         }, pid -> pid != null);
 
-        String callerRef = PlanItemCallerRef.encode(caseId, planItemId);
+        String callerRef = PlanItemRef.encode(caseId, planItemId);
         var task = new BreachedTask(UUID.randomUUID(), callerRef,
                                     "PR approval", Set.of("pr-leads"));
         var ctx  = new SlaBreachContext(BreachType.CLAIM_EXPIRED, task,

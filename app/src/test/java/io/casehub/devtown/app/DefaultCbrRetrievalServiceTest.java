@@ -220,7 +220,7 @@ class DefaultCbrRetrievalServiceTest {
             DevtownMemoryDomain.CASE_VECTOR_PREFIX + repo + ":" + caseId,
             DevtownMemoryDomain.SOFTWARE_REVIEW,
             "tenant-1", caseId.toString(),
-            "PR in " + repo, attrs, Instant.now(), null);
+            "PR in " + repo, attrs, Instant.now(), null, null, null, null);
     }
 
     private Memory buildOutcomeMemory(UUID caseId, String capability, String outcome, String detail) {
@@ -233,6 +233,6 @@ class DefaultCbrRetrievalServiceTest {
             UUID.randomUUID().toString(),
             "contributor:someone", DevtownMemoryDomain.SOFTWARE_REVIEW,
             "tenant-1", caseId.toString(),
-            "Review outcome", attrs, Instant.now(), null);
+            "Review outcome", attrs, Instant.now(), null, null, null, null);
     }
 }

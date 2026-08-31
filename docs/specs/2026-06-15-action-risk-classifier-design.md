@@ -45,7 +45,7 @@ On exception, the chainer applies a fail-safe `GateRequired`.
 Classifier returns `GateRequired` → engine stores `PendingActionGate` →
 emits `ActionGateScheduleEvent` → `ActionGateWorkItemHandler` (in
 casehub-engine-work-adapter, already a devtown dependency) creates a
-`WorkItemEntity` → human approves → `ActionGateApprovedHandler` re-fires the
+`WorkItem` → human approves → `ActionGateApprovedHandler` re-fires the
 worker completion.
 
 ### ActionGatePolicy Alignment
@@ -375,7 +375,7 @@ Synchronous classification — the engine wraps it reactively via
 ## Gastown Feature Parity
 
 This maps to Gastown's "hierarchical watchdog" (Witness/Deacon/Boot) but
-with formal obligation tracking: each `GateRequired` creates a `WorkItemEntity`
+with formal obligation tracking: each `GateRequired` creates a `WorkItem`
 through the engine's oversight channel, with SLA and escalation —
 capabilities that Gastown's watchdog cannot provide.
 

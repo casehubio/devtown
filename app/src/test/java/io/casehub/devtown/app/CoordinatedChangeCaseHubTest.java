@@ -49,14 +49,14 @@ class CoordinatedChangeCaseHubTest {
     void hasCoordinatedMergeWorker() {
         var def = caseHub.getDefinition();
         assertThat(def.getWorkers()).anySatisfy(w ->
-            assertThat(w.capabilityNames()).contains("coordinated-merge"));
+            assertThat(w.capabilities()).contains("coordinated-merge"));
     }
 
     @Test
     void hasCoordinatedRollbackWorker() {
         var def = caseHub.getDefinition();
         assertThat(def.getWorkers()).anySatisfy(w ->
-                                                        assertThat(w.capabilityNames()).contains("coordinated-rollback"));
+                                                        assertThat(w.capabilities()).contains("coordinated-rollback"));
     }
 
 }

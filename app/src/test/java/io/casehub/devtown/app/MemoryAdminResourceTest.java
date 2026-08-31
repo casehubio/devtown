@@ -45,7 +45,7 @@ class MemoryAdminResourceTest {
             UUID.randomUUID().toString(),
             "Style review by alice",
             Map.of(),
-            null
+            null, null, null, null
         ));
 
         assertThat(store.query(
@@ -111,7 +111,7 @@ class MemoryAdminResourceTest {
             UUID.randomUUID().toString(),
             "Review by bob",
             Map.of(),
-            null
+            null, null, null, null
         ));
 
         var logs = new ArrayList<LogRecord>();

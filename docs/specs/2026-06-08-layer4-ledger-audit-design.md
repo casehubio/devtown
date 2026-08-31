@@ -253,7 +253,7 @@ Supporting records: `LedgerEventRecord`, `InclusionProofRecord`, `RoutingDecisio
 
 **Persistence unit discipline:** devtown has two persistence units — default (casehub-work) and qhorus (ledger + qhorus entities). `LedgerEntryRepository` (via `JpaLedgerEntryRepository`) injects `@LedgerPersistenceUnit EntityManager` — this resolves to the qhorus PU in devtown's configuration (`casehub.ledger.datasource=qhorus`). All ledger queries go through `LedgerEntryRepository`, never through a raw EntityManager.
 
-The unqualified `EntityManager` is injected **only** for WorkItem SLA lookup (`em.find(WorkItem.class, taskId)`) — `WorkItemEntity` is on the default PU, so this is correct. An alternative is to use `WorkItemService` from casehub-work-api, but `em.find()` is simpler for a read-only lookup by ID and avoids pulling in the full service dependency graph.
+The unqualified `EntityManager` is injected **only** for WorkItem SLA lookup (`em.find(WorkItem.class, taskId)`) — `WorkItem` is on the default PU, so this is correct. An alternative is to use `WorkItemService` from casehub-work-api, but `em.find()` is simpler for a read-only lookup by ID and avoids pulling in the full service dependency graph.
 
 Note: `CaseLedgerEntryRepository` (engine-ledger) injects an unqualified `EntityManager caseEm` for its own `findByCaseId()` method — this resolves to the wrong PU in devtown's multi-PU setup. This is a pre-existing issue in `CaseLedgerEntryRepository`; the compliance service avoids it by using the parent `LedgerEntryRepository.findBySubjectId()` which uses the correctly qualified `@LedgerPersistenceUnit` EntityManager.
 
@@ -383,7 +383,7 @@ All existing tests continue with `casehub.ledger.enabled=false` and `database.ge
 | R2-1 | Moderate | `signature` field on `CodeReviewComplianceEvidence` undefined | Removed — Merkle root is inside `AuditChainRequirement`; no signing infrastructure exists. Add when it does. |
 | R2-2 | Low | Observer race with `CaseLedgerEventCapture` — unordered sequence numbers | `causedByEntryId` set to the latest `CaseLedgerEntry` matching the terminal status (best-effort — null if race). Compliance report uses both sequence order and `causedByEntryId` for audit chain. |
 | R2-3 | Low | `CrossTenantCaseInstanceRepository` blocking tech debt | Documented as accepted tech debt, same as `ReviewOutcomeObserver`. Resolution path: `CaseLifecycleEvent` carries case context directly. |
-| R2-4 | Moderate | Raw `EntityManager` resolves to wrong PU | All ledger queries via `LedgerEntryRepository` (correct PU via `@LedgerPersistenceUnit`). Unqualified `EntityManager` used only for `WorkItemEntity` lookup (default PU, correct for work entities). Pre-existing bug in `CaseLedgerEntryRepository.findByCaseId()` documented. |
+| R2-4 | Moderate | Raw `EntityManager` resolves to wrong PU | All ledger queries via `LedgerEntryRepository` (correct PU via `@LedgerPersistenceUnit`). Unqualified `EntityManager` used only for `WorkItem` lookup (default PU, correct for work entities). Pre-existing bug in `CaseLedgerEntryRepository.findByCaseId()` documented. |
 
 ### Revision 4 — final review (2 findings)
 

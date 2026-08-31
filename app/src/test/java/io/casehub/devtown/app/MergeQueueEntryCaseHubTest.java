@@ -1,6 +1,6 @@
 package io.casehub.devtown.app;
 
-import io.casehub.api.model.HumanTaskTarget;
+import io.casehub.api.model.JudgmentTarget;
 import io.quarkus.test.junit.QuarkusTest;
 import jakarta.inject.Inject;
 import org.junit.jupiter.api.Test;
@@ -50,8 +50,8 @@ class MergeQueueEntryCaseHubTest {
         var binding = def.getBindings().stream()
             .filter(b -> "sla-breach-escalation".equals(b.getName()))
             .findFirst().orElseThrow();
-        assertThat(binding.target()).isInstanceOf(HumanTaskTarget.class);
-        var ht = (HumanTaskTarget) binding.target();
+        assertThat(binding.target()).isInstanceOf(JudgmentTarget.class);
+        var ht = (JudgmentTarget) binding.target();
         assertThat(ht.outcomes()).containsExactlyInAnyOrder("PRIORITIZE", "DEQUEUE", "ACKNOWLEDGE");
     }
 }

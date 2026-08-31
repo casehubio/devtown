@@ -9,7 +9,9 @@ public record ReasoningTrace(
     String outcome,
     String reasoning,
     Instant timestamp,
-    boolean truncated) {
+    boolean truncated,
+    String module,
+    String repo) {
 
   static ReasoningTrace from(Memory m) {
     return new ReasoningTrace(
@@ -18,6 +20,13 @@ public record ReasoningTrace(
         m.attributes().getOrDefault("outcome", "unknown"),
         m.text(),
         m.createdAt(),
-        "true".equals(m.attributes().get("truncated")));
+        "true".equals(m.attributes().get("truncated")),
+        m.attributes().get("module"),
+        m.attributes().get("repo"));
+  }
+
+  ReasoningTrace withModuleContext(String module, String repo) {
+    return new ReasoningTrace(workerName, capability, outcome, reasoning,
+        timestamp, truncated, module, repo);
   }
 }

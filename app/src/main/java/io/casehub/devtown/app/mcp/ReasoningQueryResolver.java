@@ -75,4 +75,39 @@ public class ReasoningQueryResolver {
                         .withOrder(MemoryOrder.CHRONOLOGICAL));
         return reasoning.stream().map(ReasoningTrace::from).toList();
     }
+
+    @Query
+    @Description("Get reasoning traces for a specific module across cases — "
+            + "finds reviews that touched the module, then retrieves reasoning per case")
+    public List<ReasoningTrace> moduleReasoning(
+            @Name("repo") @Description("Repository name (e.g. casehubio/devtown)") String repo,
+            @Name("module") @Description("Module path (e.g. app, domain, review)") String module,
+            @Name("limit") @Description("Max results (default 20)") @DefaultValue("20") int limit) {
+        if (!memoryStore.isResolvable()) return List.of();
+        String tenantId = principal.tenancyId();
+
+        String entityId = DevtownMemoryDomain.MODULE_PREFIX + repo + "/" + module;
+        var moduleFacts = memoryStore.get().query(
+                MemoryQuery.forEntity(entityId,
+                                DevtownMemoryDomain.SOFTWARE_REVIEW, tenantId)
+                        .withLimit(limit)
+                        .withOrder(MemoryOrder.CHRONOLOGICAL));
+
+        List<String> caseIds = moduleFacts.stream()
+                .map(Memory::caseId).filter(Objects::nonNull).distinct()
+                .limit(MemoryQuery.MAX_ENTITY_IDS).toList();
+
+        if (caseIds.isEmpty()) return List.of();
+
+        List<String> entityIds = caseIds.stream()
+                .map(id -> "case:" + id).toList();
+        var reasoning = memoryStore.get().query(
+                MemoryQuery.forEntities(entityIds,
+                                DevtownMemoryDomain.WORKER_REASONING, tenantId)
+                        .withLimit(limit)
+                        .withOrder(MemoryOrder.CHRONOLOGICAL));
+        return reasoning.stream()
+                .map(r -> ReasoningTrace.from(r).withModuleContext(module, repo))
+                .toList();
+    }
 }

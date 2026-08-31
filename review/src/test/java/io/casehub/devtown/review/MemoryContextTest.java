@@ -86,7 +86,7 @@ class MemoryContextTest {
             "Some review text.",
             Map.of(MemoryAttributeKeys.OUTCOME, ReviewOutcome.COMPLETED.name(),
                    DevtownMemoryKeys.CAPABILITY, "security-review"),
-            Instant.parse("2026-06-01T10:00:00Z"), null);
+            Instant.parse("2026-06-01T10:00:00Z"), null, null, null, null);
         MemoryContext ctx = new MemoryContext(List.of(m), List.of(), List.of(), Set.of());
         assertThat(ctx.hasRiskSignals()).isTrue();
     }
@@ -106,7 +106,7 @@ class MemoryContextTest {
                 DevtownMemoryKeys.CAPABILITY, "security-review"
             ),
             Instant.parse("2026-06-01T10:00:00Z"),
-            null
+            null, null, null, null
         );
 
         MemoryContext ctx = new MemoryContext(List.of(m), List.of(), List.of(), Set.of());
@@ -194,7 +194,7 @@ class MemoryContextTest {
                 DevtownMemoryKeys.CAPABILITY, "security-review"
             ),
             Instant.parse("2026-06-01T10:00:00Z"),
-            null
+            null, null, null, null
         );
     }
 }

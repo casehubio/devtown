@@ -344,7 +344,7 @@ Four strategies implementing `BisectionSplitStrategy`:
 
 `CoordinatedChangeRequest` carries a list of `RepoChangeEntry` (owner, repo, prNumber, headSha, targetBranch, contributor, changedPaths, linesChanged).
 
-Workers: `CoordinatedMergeWorker` merges all repos when sub-cases complete; `CoordinatedRollbackWorker` reverts merges on sub-case FAULT via `RevertClient`. `CoordinatedChangeTrackerHydrator` handles startup hydration from durable state.
+Merge/rollback logic is in `CoordinatedChangeService` and `CoordinatedChangeCaseHub` — merge all repos when sub-cases complete, revert on sub-case FAULT via `RevertClient`. `CoordinatedChangeTrackerHydrator` handles startup hydration from durable state.
 
 ---
 
@@ -456,7 +456,7 @@ Five notification bridge classes in `app/notification/` translate platform event
 | `contributor-access-change` | `CONTRIBUTOR_ACCESS_CHANGE` |
 | `production-deploy` | `PRODUCTION_DEPLOY` |
 
-`DevtownRiskClassifierProducer` (`@RiskClassifier @ApplicationScoped`) is the CDI adapter. PreferenceProvider-driven thresholds at scope `casehubio/devtown/risk/<actionType>`. Gate operates through engine's `ActionGateWorkItemHandler` lifecycle.
+`DevtownRiskClassifierProducer` (`@RiskClassifier @ApplicationScoped`) is the CDI adapter. PreferenceProvider-driven thresholds at scope `casehubio/devtown/risk/<actionType>`. Gate operates through engine's action gate lifecycle (`ActionGateApprovedHandler`, `ActionGateRejectedHandler`, `ActionGateExpiredHandler`).
 
 ---
 

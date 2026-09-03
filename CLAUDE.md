@@ -1,72 +1,27 @@
-# devtown Workspace
+# CLAUDE.md
 
 **Name:** casehub-devtown
-**Project repo:** /Users/mdproctor/claude/casehub/devtown
-**Workspace type:** public
 
-## Session Start
+## Project Type
 
-Run `add-dir /Users/mdproctor/claude/casehub/devtown` before any other work.
+type: java
 
-## Artifact Locations
+**Stack:** Java 21 (on Java 26 JVM), Quarkus 3.32.2, GraalVM 25 (native image target)
 
-| Skill | Writes to |
-|-------|-----------|
-| brainstorming (specs) | `specs/` |
-| writing-plans (plans) | `plans/` |
-| handover | `HANDOFF.md` |
-| idea-log | `IDEAS.md` |
-| design-snapshot | `snapshots/` |
-| java-update-design / update-primary-doc | `design/JOURNAL.md` (created by `epic`) |
-| adr | `adr/` |
-| write-blog | `blog/` |
-| roadmap | `ROADMAP.md` |
+**Modules:** domain, review, queue, merge, github, app, templates/pr-review
 
-## Structure
+## Work Tracking
 
-- `HANDOFF.md` — session handover (single file, overwritten each session)
-- `ROADMAP.md` — cross-repo phased delivery plan with foundation priority signals
-- `IDEAS.md` — idea log (single file)
-- `specs/` — brainstorming / design specs (superpowers output)
-- `plans/` — implementation plans (superpowers output)
-- `snapshots/` — design snapshots with INDEX.md (auto-pruned, max 10)
-- `adr/` — architecture decision records with INDEX.md
-- `blog/` — project diary entries with INDEX.md
-- `design/` — epic journal (created by `epic` at branch start)
+**Issue tracking:** enabled
+**GitHub repo:** casehubio/devtown
 
-## Git Discipline
-
-Two git repositories are active in every session:
-- **Workspace** (`/Users/mdproctor/claude/public/casehub/devtown`) — methodology artifacts: handover, blog, specs, plans, ADRs
-- **Project repo** (`/Users/mdproctor/claude/casehub/devtown`) — source code
-
-Before any git operation, run `git rev-parse --show-toplevel` to confirm which repo is currently active. Do not assume — the session may have opened in either. cd to the correct repo before staging:
-- Source code commits → project repo
-- Methodology artifacts → workspace
-
-
-## Rules
-
-- All methodology artifacts go here, not in the project repo
-- Promotion to project repo is always explicit — never automatic
-- Workspace branches mirror project branches — switch both together
-
-## Routing
-
-| Artifact   | Destination | Notes |
-|------------|-------------|-------|
-| adr        | project     | lands in `docs/adr/` — promoted at epic close |
-| specs      | project     | lands in `docs/specs/` — promoted at epic close |
-| blog       | project     | lands in `docs/blog/` — promoted at work end |
-| plans      | workspace   | stay in workspace permanently |
-| design     | workspace   | epic journal stays in workspace |
-| snapshots  | workspace   | stay in workspace permanently |
-| handover      | workspace   | |
-| ARC42STORIES.MD | project   | lives in project repo root — same convention as DESIGN.md before migration |
+**Automatic behaviours (Claude follows these at all times):**
+- **Before implementation begins** — check if an active issue exists. If not, run issue-workflow Phase 1 before writing any code.
+- **Before any commit** — confirm issue linkage.
+- **All commits should reference an issue** — `Refs #N` (ongoing) or `Closes #N` (done).
+- **Exception:** housekeeping commits (doc fixes, dependency bumps) may omit issue links.
 
 ---
-
-# casehub-devtown — Claude Code Project Guide
 
 ## Platform Context
 
@@ -89,14 +44,6 @@ This repo owns its own documentation, synced to parent via CI:
 Update the relevant guide in the same session when implementation changes modules, SPIs, or public APIs. Do not defer — drift compounds.
 
 Read `docs/guides/consumer-guide.md` for app-level work. Only read `docs/guides/contributor-guide.md` when modifying this repo's internals or extension points.
-
----
-
-## Project Type
-
-type: java
-
-**Stack:** Java 21 (on Java 26 JVM), Quarkus 3.32.2, GraalVM 25 (native image target)
 
 ---
 
@@ -200,7 +147,7 @@ Read these **before designing**, not after. The concern column tells you when ea
 |---------|-----------|
 | Writing a new Flyway migration | `../garden/docs/protocols/universal/flyway-migration-rules.md` — naming, H2 MODE=PostgreSQL |
 | Assigning a migration version number | V1–V999 devtown domain; V2000+ ledger subclass join tables |
-| Engine persistence SPIs (EventLogRepository, CaseInstanceRepository, etc.) | Satisfied by `@ApplicationScoped` subclasses in `app/src/main/java/io/casehub/devtown/app/spi/` (devtown#40 ✅ 2026-05-24). Do not use `quarkus.arc.selected-alternatives` — it does not activate beans during `quarkus:build`. |
+| Engine persistence SPIs (EventLogRepository, CaseInstanceRepository, etc.) | Satisfied by `@ApplicationScoped` subclasses in `app/src/main/java/io/casehub/devtown/app/spi/` (devtown#40). Do not use `quarkus.arc.selected-alternatives` — it does not activate beans during `quarkus:build`. |
 | Adding casehub-work JPA persistence | devtown#34 still open — `casehub-persistence-hibernate` for production PostgreSQL backend |
 
 ### Testing
@@ -217,7 +164,7 @@ Read these **before designing**, not after. The concern column tells you when ea
 
 ### The Domain Model
 
-**Vocabulary types** — typed constant classes replacing the original flat namespace (Epic 2 ✅):
+**Vocabulary types** — typed constant classes replacing the original flat namespace (Epic 2):
 
 | Class | Constants | What they represent |
 |-------|-----------|---------------------|
@@ -228,7 +175,7 @@ Read these **before designing**, not after. The concern column tells you when ea
 
 `NOTIFY` removed — connector call, not a trust-scored capability. `BATCH_BISECT` deferred to CasePlanModel definitions (devtown#20). `COORDINATED_MERGE` and `COORDINATED_ROLLBACK` added in Epic 5 (#156, #158).
 
-**Trust dimensions** — how trust is scoped for this domain (Epic 2 ✅):
+**Trust dimensions** — how trust is scoped for this domain (Epic 2):
 
 | Dimension | Measures |
 |-----------|---------|
@@ -238,7 +185,7 @@ Read these **before designing**, not after. The concern column tells you when ea
 
 `security-specialist` removed — per-capability quality expressed via `ScoreType.CAPABILITY` in the ledger (ledger#76 tracks composite per-capability quality scores).
 
-**Routing policies** — `RoutingPolicy` objects with threshold, minimum observations, and borderline margin (Epic 2 ✅):
+**Routing policies** — `RoutingPolicy` objects with threshold, minimum observations, and borderline margin (Epic 2):
 
 | Capability | Threshold | Min observations | Borderline margin | Rationale |
 |-----------|-----------|-----------------|-------------------|-----------|
@@ -273,40 +220,40 @@ Read these **before designing**, not after. The concern column tells you when ea
 
 | Capability | Foundation prerequisite |
 |-----------|------------------------|
-| Content-driven routing | P0 complete (engine#186 merged) ✅ DONE |
-| Parallel check execution | P0 complete ✅ DONE |
-| PR review CasePlanModel (Epic 3) | P0 complete ✅ DONE — devtown#10 shipped 2026-05-19 |
-| Scoped policy preferences | casehub-platform ✅ shipped — `PreferenceProvider` with `Path`-based scope hierarchy and JPA persistence; `Path.root()` ✅ DONE (platform#24 closed, work#212 closed 2026-05-22) |
-| Human review WorkItem end-to-end | P0 complete ✅ DONE — casehub-work-adapter wired (devtown#33), e2e test complete (devtown#30 ✅ 2026-05-21) |
+| Content-driven routing | P0 complete (engine#186 merged) |
+| Parallel check execution | P0 complete |
+| PR review CasePlanModel (Epic 3) | P0 complete — devtown#10 shipped 2026-05-19 |
+| Scoped policy preferences | casehub-platform shipped — `PreferenceProvider` with `Path`-based scope hierarchy and JPA persistence; `Path.root()` (platform#24 closed, work#212 closed 2026-05-22) |
+| Human review WorkItem end-to-end | P0 complete — casehub-work-adapter wired (devtown#33), e2e test complete (devtown#30 2026-05-21) |
 | Trust-weighted assignment | P1 complete (P1.3 — TrustWeightedSelectionStrategy wired) |
 | Merge queue (full) | P1 complete |
-| Cryptographic audit | P1.4 ✅ DONE (CaseLedgerEntry merged 2026-04-26) |
+| Cryptographic audit | P1.4 (CaseLedgerEntry merged 2026-04-26) |
 | Failure routing (DECLINED vs FAILED) | P0 complete (qhorus#124 claudony persona mapping) |
 | Recovery on stuck reviewer | P1.2 RecoveryPolicy SPI |
 | Cross-deployment trust | P2.1 TrustExport/ImportService |
 
 **Current foundation status (as of 2026-05-19):**
-- P0.1 engine-side ✅ DONE — engine#186 closed
-- P0.2 ✅ DONE — qhorus#123, commitment outcomes → trust scoring
-- P0.3 ActorTypeResolver ✅ DONE — all consumers updated
-- P0.3 InstanceActorIdProvider SPI ✅ DONE — claudony persona mapping still pending (qhorus#124)
-- P1.4 CaseLedgerEntry ✅ DONE — merged 2026-04-26
+- P0.1 engine-side — engine#186 closed
+- P0.2 — qhorus#123, commitment outcomes → trust scoring
+- P0.3 ActorTypeResolver — all consumers updated
+- P0.3 InstanceActorIdProvider SPI — claudony persona mapping still pending (qhorus#124)
+- P1.4 CaseLedgerEntry — merged 2026-04-26
 - **Remaining P0:** qhorus#124 claudony persona→session mapping (no end-to-end trust accumulation yet)
 - **Remaining P1:** concurrency throttling (P1.1), RecoveryPolicy SPI (P1.2), TrustWeightedSelectionStrategy wired (P1.3), Doltgres backend (P1.5)
 
 ### Foundation Layers
 
 ```
-Layer 1: naive Java — vocabulary model, @DefaultBean naive service, REST entry point ✅ (devtown#8, #9, #27)
-Layer 2: + casehub-work — SLA-bounded human review gate with escalation ✅ (devtown#41, #42)
-Layer 3: + casehub-qhorus — typed COMMAND/RESPONSE/DONE/DECLINE per reviewer agent interaction ✅ (devtown#52)
-Layer 4: + casehub-ledger — tamper-evident merge decision audit trail ✅ (devtown#73, devtown#7)
-Layer 5: + casehub-engine — adaptive paths, CasePlanModel, content-driven PR routing ✅ (devtown#10)
-Layer 6: trust routing — trust-weighted reviewer assignment from outcome attestations ✅ (devtown#13)
+Layer 1: naive Java — vocabulary model, @DefaultBean naive service, REST entry point (devtown#8, #9, #27)
+Layer 2: + casehub-work — SLA-bounded human review gate with escalation (devtown#41, #42)
+Layer 3: + casehub-qhorus — typed COMMAND/RESPONSE/DONE/DECLINE per reviewer agent interaction (devtown#52)
+Layer 4: + casehub-ledger — tamper-evident merge decision audit trail (devtown#73, devtown#7)
+Layer 5: + casehub-engine — adaptive paths, CasePlanModel, content-driven PR routing (devtown#10)
+Layer 6: trust routing — trust-weighted reviewer assignment from outcome attestations (devtown#13)
 Layer 7: comparison vs Gastown (Refinery/Deacon/Witness architecture)
 ```
 
-**Reading order vs build order:** Layer 5 was built before Layers 2–4 because the engine CasePlanModel (adaptive routing, HITL binding) was the architectural priority. Reading order differs from chronological build order — `ARC42STORIES.MD §9.4` preserves reading order; build order is reflected in the blog entries.
+**Reading order vs build order:** Layer 5 was built before Layers 2-4 because the engine CasePlanModel (adaptive routing, HITL binding) was the architectural priority. Reading order differs from chronological build order — `ARC42STORIES.MD §9.4` preserves reading order; build order is reflected in the blog entries.
 
 **`@DefaultBean` displacement pattern:** devtown uses CDI displacement throughout. `PrReviewService @DefaultBean` is never deleted — each layer adds an `@ApplicationScoped` implementation (without `@DefaultBean`) in `review/` that takes CDI priority. The baseline service remains in the build, inactive.
 
@@ -322,7 +269,7 @@ Features Gastown's Refinery provides that devtown must match or exceed:
 | AI coding agent workers | Claudony WorkerProvisioner (already integrated via claudony-casehub) | Foundation ready |
 | Human workspaces (Crew) | Human review WorkItem via casehub-work | Foundation ready |
 | Cross-rig agent routing | Sub-case orchestration | Foundation ready |
-| CLI tooling (`gt feed`, `gt problems`, etc.) | DevtownMcpTools — 19 read + 6 write + PROV-DM export (`app/mcp/`) | ✅ devtown#17 |
+| CLI tooling (`gt feed`, `gt problems`, etc.) | DevtownMcpTools — 19 read + 6 write + PROV-DM export (`app/mcp/`) | devtown#17 |
 | Predecessor session context (`gt seance`) | WorkerContextProvider + Doltgres AS OF (P1.5) | Partial |
 | Federated reputation (Wasteland) | TrustExport/ImportService (P2.1) | Not started |
 | Sandboxed execution | gt-proxy-server equivalent | Not planned |
@@ -353,8 +300,8 @@ Frontend lives at `app/src/main/webui/`. Quinoa runs `npm install` and `npm run 
 
 - `@casehubio` packages resolved from Maven SNAPSHOT artifacts (no npm auth needed — see ADR-0001)
 - Dev mode: `mvn quarkus:dev -pl app` hot-reloads both Java and TypeScript
-- TypeScript only: `cd app/src/main/webui && npm run dev` (esbuild watch mode)
-- Type check: `cd app/src/main/webui && npm run typecheck`
+- TypeScript only: `npm run dev` from `app/src/main/webui/` (esbuild watch mode)
+- Type check: `npm run typecheck` from `app/src/main/webui/`
 
 ---
 
@@ -374,14 +321,7 @@ CI must use `server-id: github` + `GITHUB_TOKEN` in `actions/setup-java`.
 
 **Cross-project SNAPSHOT versions:** All casehubio artifacts are `0.2-SNAPSHOT` resolved from GitHub Packages. Declare in `pom.xml` properties and `<dependencyManagement>` — no hardcoded versions in submodule poms.
 
-**Java on this machine:**
-```bash
-JAVA_HOME=$(/usr/libexec/java_home -v 26)    # Java 26, use for dev and tests
-JAVA_HOME=/Library/Java/JavaVirtualMachines/graalvm-25.jdk/Contents/Home  # GraalVM 25, native only
-```
-
 ---
-
 
 ## Design Document Convention
 
@@ -402,33 +342,6 @@ See [casehub-pages ADR-0001](https://github.com/casehubio/casehub-pages/blob/mai
 | casehub-pages | Maven SNAPSHOT (`META-INF/resources/`) |
 | blocks-ui | Maven SNAPSHOT (`META-INF/resources/`) |
 
-**Local development:** after changing pages or blocks-ui, run `yarn build && mvn install` in the source repo to publish the SNAPSHOT to `~/.m2`.
+**Local development:** after changing pages or blocks-ui, run `yarn build && mvn install` in the source repo to publish the SNAPSHOT locally.
 
 **Do not use npm `file:` references for cross-repo dependencies** — they break in CI. See ADR-0001.
-
-## Development Workflow
-
-Session start: `work-start` (platform coherence, protocols, issue check, IntelliJ MCPs)
-Before designing: `superpowers:brainstorming`
-Before implementing: `superpowers:test-driven-development`
-For all Java work: `java-dev` (loads `testing-principles` + `ide-tooling`)
-Before committing: `superpowers:requesting-code-review`
-After implementation: `implementation-doc-sync` (scoped doc sweep)
-
-Living docs — check for drift after significant changes:
-- `docs/adr/INDEX.md`
-
-## Writing Style Guide
-
-**The writing style guide at `~/claude-workspace/writing-styles/blog-technical.md` is mandatory for all blog and diary entries.** Load it in full before drafting. Complete the pre-draft voice classification (I / we / Claude-named) before generating any prose. Do not show a draft without verifying it against the style guide.
-
-## Work Tracking
-
-**Issue tracking:** enabled
-**GitHub repo:** casehubio/devtown
-
-**Automatic behaviours (Claude follows these at all times):**
-- **Before implementation begins** — check if an active issue exists. If not, run issue-workflow Phase 1 before writing any code.
-- **Before any commit** — confirm issue linkage.
-- **All commits should reference an issue** — `Refs #N` (ongoing) or `Closes #N` (done).
-- **Exception:** housekeeping commits (doc fixes, dependency bumps) may omit issue links.

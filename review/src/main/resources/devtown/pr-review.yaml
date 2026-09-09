@@ -6,6 +6,16 @@ title: PR Review — content-driven routing with failure cascade
 
 spec:
 
+  ## ─── Concurrency & Watchdog ────────────────────────────────────────
+  maxConcurrentDispatches: 5
+  watchdogPolicy:
+    AGENT_STALE: CANCEL_AFFECTED
+    BARRIER_STUCK: CANCEL_AFFECTED
+    LOOP_DETECTED: CANCEL_AFFECTED
+    CONVERSATION_STALL: CANCEL_AFFECTED
+    ECHO_CHAMBER: CANCEL_AFFECTED
+    CIRCULAR_DELEGATION: CANCEL_AFFECTED
+
   ## ─── Memory Retrieval ─────────────────────────────────────────────
   memoryRetrieval:
     enabled: true

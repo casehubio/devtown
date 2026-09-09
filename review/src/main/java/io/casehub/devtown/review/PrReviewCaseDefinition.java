@@ -22,7 +22,7 @@ import io.casehub.api.model.ContextChangeTrigger;
 import io.casehub.api.model.Goal;
 import io.casehub.api.model.GoalExpression;
 import io.casehub.api.model.GoalKind;
-import io.casehub.api.model.HumanTaskTarget;
+import io.casehub.api.model.JudgmentTarget;
 import io.casehub.api.model.OutcomeAction;
 import io.casehub.api.model.OutcomePolicy;
 import io.casehub.api.model.evaluator.LambdaExpressionEvaluator;
@@ -213,9 +213,8 @@ public final class PrReviewCaseDefinition {
                     ctx.get("humanApproval") == null;
             }))
             .conflictResolverStrategy(DEEP_MERGE)
-            .humanTask(HumanTaskTarget.inline()
+            .judgment(JudgmentTarget.builder()
                 .title("PR approval required")
-                .candidateGroups(Set.of("pr-reviewers"))
                 .expiresIn(Duration.ofHours(24))
                 .outputMapping("{ humanApproval: . }")
                 .build())
@@ -371,9 +370,8 @@ public final class PrReviewCaseDefinition {
                 return true;
             }))
             .conflictResolverStrategy(DEEP_MERGE)
-            .humanTask(HumanTaskTarget.inline()
+            .judgment(JudgmentTarget.builder()
                 .title(title)
-                .candidateGroups(Set.of(candidateGroup))
                 .expiresIn(policy.humanEscalationSla())
                 .outputMapping("{ " + contextKey + ": { outcome: . } }")
                 .build())

@@ -460,6 +460,17 @@ Five notification bridge classes in `app/notification/` translate platform event
 
 ---
 
+## Failure Classification and Watchdog Config
+
+`DevtownFailureClassifier` (`review/`) implements engine's `FailureClassifier` SPI for PR review scenarios:
+- CI timeout, rate limit, flaky tests → `Transient` (retry)
+- Merge conflict, stale diff, hallucination → `Knowledge` (needs context, reroute)
+- Unsupported language, binary file, too large → `Infeasible` (stop trying)
+
+`DevtownWorkerStatusListener` (`review/`) implements `WorkerStatusListener` — logs worker lifecycle events for review SLA tracking.
+
+`pr-review.yaml` configures `maxConcurrentDispatches: 5` and watchdog policy for all 6 worker-hung conditions (`CANCEL_AFFECTED`).
+
 ## GitHub Integration
 
 The `github` module provides GitHub-specific adapters:

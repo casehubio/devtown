@@ -1,10 +1,8 @@
 package io.casehub.devtown.app.ledger;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.casehub.api.context.CaseContext;
 import io.casehub.devtown.domain.DeterministicUuid;
-import io.casehub.engine.common.internal.model.CaseInstance;
-import io.casehub.engine.common.spi.CrossTenantCaseInstanceRepository;
 import io.casehub.engine.common.spi.event.CaseLifecycleEvent;
 import io.casehub.ledger.api.model.LedgerEntryType;
 import io.casehub.ledger.model.CaseLedgerEntry;
@@ -21,7 +19,6 @@ import org.jboss.logging.Logger;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -48,20 +45,12 @@ import java.util.UUID;
  *   <li>{@code CANCELLED} → {@code REJECTED} — case explicitly aborted
  *   <li>{@code FAULTED} → no entry — infrastructure error, not a merge decision
  * </ul>
- *
- * <p><strong>Tech debt:</strong> Uses {@link CrossTenantCaseInstanceRepository}
- * because there is no request-scoped tenant in the async observer context.
- * The repository's contract says "for startup recovery services only" — this
- * is accepted tech debt, identical to {@code ReviewOutcomeObserver}. Resolution:
- * when {@code CaseLifecycleEvent} carries PR metadata directly, the lookup
- * becomes unnecessary.
  */
 @ApplicationScoped
 public class MergeDecisionObserver {
 
     private static final Logger LOG = Logger.getLogger(MergeDecisionObserver.class);
 
-    @Inject CrossTenantCaseInstanceRepository caseInstanceRepo;
     @Inject LedgerEntryRepository ledgerRepo;
     @Inject LedgerConfig ledgerConfig;
     @Inject ObjectMapper objectMapper;
@@ -76,28 +65,18 @@ public class MergeDecisionObserver {
         };
         if (decision == null) return;
 
-        CaseInstance ci;
-        try {
-            ci = caseInstanceRepo.findByUuid(event.caseId());
-        } catch (Exception e) {
-            LOG.warnf(e, "Failed to lookup CaseInstance for caseId=%s", event.caseId());
-            return;
-        }
-        if (ci == null) return;
+        JsonNode snapshot = event.contextSnapshot();
+        if (snapshot == null) return;
 
-        CaseContext ctx = ci.getCaseContext();
-        if (ctx == null) return;
-
-        // Path detection: PR review vs merge batch
-        String prRepo = ctx.getPathAsString("pr.repo");
-        String batchIdStr = ctx.getPathAsString("batch.id");
+        String prRepo = snapshot.path("pr").path("repo").asText(null);
+        String batchIdStr = snapshot.path("batch").path("id").asText(null);
 
         try {
             QuarkusTransaction.requiringNew().run(() -> {
                 if (prRepo != null) {
-                    handlePrReviewPath(event, ctx, decision);
+                    handlePrReviewPath(event, snapshot, decision);
                 } else if (batchIdStr != null) {
-                    handleMergeBatchPath(event, ctx, decision);
+                    handleMergeBatchPath(event, snapshot, decision);
                 }
             });
         } catch (Exception e) {
@@ -106,11 +85,11 @@ public class MergeDecisionObserver {
         }
     }
 
-    private void handlePrReviewPath(CaseLifecycleEvent event, CaseContext ctx, String decision) {
-        String repo = ctx.getPathAsString("pr.repo");
-        String prIdStr = ctx.getPathAsString("pr.id");
-        String headSha = ctx.getPathAsString("pr.headSha");
-        String mergeSha = ctx.getPathAsString("merge_sha");
+    private void handlePrReviewPath(CaseLifecycleEvent event, JsonNode snapshot, String decision) {
+        String repo = snapshot.path("pr").path("repo").asText(null);
+        String prIdStr = snapshot.path("pr").path("id").asText(null);
+        String headSha = snapshot.path("pr").path("headSha").asText(null);
+        String mergeSha = snapshot.path("merge_sha").asText(null);
         if (repo == null || prIdStr == null) return;
 
         int prNumber;
@@ -134,9 +113,6 @@ public class MergeDecisionObserver {
         entry.actorRole = "ORCHESTRATOR";
         entry.occurredAt = Instant.now().truncatedTo(ChronoUnit.MILLIS);
 
-        // Best-effort causal link to the CaseLedgerEntry for the terminal transition.
-        // Uses findLatestBySubjectId() (correct @LedgerPersistenceUnit) — NOT
-        // findLatestByCaseId() which uses an unqualified EntityManager (engine#450).
         ledgerRepo.findLatestBySubjectId(event.caseId(), event.tenancyId())
                 .filter(latest -> latest instanceof CaseLedgerEntry cle
                         && event.caseStatus().equals(cle.caseStatus))
@@ -153,44 +129,38 @@ public class MergeDecisionObserver {
                 event.caseId(), decision, repo, prNumber);
     }
 
-    private void handleMergeBatchPath(CaseLifecycleEvent event, CaseContext ctx, String decision) {
-        // Root batch guard: only root batches write ledger entries
-        Object isRootBatchObj = ctx.getPath("batch.isRootBatch");
-        if (!(isRootBatchObj instanceof Boolean isRootBatch) || !isRootBatch) {
+    private void handleMergeBatchPath(CaseLifecycleEvent event, JsonNode snapshot, String decision) {
+        JsonNode batch = snapshot.path("batch");
+
+        if (!batch.path("isRootBatch").asBoolean(false)) {
             LOG.debugf("Skipping batch sub-case completion: caseId=%s (not a root batch)", event.caseId());
             return;
         }
 
-        // Extract batch metadata
-        String batchId = ctx.getPathAsString("batch.id");
-        String repository = ctx.getPathAsString("batch.repository");
-        Object batchSizeObj = ctx.getPath("batch.size");
-        Integer batchSize = batchSizeObj instanceof Number n ? n.intValue() : null;
+        String batchId = batch.path("id").asText(null);
+        String repository = batch.path("repository").asText(null);
+        Integer batchSize = batch.has("size") && batch.path("size").isNumber()
+                ? batch.path("size").intValue() : null;
+        Boolean bisectionOccurred = batch.has("bisectionOccurred") && batch.path("bisectionOccurred").isBoolean()
+                ? batch.path("bisectionOccurred").asBoolean() : null;
+        String bisectionStrategy = batch.path("bisectionStrategy").asText(null);
 
-        Object bisectionOccurredObj = ctx.getPath("batch.bisectionOccurred");
-        Boolean bisectionOccurred = bisectionOccurredObj instanceof Boolean b ? b : null;
+        String batchContextJson = serializeBatchContext(snapshot);
 
-        String bisectionStrategy = ctx.getPathAsString("batch.bisectionStrategy");
-
-        // batchContextJson: serialize the full batch context for audit purposes
-        String batchContextJson = serializeBatchContext(ctx);
-
-        // Extract PR list from batch.prs
-        Object prsObj = ctx.getPath("batch.prs");
-        if (!(prsObj instanceof List<?> prsList)) {
-            LOG.warnf("batch.prs is not a List for caseId=%s", event.caseId());
+        JsonNode prsNode = batch.path("prs");
+        if (!prsNode.isArray()) {
+            LOG.warnf("batch.prs is not an array for caseId=%s", event.caseId());
             return;
         }
 
         int entriesWritten = 0;
-        for (Object prItem : prsList) {
-            if (!(prItem instanceof java.util.Map<?,?> prMap)) continue;
+        for (JsonNode prItem : prsNode) {
+            if (!prItem.isObject()) continue;
 
-            Object prNumberObj = prMap.get("number");
-            if (!(prNumberObj instanceof Number n)) continue;
-            int prNumber = n.intValue();
+            JsonNode prNumberNode = prItem.path("number");
+            if (!prNumberNode.isNumber()) continue;
+            int prNumber = prNumberNode.intValue();
 
-            // Derive deterministic subjectId from caseId + prNumber (UUID v5)
             UUID subjectId = DeterministicUuid.v5(
                     DeterministicUuid.MERGE_DECISION_NS,
                     event.caseId() + ":" + prNumber);
@@ -202,21 +172,19 @@ public class MergeDecisionObserver {
             entry.entryType = LedgerEntryType.EVENT;
             entry.prNumber = prNumber;
             entry.repository = repository;
-            entry.commitSha = null; // Batch merges don't track per-PR commit SHA
+            entry.commitSha = null;
             entry.decision = decision;
             entry.actorId = "system";
             entry.actorType = ActorType.SYSTEM;
             entry.actorRole = "ORCHESTRATOR";
             entry.occurredAt = Instant.now().truncatedTo(ChronoUnit.MILLIS);
 
-            // Batch metadata
             entry.batchId = batchId;
             entry.batchSize = batchSize;
             entry.bisectionOccurred = bisectionOccurred;
             entry.bisectionStrategy = bisectionStrategy;
             entry.batchContextJson = batchContextJson;
 
-            // Best-effort causal link
             ledgerRepo.findLatestBySubjectId(event.caseId(), event.tenancyId())
                     .filter(latest -> latest instanceof CaseLedgerEntry cle
                             && event.caseStatus().equals(cle.caseStatus))
@@ -236,35 +204,28 @@ public class MergeDecisionObserver {
                 event.caseId(), decision, batchId, entriesWritten);
     }
 
-    /**
-     * Serialize batch context to JSON for audit purposes.
-     * Includes: PR list, trust scores, CI run IDs, rejected PRs.
-     */
-    private String serializeBatchContext(CaseContext ctx) {
+    private String serializeBatchContext(JsonNode snapshot) {
+        JsonNode batch = snapshot.path("batch");
         Map<String, Object> batchContext = new LinkedHashMap<>();
 
-        // prList
-        Object prsObj = ctx.getPath("batch.prs");
-        if (prsObj instanceof List<?> prsList) {
-            batchContext.put("prList", prsList);
+        JsonNode prsNode = batch.path("prs");
+        if (prsNode.isArray()) {
+            batchContext.put("prList", prsNode);
         }
 
-        // trustScoresAtDecision
-        Object trustScoresObj = ctx.getPath("batch.trustScoresAtDecision");
-        if (trustScoresObj instanceof Map<?,?> trustScoresMap) {
-            batchContext.put("trustScoresAtDecision", trustScoresMap);
+        JsonNode trustScoresNode = batch.path("trustScoresAtDecision");
+        if (trustScoresNode.isObject()) {
+            batchContext.put("trustScoresAtDecision", trustScoresNode);
         }
 
-        // ciRunIds
-        Object ciRunIdsObj = ctx.getPath("batch.ciRunIds");
-        if (ciRunIdsObj instanceof List<?> ciRunIdsList) {
-            batchContext.put("ciRunIds", ciRunIdsList);
+        JsonNode ciRunIdsNode = batch.path("ciRunIds");
+        if (ciRunIdsNode.isArray()) {
+            batchContext.put("ciRunIds", ciRunIdsNode);
         }
 
-        // rejectedPrs
-        Object rejectedPrsObj = ctx.getPath("batch.rejectedPrs");
-        if (rejectedPrsObj instanceof List<?> rejectedPrsList) {
-            batchContext.put("rejectedPrs", rejectedPrsList);
+        JsonNode rejectedPrsNode = batch.path("rejectedPrs");
+        if (rejectedPrsNode.isArray()) {
+            batchContext.put("rejectedPrs", rejectedPrsNode);
         }
 
         try {

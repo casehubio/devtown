@@ -26,6 +26,19 @@ public interface GitHubPullRequestApi {
                                                 @QueryParam("base") String base,
                                                 @QueryParam("state") String state);
 
+
+    @GET
+    @Path("/{owner}/{repo}/pulls")
+    List<Map<String, Object>> listPullRequestsByAuthor(
+            @PathParam("owner") String owner,
+            @PathParam("repo") String repo,
+            @QueryParam("creator") String creator,
+            @QueryParam("state") String state,
+            @QueryParam("sort") String sort,
+            @QueryParam("direction") String direction,
+            @QueryParam("per_page") int perPage,
+            @QueryParam("page") int page);
+
     @POST
     @Path("/{owner}/{repo}/pulls")
     Map<String, Object> createPullRequest(@PathParam("owner") String owner,

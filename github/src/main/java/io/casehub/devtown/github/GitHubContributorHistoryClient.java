@@ -24,8 +24,6 @@ public class GitHubContributorHistoryClient implements ContributorHistoryClient 
         this.repoApi = repoApi;
     }
 
-    // removed — use @Inject constructor for both CDI and test instantiation
-
     @Override
     public ContributorHistorySnapshot fetchHistory(String login, String repo, Instant since) {
         String[] parts = repo.split("/");
@@ -39,6 +37,9 @@ public class GitHubContributorHistoryClient implements ContributorHistoryClient 
             if (prs.isEmpty()) break;
 
             for (Map<String, Object> pr : prs) {
+                String prState = (String) pr.get("state");
+                if (!"closed".equals(prState)) continue;
+
                 Instant createdAt = Instant.parse((String) pr.get("created_at"));
                 if (!Instant.MIN.equals(since) && createdAt.isBefore(since)) {
                     return new ContributorHistorySnapshot(login, numericId, repo,
@@ -47,6 +48,7 @@ public class GitHubContributorHistoryClient implements ContributorHistoryClient 
 
                 @SuppressWarnings("unchecked")
                 Map<String, Object> user = (Map<String, Object>) pr.get("user");
+                if (user == null) continue;
                 if (numericId == 0) numericId = ((Number) user.get("id")).longValue();
                 if (newest == null) newest = createdAt;
                 oldest = createdAt;

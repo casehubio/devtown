@@ -24,9 +24,9 @@ import io.casehub.platform.api.preferences.Preferences;
 import io.casehub.platform.api.preferences.SettingsScope;
 import io.casehub.qhorus.api.message.Commitment;
 import io.casehub.qhorus.api.store.CommitmentStore;
-import io.casehub.work.api.WorkItemStatus;
 import io.casehub.work.api.WorkItem;
 import io.casehub.work.api.WorkItemQuery;
+import io.casehub.work.api.WorkItemStatus;
 import io.casehub.work.api.spi.WorkItemStore;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -66,6 +66,8 @@ public class GovernanceQueryService {
     private final SlaCalibrationStore slaCalibrationStore;
     private final PreferenceProvider preferenceProvider;
     private final TrustQueryService  trustQueryService;
+    @Inject
+                  jakarta.persistence.EntityManager em;
 
 
     @Inject
@@ -147,7 +149,8 @@ public class GovernanceQueryService {
     public record ContributorDetail(String actorId, Double globalScore,
                                     Map<String, Double> capabilityScores, Map<String, Double> dimensionScores,
                                     IntakeClassificationEntry intakeClassification,
-                                    List<TrustQueryService.ContributorOutcomeSummary> recentOutcomes) {}
+                                    List<TrustQueryService.ContributorOutcomeSummary> recentOutcomes,
+                                    GitHubIntelligence githubIntelligence) {}
 
     public record IntakeClassificationEntry(String lane, double trustScore, int observationCount,
                                             String classificationReason, double fastTrackThreshold,
@@ -556,7 +559,40 @@ public class GovernanceQueryService {
 
         var outcomes = trustQueryService.contributorOutcomes(actorId, 50);
 
-        return new ContributorDetail(actorId, globalScore, capabilityScores, dimensionScores, intakeEntry, outcomes);
+        GitHubIntelligence githubIntelligence = lookupGitHubIntelligence(actorId);
+
+        return new ContributorDetail(actorId, globalScore, capabilityScores, dimensionScores, intakeEntry, outcomes, githubIntelligence);
+    }
+
+    private GitHubIntelligence lookupGitHubIntelligence(String actorId) {
+        try {
+            var entity = em.createQuery(
+                                   "SELECT p FROM ContributorGitHubProfileEntity p WHERE p.actorId = :actorId",
+                                   io.casehub.devtown.app.trust.ContributorGitHubProfileEntity.class)
+                           .setParameter("actorId", actorId)
+                           .setMaxResults(1)
+                           .getSingleResult();
+            int    obs        = entity.mergedCount + entity.closedCount;
+            double mergeRatio = obs > 0 ? (double) entity.mergedCount / obs : 0.0;
+            String tierName   = "LOW";
+            try {
+                var repoEntity = em.createQuery(
+                                           "SELECT r FROM RepoConfidenceProfileEntity r WHERE r.repo = :repo",
+                                           io.casehub.devtown.app.trust.RepoConfidenceProfileEntity.class)
+                                   .setParameter("repo", entity.repo)
+                                   .setMaxResults(1)
+                                   .getSingleResult();
+                tierName = repoEntity.tier != null ? repoEntity.tier.name() : "LOW";
+            } catch (jakarta.persistence.NoResultException ignored) {}
+            return new GitHubIntelligence(
+                    entity.mergedCount, entity.closedCount, mergeRatio,
+                    tierName,
+                    entity.maturity != null ? entity.maturity.name() : "COLD",
+                    entity.lastRefreshAt, true,
+                    String.format("bootstrapped from %d PRs in %s", obs, entity.repo));
+        } catch (jakarta.persistence.NoResultException e) {
+            return null;
+        }
     }
 
 

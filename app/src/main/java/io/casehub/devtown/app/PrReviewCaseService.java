@@ -63,6 +63,9 @@ public class PrReviewCaseService implements PrReviewApplicationService {
 
     @ConfigProperty(name = "devtown.ci.mode", defaultValue = "external")
     String ciMode;
+    @Inject
+    jakarta.enterprise.event.Event<io.casehub.devtown.review.BootstrapContributorEvent> bootstrapContributorEvent;
+
     @Inject jakarta.enterprise.event.Event<io.casehub.devtown.review.PrLifecycleEvent.Merged> mergedEvent;
     @Inject jakarta.enterprise.event.Event<io.casehub.devtown.review.PrLifecycleEvent.Rejected> rejectedEvent;
     @Inject jakarta.enterprise.event.Event<io.casehub.devtown.review.PrLifecycleEvent.ChangesRequested> changesRequestedEvent;
@@ -82,6 +85,10 @@ public class PrReviewCaseService implements PrReviewApplicationService {
             revisePr(pr.repo(), pr.prNumber(), pr.headSha(), pr.linesChanged());
             return new PrReviewOutcome(VERDICT_CASE_OPENED, List.of(), null);
         }
+
+        bootstrapContributorEvent.fireAsync(
+            new io.casehub.devtown.review.BootstrapContributorEvent(
+                pr.contributor(), pr.contributorNumericId(), pr.repo()));
 
         var memoryContext = memoryRecaller.recall(pr);
 

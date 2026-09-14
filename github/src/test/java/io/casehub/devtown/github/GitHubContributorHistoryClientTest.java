@@ -60,6 +60,31 @@ class GitHubContributorHistoryClientTest {
         assertNotNull(meta.lastPushedAt());
     }
 
+    @Test
+    void fetchHistory_skipsOpenPrs() {
+        var openPrApi = new GitHubPullRequestApi() {
+            @Override
+            public List<Map<String, Object>> listPullRequests(String o, String r, String h, String b, String s) {return List.of();}
+
+            @Override
+            public Map<String, Object> createPullRequest(String o, String r, Map<String, Object> body)          {return Map.of();}
+
+            @Override
+            public List<Map<String, Object>> listPullRequestsByAuthor(String o, String r, String creator, String state, String sort, String direction, int perPage, int page) {
+                if (page > 1) {return List.of();}
+                return List.of(
+                        Map.of("state", "open", "created_at", "2026-08-01T00:00:00Z", "user", Map.of("login", "alice", "id", 123)),
+                        Map.of("state", "closed", "merged_at", "2026-07-01T00:00:00Z", "created_at", "2026-07-01T00:00:00Z", "user", Map.of("login", "alice", "id", 123))
+                              );
+            }
+        };
+        var c        = new GitHubContributorHistoryClient(openPrApi, new StubRepoApi());
+        var snapshot = c.fetchHistory("alice", "org/repo", Instant.MIN);
+        assertEquals(1, snapshot.mergedCount());
+        assertEquals(0, snapshot.closedCount());
+    }
+
+
     static class StubPullRequestApi implements GitHubPullRequestApi {
         @Override
         public List<Map<String, Object>> listPullRequests(String o, String r, String h, String b, String s) {

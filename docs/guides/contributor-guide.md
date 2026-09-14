@@ -95,6 +95,30 @@ Parameters: repository, prNumber, incidentId, severity (LOW/MEDIUM/HIGH/CRITICAL
 
 Chain: `IncidentFeedbackService` resolves merge decision from ledger, finds worker decisions, writes FLAGGED attestations with trust dimension `REVIEW_THOROUGHNESS`. `TrustFeedbackClosedLoopTest` provides E2E proof of the full chain.
 
+## GitHub-Derived Contributor Intelligence (#202)
+
+Bootstraps contributor trust from GitHub PR history so contributors with existing track records don't start at zero. Solves the cold-start problem for `ContributorIntakePolicy` classification.
+
+**Architecture:** Hybrid `TrustBootstrapSource` integration -- eager import via `TrustImportService` on first PR, pull SPI fallback for `TrustScoreJob`. Async bootstrap: first PR from unknown contributor classified as TRIAGE, background event fetches GitHub history and imports trust scores.
+
+| Component | Module | Role |
+|-----------|--------|------|
+| `ContributorHistoryClient` | `domain/trust/` | SPI port for contributor history + repo metadata |
+| `ContributorGitHubProfile` | `domain/trust/` | Per-contributor per-repo cached aggregate |
+| `BootstrapScoreComputer` | `domain/trust/` | Computes alpha/beta and dimension scores from profile + tier |
+| `GitHubContributorHistoryClient` | `github/` | GitHub REST adapter implementing the SPI |
+| `GitHubRepoApi` | `github/` | MicroProfile REST client for repo metadata |
+| `ContributorBootstrapWriter` | `app/trust/` | CDI observer: orchestrates bootstrap, calls `TrustImportService` |
+| `DevtownTrustBootstrapSource` | `app/trust/` | Implements `TrustBootstrapSource` SPI (pull path) |
+
+**Identity:** `"github-id:" + numericId` -- matches the existing attestation pipeline identity scheme.
+
+**Repo confidence tiers:** MEDIUM requires age >1yr, >5 contributors, >50 PRs. Admin override via `PreferenceKey`. Multipliers: HIGH=0.8, MEDIUM=0.5, LOW=0.3.
+
+**Persistence:** `contributor_github_profile` and `repo_confidence_profile` tables (Flyway V2).
+
+**Configuration:** GitHub API authentication required for production (`github-api` REST client configKey).
+
 ---
 
 ## EvidentialChecker Integration
@@ -473,8 +497,9 @@ Case definitions:
 | `CiStatusClient` | CI status queries | `NoOpCiStatusClient` |
 | `MergeClient` | PR merge execution | `NoOpMergeClient` |
 | `RevertClient` | Merge revert for rollback | `NoOpRevertClient` |
+| `ContributorHistoryClient` | GitHub PR history + repo metadata for contributor trust bootstrap (#202) | `NoOpContributorHistoryClient` |
 
-All NoOp defaults are `@DefaultBean` in `app/spi/` -- displaced by real implementations (e.g. `GitHubMergeClient`) when the `github` module is on the classpath.
+All NoOp defaults are `@DefaultBean` in `app/` -- displaced by real implementations (e.g. `GitHubMergeClient`, `GitHubContributorHistoryClient`) when the `github` module is on the classpath.
 
 ---
 

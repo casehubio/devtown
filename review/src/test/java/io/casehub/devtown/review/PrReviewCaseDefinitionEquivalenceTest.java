@@ -27,8 +27,8 @@ class PrReviewCaseDefinitionEquivalenceTest {
             var yamlCap = fromYaml.getCapabilities().get(i);
             var dslCap = fromDsl.getCapabilities().get(i);
             assertThat(dslCap.name()).isEqualTo(yamlCap.name());
-            assertThat(dslCap.inputSchema()).isEqualTo(yamlCap.inputSchema());
-            assertThat(dslCap.outputSchema()).isEqualTo(yamlCap.outputSchema());
+            assertThat(dslCap.inputProjection()).isEqualTo(yamlCap.inputProjection());
+            assertThat(dslCap.outputProjection()).isEqualTo(yamlCap.outputProjection());
         }
 
         assertThat(fromDsl.getGoals()).hasSameSizeAs(fromYaml.getGoals());

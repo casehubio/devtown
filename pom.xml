@@ -102,20 +102,6 @@
         <version>1.6.0</version>
       </dependency>
 
-      <!-- jackson-databind convergence: jsonschema2pojo 3.0.2 vs MCP SDK 3.0.3 -->
-      <dependency>
-        <groupId>tools.jackson.core</groupId>
-        <artifactId>jackson-databind</artifactId>
-        <version>3.0.3</version>
-      </dependency>
-
-      <!-- json-schema-validator convergence: work 1.5.4 vs MCP SDK 3.0.0 vs serverlessworkflow 2.0.0 -->
-      <dependency>
-        <groupId>com.networknt</groupId>
-        <artifactId>json-schema-validator</artifactId>
-        <version>1.5.4</version>
-      </dependency>
-
       <!-- Quarkus Quinoa -->
       <dependency>
         <groupId>io.quarkiverse.quinoa</groupId>

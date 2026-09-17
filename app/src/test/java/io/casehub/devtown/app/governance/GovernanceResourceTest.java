@@ -302,7 +302,7 @@ class GovernanceResourceTest {
                 "FAST_TRACK", 0.80, 15, "score 0.80 >= fast-track", 0.75, 0.50);
         var expected = new GovernanceQueryService.ContributorDetail(
                 "contributor-1", 0.80, Map.of("pr-contribution", 0.80), Map.of("merge-rate", 0.90),
-                intakeEntry, List.of());
+                intakeEntry, List.of(), null);
         when(mockService.contributorDetail("contributor-1")).thenReturn(expected);
 
         var result = resource.contributorDetail("contributor-1");

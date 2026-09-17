@@ -5,7 +5,7 @@ import io.casehub.devtown.domain.memory.DevtownMemoryKeys;
 import io.casehub.devtown.domain.memory.ReviewOutcome;
 import io.casehub.devtown.review.PrPayload;
 import io.casehub.devtown.review.ReviewCompletedEvent;
-import io.casehub.memory.runtime.MemoryEmitter;
+import io.casehub.memory.runtime.MemoryEmitterCore;
 import io.casehub.neocortex.memory.MemoryAttributeKeys;
 import io.casehub.neocortex.memory.MemoryInput;
 import org.junit.jupiter.api.BeforeEach;
@@ -21,12 +21,12 @@ import static org.mockito.Mockito.*;
 class CaseMemoryEmitterTest {
 
     private CaseMemoryEmitter emitter;
-    private MemoryEmitter memoryEmitter;
+    private MemoryEmitterCore memoryEmitter;
 
     @BeforeEach
     void setUp() {
         emitter = new CaseMemoryEmitter();
-        memoryEmitter = mock(MemoryEmitter.class);
+        memoryEmitter = mock(MemoryEmitterCore.class);
         emitter.memoryEmitter = memoryEmitter;
     }
 

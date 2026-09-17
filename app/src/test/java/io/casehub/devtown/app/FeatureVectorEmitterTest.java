@@ -7,7 +7,7 @@ import static org.mockito.Mockito.verify;
 import io.casehub.devtown.domain.cbr.PrFeatureVector;
 import io.casehub.devtown.domain.memory.DevtownMemoryDomain;
 import io.casehub.devtown.domain.memory.DevtownMemoryKeys;
-import io.casehub.memory.runtime.MemoryEmitter;
+import io.casehub.memory.runtime.MemoryEmitterCore;
 import io.casehub.neocortex.memory.MemoryInput;
 import java.util.List;
 import java.util.UUID;
@@ -18,7 +18,7 @@ class FeatureVectorEmitterTest {
 
     @Test
     void emitsFactWithCorrectEntityIdAndAttributes() {
-        var memoryEmitter = mock(MemoryEmitter.class);
+        var memoryEmitter = mock(MemoryEmitterCore.class);
 
         var emitter = new FeatureVectorEmitter();
         emitter.memoryEmitter = memoryEmitter;
@@ -44,7 +44,7 @@ class FeatureVectorEmitterTest {
 
     @Test
     void emitsHumanReadableText() {
-        var memoryEmitter = mock(MemoryEmitter.class);
+        var memoryEmitter = mock(MemoryEmitterCore.class);
 
         var emitter = new FeatureVectorEmitter();
         emitter.memoryEmitter = memoryEmitter;
@@ -61,7 +61,7 @@ class FeatureVectorEmitterTest {
 
     @Test
     void attributesContainAllVectorFields() {
-        var memoryEmitter = mock(MemoryEmitter.class);
+        var memoryEmitter = mock(MemoryEmitterCore.class);
 
         var emitter = new FeatureVectorEmitter();
         emitter.memoryEmitter = memoryEmitter;

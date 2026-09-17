@@ -3,7 +3,7 @@ package io.casehub.devtown.app;
 import io.casehub.devtown.domain.cbr.PrFeatureVector;
 import io.casehub.devtown.domain.memory.DevtownMemoryDomain;
 import io.casehub.devtown.domain.memory.DevtownMemoryKeys;
-import io.casehub.memory.runtime.MemoryEmitter;
+import io.casehub.memory.runtime.MemoryEmitterCore;
 import io.casehub.neocortex.memory.MemoryInput;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -15,7 +15,7 @@ import java.util.UUID;
 public class FeatureVectorEmitter {
 
     @Inject
-    MemoryEmitter memoryEmitter;
+    MemoryEmitterCore memoryEmitter;
 
     public void emit(UUID caseId, String tenantId, PrFeatureVector vector) {
         var entityId = DevtownMemoryDomain.CASE_VECTOR_PREFIX + vector.repo() + ":" + caseId;

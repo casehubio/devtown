@@ -17,7 +17,7 @@ import io.casehub.devtown.queue.QueuedPr;
 import io.casehub.devtown.review.PrPayload;
 import io.casehub.devtown.review.sla.SlaCalibrationRecord;
 import io.casehub.devtown.review.sla.SlaCalibrationStore;
-import io.casehub.ledger.runtime.service.TrustGateService;
+import io.casehub.ledger.core.trust.TrustGateService;
 import io.casehub.ledger.runtime.service.federation.TrustExportService;
 import io.casehub.platform.api.preferences.PreferenceProvider;
 import io.casehub.platform.api.preferences.Preferences;

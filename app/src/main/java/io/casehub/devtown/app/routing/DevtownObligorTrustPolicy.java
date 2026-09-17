@@ -2,7 +2,7 @@ package io.casehub.devtown.app.routing;
 
 import io.casehub.devtown.domain.preferences.DoublePreference;
 import io.casehub.devtown.domain.trust.TrustGatePreferenceKeys;
-import io.casehub.ledger.runtime.service.TrustGateService;
+import io.casehub.ledger.core.trust.TrustGateService;
 import io.casehub.platform.api.preferences.PreferenceProvider;
 import io.casehub.platform.api.preferences.Preferences;
 import io.casehub.platform.api.path.Path;

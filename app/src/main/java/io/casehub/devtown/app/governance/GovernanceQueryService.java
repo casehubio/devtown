@@ -565,6 +565,7 @@ public class GovernanceQueryService {
     }
 
     private GitHubIntelligence lookupGitHubIntelligence(String actorId) {
+        if (em == null) return null;
         try {
             var entity = em.createQuery(
                                    "SELECT p FROM ContributorGitHubProfileEntity p WHERE p.actorId = :actorId",

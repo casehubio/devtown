@@ -10,6 +10,10 @@ import io.casehub.ledger.api.spi.TrustScoreSource;
  * ClassNotFoundException. Remove once qhorus is rebuilt against the current ledger.
  */
 public class TrustGateService extends io.casehub.ledger.core.trust.TrustGateService {
+
+    @SuppressWarnings("unused")
+    protected TrustGateService() { super(null); }
+
     public TrustGateService(TrustScoreSource source) {
         super(source);
     }

@@ -3,7 +3,7 @@ package io.casehub.devtown.app;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.casehub.api.model.Binding;
-import io.casehub.api.model.HumanTaskTarget;
+import io.casehub.api.model.JudgmentTarget;
 import io.quarkus.test.junit.QuarkusTest;
 import jakarta.inject.Inject;
 import org.junit.jupiter.api.Test;
@@ -70,7 +70,7 @@ class PrReviewCaseHubTest {
         for (Binding b : escalationBindings) {
             assertThat(b.target())
                     .as("binding '%s' should target a humanTask", b.getName())
-                    .isInstanceOf(HumanTaskTarget.class);
+                    .isInstanceOf(JudgmentTarget.class);
         }
     }
 

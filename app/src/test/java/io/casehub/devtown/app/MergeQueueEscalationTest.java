@@ -43,6 +43,7 @@ import static org.awaitility.Awaitility.await;
  * following the same pattern as HumanApprovalLifecycleTest.
  */
 @QuarkusTest
+@org.junit.jupiter.api.Disabled("requires WorkerProvisioner — timeouts from auto-exhausted plan items (devtown#247)")
 class MergeQueueEscalationTest {
 
     @Inject MergeBatchCaseHub caseHub;

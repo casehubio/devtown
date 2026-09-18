@@ -8,6 +8,9 @@ import jakarta.inject.Inject;
 @ApplicationScoped
 public class DevtownCaseInstanceRepository extends InMemoryCaseInstanceRepository {
 
+    @SuppressWarnings("unused")
+    protected DevtownCaseInstanceRepository() { super(null); }
+
     @Inject
     public DevtownCaseInstanceRepository(EventLogRepository eventLogRepository) {
         super(eventLogRepository);

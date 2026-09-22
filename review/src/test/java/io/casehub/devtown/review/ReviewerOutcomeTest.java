@@ -1,15 +1,20 @@
 package io.casehub.devtown.review;
 
+import io.casehub.devtown.domain.ReviewFinding;
 import org.junit.jupiter.api.Test;
+
 import java.util.List;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
 class ReviewerOutcomeTest {
 
     @Test
     void completed_holdsFindings() {
-        var outcome = new ReviewerOutcome.Completed(List.of("finding-1", "finding-2"));
-        assertThat(outcome.findings()).containsExactly("finding-1", "finding-2");
+        var f1      = new ReviewFinding(ReviewFinding.Severity.HIGH, "injection", "src/A.java", null, "finding-1", 0.9);
+        var f2      = new ReviewFinding(ReviewFinding.Severity.LOW, "naming", "src/B.java", null, "finding-2", 0.5);
+        var outcome = new ReviewerOutcome.Completed(List.of(f1, f2));
+        assertThat(outcome.findings()).containsExactly(f1, f2);
     }
 
     @Test
@@ -26,24 +31,25 @@ class ReviewerOutcomeTest {
 
     @Test
     void patternMatch_coversAllPermits() {
-        ReviewerOutcome completed = new ReviewerOutcome.Completed(List.of("f1"));
+        var             finding   = new ReviewFinding(ReviewFinding.Severity.LOW, "test", "src/X.java", null, "f1", 0.5);
+        ReviewerOutcome completed = new ReviewerOutcome.Completed(List.of(finding));
         ReviewerOutcome declined  = new ReviewerOutcome.Declined("reason");
         ReviewerOutcome failed    = new ReviewerOutcome.Failed("crash");
 
         String c = switch (completed) {
             case ReviewerOutcome.Completed x -> "completed:" + x.findings().size();
-            case ReviewerOutcome.Declined x  -> "declined";
-            case ReviewerOutcome.Failed x    -> "failed";
+            case ReviewerOutcome.Declined x -> "declined";
+            case ReviewerOutcome.Failed x -> "failed";
         };
         String d = switch (declined) {
             case ReviewerOutcome.Completed x -> "completed";
-            case ReviewerOutcome.Declined x  -> "declined:" + x.reason();
-            case ReviewerOutcome.Failed x    -> "failed";
+            case ReviewerOutcome.Declined x -> "declined:" + x.reason();
+            case ReviewerOutcome.Failed x -> "failed";
         };
         String f = switch (failed) {
             case ReviewerOutcome.Completed x -> "completed";
-            case ReviewerOutcome.Declined x  -> "declined";
-            case ReviewerOutcome.Failed x    -> "failed:" + x.reason();
+            case ReviewerOutcome.Declined x -> "declined";
+            case ReviewerOutcome.Failed x -> "failed:" + x.reason();
         };
 
         assertThat(c).isEqualTo("completed:1");

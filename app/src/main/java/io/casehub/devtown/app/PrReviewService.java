@@ -1,5 +1,6 @@
 package io.casehub.devtown.app;
 
+import io.casehub.devtown.domain.ReviewFinding;
 import io.casehub.devtown.review.LifecycleResult;
 import io.casehub.devtown.review.PrPayload;
 import io.casehub.devtown.review.PrReviewApplicationService;
@@ -18,9 +19,9 @@ public class PrReviewService implements PrReviewApplicationService {
 
     @Override
     public PrReviewOutcome startReview(PrPayload pr) {
-        var securityFindings = analyzeSecurityDirectly(pr);
+        var securityFindings     = analyzeSecurityDirectly(pr);
         var architectureFindings = reviewArchitectureDirectly(pr);
-        var allFindings = new ArrayList<String>(securityFindings);
+        var allFindings          = new ArrayList<ReviewFinding>(securityFindings);
         allFindings.addAll(architectureFindings);
         return new PrReviewOutcome("reviewed", allFindings, null);
     }
@@ -51,11 +52,11 @@ public class PrReviewService implements PrReviewApplicationService {
     }
 
 
-    private List<String> analyzeSecurityDirectly(PrPayload pr) {
-        return List.of("security-analysis-complete");
+    private List<ReviewFinding> analyzeSecurityDirectly(PrPayload pr) {
+        return List.of(new ReviewFinding(ReviewFinding.Severity.INFO, "security", "src/Main.java", null, "security-analysis-complete", 0.5));
     }
 
-    private List<String> reviewArchitectureDirectly(PrPayload pr) {
-        return List.of("architecture-review-complete");
+    private List<ReviewFinding> reviewArchitectureDirectly(PrPayload pr) {
+        return List.of(new ReviewFinding(ReviewFinding.Severity.INFO, "architecture", "src/Main.java", null, "architecture-review-complete", 0.5));
     }
 }

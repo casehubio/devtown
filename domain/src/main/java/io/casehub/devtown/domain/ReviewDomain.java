@@ -15,6 +15,11 @@ public final class ReviewDomain {
         CODE_ANALYSIS, SECURITY_REVIEW, ARCHITECTURE_REVIEW,
         STYLE_REVIEW, TEST_COVERAGE, PERFORMANCE_ANALYSIS
     );
+    public static final Set<String> FINDINGS_CAPABILITIES = Set.of(
+            SECURITY_REVIEW, ARCHITECTURE_REVIEW,
+            STYLE_REVIEW, TEST_COVERAGE, PERFORMANCE_ANALYSIS
+                                                                  );
+
 
     private ReviewDomain() {}
 }

@@ -5,6 +5,7 @@ import io.casehub.devtown.review.LifecycleResult;
 import io.casehub.devtown.review.PrPayload;
 import io.casehub.devtown.review.PrReviewApplicationService;
 import io.casehub.devtown.review.PrReviewOutcome;
+import io.casehub.devtown.review.ReviewContext;
 import io.casehub.devtown.review.ReviewerAgent;
 import io.casehub.devtown.review.ReviewerOutcome;
 import io.casehub.devtown.review.SupersedeResult;
@@ -24,11 +25,11 @@ import jakarta.inject.Inject;
 
 import java.time.Instant;
 import java.util.ArrayList;
-import java.util.stream.Collectors;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import static io.casehub.qhorus.api.message.MessageType.COMMAND;
 import static io.casehub.qhorus.api.message.MessageType.DECLINE;
@@ -50,13 +51,13 @@ import static io.casehub.qhorus.api.message.MessageType.STATUS;
 @Priority(1)
 public class QhorusPrReviewService implements PrReviewApplicationService {
 
-    static final Set<MessageType> WORK_ALLOWED_TYPES =
+    static final         Set<MessageType> WORK_ALLOWED_TYPES      =
             Set.copyOf(EnumSet.of(COMMAND, STATUS, DONE, DECLINE, FAILURE));
-    static final Set<MessageType> OBSERVE_ALLOWED_TYPES =
+    static final         Set<MessageType> OBSERVE_ALLOWED_TYPES   =
             Set.copyOf(EnumSet.of(EVENT));
-    static final Set<MessageType> OVERSIGHT_ALLOWED_TYPES =
+    static final         Set<MessageType> OVERSIGHT_ALLOWED_TYPES =
             Set.copyOf(EnumSet.of(COMMAND, DONE, DECLINE));
-    private static final String ORCHESTRATOR = "pr-orchestrator";
+    private static final String           ORCHESTRATOR            = "pr-orchestrator";
     @Inject
     ChannelService channelService;
 
@@ -104,7 +105,7 @@ public class QhorusPrReviewService implements PrReviewApplicationService {
                                                                        .actorType(ActorType.SYSTEM)
                                                                        .build());
 
-            ReviewerOutcome outcome = agent.handle(pr);
+            ReviewerOutcome outcome = agent.handle(new ReviewContext(pr, null));
 
             switch (outcome) {
                 case ReviewerOutcome.Completed completed -> {

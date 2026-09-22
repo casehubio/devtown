@@ -2,7 +2,7 @@ package io.casehub.devtown.app.agents;
 
 import io.casehub.devtown.domain.ReviewDomain;
 import io.casehub.devtown.domain.ReviewFinding;
-import io.casehub.devtown.review.PrPayload;
+import io.casehub.devtown.review.ReviewContext;
 import io.casehub.devtown.review.ReviewerAgent;
 import io.casehub.devtown.review.ReviewerOutcome;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -18,7 +18,7 @@ public class SecurityReviewAgent implements ReviewerAgent {
     }
 
     @Override
-    public ReviewerOutcome handle(PrPayload pr) {
+    public ReviewerOutcome handle(ReviewContext context) {
         return new ReviewerOutcome.Completed(List.of(
                 new ReviewFinding(ReviewFinding.Severity.MEDIUM, "rate-limiting",
                                   "src/PaymentController.java", null,

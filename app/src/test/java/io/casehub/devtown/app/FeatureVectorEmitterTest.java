@@ -7,7 +7,7 @@ import static org.mockito.Mockito.verify;
 import io.casehub.devtown.domain.cbr.PrFeatureVector;
 import io.casehub.devtown.domain.memory.DevtownMemoryDomain;
 import io.casehub.devtown.domain.memory.DevtownMemoryKeys;
-import io.casehub.memory.runtime.MemoryEmitter;
+import io.casehub.neocortex.memory.CaseMemoryStore;
 import io.casehub.neocortex.memory.MemoryInput;
 import java.util.List;
 import java.util.UUID;
@@ -18,10 +18,10 @@ class FeatureVectorEmitterTest {
 
     @Test
     void emitsFactWithCorrectEntityIdAndAttributes() {
-        var memoryEmitter = mock(MemoryEmitter.class);
+        var memoryStore = mock(CaseMemoryStore.class);
 
         var emitter = new FeatureVectorEmitter();
-        emitter.memoryEmitter = memoryEmitter;
+        emitter.memoryStore = memoryStore;
 
         var caseId = UUID.randomUUID();
         var vector = PrFeatureVector.from("casehubio/devtown", 42, "alice", 150,
@@ -30,7 +30,7 @@ class FeatureVectorEmitterTest {
         emitter.emit(caseId, "tenant-1", vector);
 
         var captor = ArgumentCaptor.forClass(MemoryInput.class);
-        verify(memoryEmitter).emit(captor.capture());
+        verify(memoryStore).store(captor.capture());
         var input = captor.getValue();
 
         assertThat(input.entityId()).startsWith("case-vector:casehubio/devtown:");
@@ -44,10 +44,10 @@ class FeatureVectorEmitterTest {
 
     @Test
     void emitsHumanReadableText() {
-        var memoryEmitter = mock(MemoryEmitter.class);
+        var memoryStore = mock(CaseMemoryStore.class);
 
         var emitter = new FeatureVectorEmitter();
-        emitter.memoryEmitter = memoryEmitter;
+        emitter.memoryStore = memoryStore;
 
         var vector = PrFeatureVector.from("casehubio/devtown", 42, "alice", 150,
             List.of("core/src/main/java/Foo.java", "core/src/test/java/FooTest.java"));
@@ -55,16 +55,16 @@ class FeatureVectorEmitterTest {
         emitter.emit(UUID.randomUUID(), "tenant-1", vector);
 
         var captor = ArgumentCaptor.forClass(MemoryInput.class);
-        verify(memoryEmitter).emit(captor.capture());
+        verify(memoryStore).store(captor.capture());
         assertThat(captor.getValue().text()).contains("PR #42", "casehubio/devtown", "150 lines");
     }
 
     @Test
     void attributesContainAllVectorFields() {
-        var memoryEmitter = mock(MemoryEmitter.class);
+        var memoryStore = mock(CaseMemoryStore.class);
 
         var emitter = new FeatureVectorEmitter();
-        emitter.memoryEmitter = memoryEmitter;
+        emitter.memoryStore = memoryStore;
 
         var vector = PrFeatureVector.from("repo", 1, "alice", 100,
             List.of("core/src/main/java/Foo.java"));
@@ -72,7 +72,7 @@ class FeatureVectorEmitterTest {
         emitter.emit(UUID.randomUUID(), "t", vector);
 
         var captor = ArgumentCaptor.forClass(MemoryInput.class);
-        verify(memoryEmitter).emit(captor.capture());
+        verify(memoryStore).store(captor.capture());
         var attrs = captor.getValue().attributes();
 
         assertThat(attrs).containsKeys(

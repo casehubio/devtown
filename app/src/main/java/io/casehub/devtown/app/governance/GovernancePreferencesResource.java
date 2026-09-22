@@ -11,6 +11,7 @@ import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
 import java.util.Map;
 
+@io.casehub.platform.api.mcp.HandWrittenEndpoint("preferences API uses PreferenceProvider SPI")
 @Path("/api/governance/preferences")
 @Produces(MediaType.APPLICATION_JSON)
 @jakarta.annotation.security.PermitAll

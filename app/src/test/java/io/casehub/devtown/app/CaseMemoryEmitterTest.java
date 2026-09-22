@@ -5,7 +5,7 @@ import io.casehub.devtown.domain.memory.DevtownMemoryKeys;
 import io.casehub.devtown.domain.memory.ReviewOutcome;
 import io.casehub.devtown.review.PrPayload;
 import io.casehub.devtown.review.ReviewCompletedEvent;
-import io.casehub.memory.runtime.MemoryEmitter;
+import io.casehub.neocortex.memory.CaseMemoryStore;
 import io.casehub.neocortex.memory.MemoryAttributeKeys;
 import io.casehub.neocortex.memory.MemoryInput;
 import org.junit.jupiter.api.BeforeEach;
@@ -21,13 +21,13 @@ import static org.mockito.Mockito.*;
 class CaseMemoryEmitterTest {
 
     private CaseMemoryEmitter emitter;
-    private MemoryEmitter memoryEmitter;
+    private CaseMemoryStore memoryStore;
 
     @BeforeEach
     void setUp() {
         emitter = new CaseMemoryEmitter();
-        memoryEmitter = mock(MemoryEmitter.class);
-        emitter.memoryEmitter = memoryEmitter;
+        memoryStore = mock(CaseMemoryStore.class);
+        emitter.memoryStore = memoryStore;
     }
 
     @Test
@@ -37,7 +37,7 @@ class CaseMemoryEmitterTest {
         emitter.onReviewCompleted(event);
 
         var captor = ArgumentCaptor.forClass(List.class);
-        verify(memoryEmitter).emitAll(captor.capture());
+        verify(memoryStore).storeAll(captor.capture());
         var facts = (List<MemoryInput>) captor.getValue();
 
         assertThat(facts).hasSize(3); // contributor + reviewer + module
@@ -50,7 +50,7 @@ class CaseMemoryEmitterTest {
         emitter.onReviewCompleted(event);
 
         var captor = ArgumentCaptor.forClass(List.class);
-        verify(memoryEmitter).emitAll(captor.capture());
+        verify(memoryStore).storeAll(captor.capture());
         var facts = (List<MemoryInput>) captor.getValue();
 
         var contributorFact = facts.stream()
@@ -67,7 +67,7 @@ class CaseMemoryEmitterTest {
         emitter.onReviewCompleted(event);
 
         var captor = ArgumentCaptor.forClass(List.class);
-        verify(memoryEmitter).emitAll(captor.capture());
+        verify(memoryStore).storeAll(captor.capture());
         var facts = (List<MemoryInput>) captor.getValue();
 
         var reviewerFact = facts.stream()
@@ -84,7 +84,7 @@ class CaseMemoryEmitterTest {
         emitter.onReviewCompleted(event);
 
         var captor = ArgumentCaptor.forClass(List.class);
-        verify(memoryEmitter).emitAll(captor.capture());
+        verify(memoryStore).storeAll(captor.capture());
         var facts = (List<MemoryInput>) captor.getValue();
 
         var codeAreaFact = facts.stream()
@@ -101,7 +101,7 @@ class CaseMemoryEmitterTest {
         emitter.onReviewCompleted(event);
 
         var captor = ArgumentCaptor.forClass(List.class);
-        verify(memoryEmitter).emitAll(captor.capture());
+        verify(memoryStore).storeAll(captor.capture());
         var facts = (List<MemoryInput>) captor.getValue();
 
         assertThat(facts).allSatisfy(fact -> {
@@ -126,7 +126,7 @@ class CaseMemoryEmitterTest {
         emitter.onReviewCompleted(event);
 
         var captor = ArgumentCaptor.forClass(List.class);
-        verify(memoryEmitter).emitAll(captor.capture());
+        verify(memoryStore).storeAll(captor.capture());
         var facts = (List<MemoryInput>) captor.getValue();
 
         assertThat(facts).allSatisfy(fact -> {
@@ -141,7 +141,7 @@ class CaseMemoryEmitterTest {
         emitter.onReviewCompleted(event);
 
         var captor = ArgumentCaptor.forClass(List.class);
-        verify(memoryEmitter).emitAll(captor.capture());
+        verify(memoryStore).storeAll(captor.capture());
         var facts = (List<MemoryInput>) captor.getValue();
 
         assertThat(facts).allSatisfy(fact -> {
@@ -159,7 +159,7 @@ class CaseMemoryEmitterTest {
         emitter.onReviewCompleted(event);
 
         var captor = ArgumentCaptor.forClass(List.class);
-        verify(memoryEmitter).emitAll(captor.capture());
+        verify(memoryStore).storeAll(captor.capture());
         var facts = (List<MemoryInput>) captor.getValue();
 
         // contributor + reviewer + 2 modules (app, domain)
@@ -182,7 +182,7 @@ class CaseMemoryEmitterTest {
         emitter.onReviewCompleted(event);
 
         var captor = ArgumentCaptor.forClass(List.class);
-        verify(memoryEmitter).emitAll(captor.capture());
+        verify(memoryStore).storeAll(captor.capture());
         var facts = (List<MemoryInput>) captor.getValue();
 
         assertThat(facts).allSatisfy(fact -> {
@@ -200,7 +200,7 @@ class CaseMemoryEmitterTest {
         emitter.onReviewCompleted(event);
 
         var captor = ArgumentCaptor.forClass(List.class);
-        verify(memoryEmitter).emitAll(captor.capture());
+        verify(memoryStore).storeAll(captor.capture());
         var facts = (List<MemoryInput>) captor.getValue();
 
         var codeAreaFact = facts.stream()
@@ -218,7 +218,7 @@ class CaseMemoryEmitterTest {
         emitter.onReviewCompleted(event);
 
         var captor = ArgumentCaptor.forClass(List.class);
-        verify(memoryEmitter).emitAll(captor.capture());
+        verify(memoryStore).storeAll(captor.capture());
         var facts = (List<MemoryInput>) captor.getValue();
 
         assertThat(facts).hasSize(2);

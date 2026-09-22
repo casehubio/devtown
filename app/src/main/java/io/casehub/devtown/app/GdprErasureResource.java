@@ -14,6 +14,7 @@ import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
 
+@io.casehub.platform.api.mcp.HandWrittenEndpoint("GDPR erasure requires transactional coordination")
 @Path("/api/actors/{actorId}/erasure")
 @ApplicationScoped
 @Produces(MediaType.APPLICATION_JSON)

@@ -15,6 +15,7 @@ import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import org.jboss.logging.Logger;
 
+@io.casehub.platform.api.mcp.HandWrittenEndpoint("memory admin with custom query parameters")
 @Path("/api/admin/memory")
 @Consumes(MediaType.APPLICATION_JSON)
 @RolesAllowed(DevtownRoles.ADMIN)

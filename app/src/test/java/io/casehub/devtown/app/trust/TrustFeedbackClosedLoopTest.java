@@ -15,7 +15,7 @@ import io.casehub.ledger.api.model.AttestationVerdict;
 import io.casehub.ledger.api.model.LedgerEntryType;
 import io.casehub.ledger.api.spi.LedgerEntryRepository;
 import io.casehub.ledger.model.WorkerDecisionEntry;
-import io.casehub.ledger.runtime.service.TrustGateService;
+import io.casehub.ledger.core.trust.TrustGateService;
 import io.casehub.ledger.runtime.service.TrustScoreJob;
 import io.casehub.platform.api.identity.ActorType;
 import io.quarkus.narayana.jta.QuarkusTransaction;

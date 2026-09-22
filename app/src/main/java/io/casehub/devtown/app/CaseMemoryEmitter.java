@@ -4,7 +4,7 @@ import io.casehub.devtown.domain.memory.DevtownMemoryDomain;
 import io.casehub.devtown.domain.memory.DevtownMemoryKeys;
 import io.casehub.devtown.domain.memory.ModulePathNormalizer;
 import io.casehub.devtown.review.ReviewCompletedEvent;
-import io.casehub.memory.runtime.MemoryEmitter;
+import io.casehub.neocortex.memory.CaseMemoryStore;
 import io.casehub.neocortex.memory.MemoryAttributeKeys;
 import io.casehub.neocortex.memory.MemoryInput;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -19,9 +19,9 @@ import java.util.List;
 public class CaseMemoryEmitter {
 
     @Inject
-    MemoryEmitter memoryEmitter;
+    CaseMemoryStore memoryStore;
 
-    void onReviewCompleted(@ObservesAsync ReviewCompletedEvent event) {memoryEmitter.emitAll(buildFacts(event));}
+    void onReviewCompleted(@ObservesAsync ReviewCompletedEvent event) {memoryStore.storeAll(buildFacts(event));}
 
     List<MemoryInput> buildFacts(ReviewCompletedEvent event) {
         var facts = new ArrayList<MemoryInput>();

@@ -12,6 +12,7 @@ import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
 
+@io.casehub.platform.api.mcp.HandWrittenEndpoint("review intake with Layer 3/5 dispatch coordination")
 @Path("/api/reviews")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)

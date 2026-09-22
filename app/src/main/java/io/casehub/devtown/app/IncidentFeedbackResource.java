@@ -13,6 +13,7 @@ import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
 
+@io.casehub.platform.api.mcp.HandWrittenEndpoint("incident feedback ingest with custom validation")
 @Path("/api/incident-feedback")
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)

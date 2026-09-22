@@ -14,6 +14,7 @@ import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import java.util.UUID;
 
+@io.casehub.platform.api.mcp.HandWrittenEndpoint("compliance evidence requires custom JPA queries")
 @Path("/api/compliance/code-review")
 @ApplicationScoped
 @Produces(MediaType.APPLICATION_JSON)

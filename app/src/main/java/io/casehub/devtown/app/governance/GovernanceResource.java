@@ -15,6 +15,7 @@ import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 
+@io.casehub.platform.api.mcp.HandWrittenEndpoint("governance dashboard with custom query parameters")
 @Path("/api/governance")
 @Produces(MediaType.APPLICATION_JSON)
 @jakarta.annotation.security.PermitAll

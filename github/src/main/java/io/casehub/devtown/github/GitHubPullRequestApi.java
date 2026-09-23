@@ -44,4 +44,15 @@ public interface GitHubPullRequestApi {
     Map<String, Object> createPullRequest(@PathParam("owner") String owner,
                                           @PathParam("repo") String repo,
                                           Map<String, Object> body);
+
+    @GET
+    @Path("/{owner}/{repo}/pulls/{pull_number}/files")
+    default List<Map<String, Object>> listPullRequestFiles(
+            @PathParam("owner") String owner,
+            @PathParam("repo") String repo,
+            @PathParam("pull_number") int pullNumber,
+            @QueryParam("per_page") int perPage,
+            @QueryParam("page") int page) {
+        throw new UnsupportedOperationException("listPullRequestFiles");
+    }
 }

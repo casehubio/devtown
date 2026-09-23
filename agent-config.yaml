@@ -1,0 +1,14 @@
+providers:
+  - vendor: anthropic
+    credential: env:ANTHROPIC_API_KEY
+aliases:
+  reasoning-heavy:
+    tier: FLAGSHIP
+    capabilities: [reasoning]
+  standard-review:
+    tier: STANDARD
+  cheap-fast:
+    tier: FAST
+    max-cost: LOW
+defaults:
+  backend: claude

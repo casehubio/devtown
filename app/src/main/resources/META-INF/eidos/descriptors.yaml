@@ -1,0 +1,63 @@
+- agentId: security-reviewer
+  name: Security Review Agent
+  slot: reviewer
+  tenancyId: default
+  capabilities:
+    - name: security-review
+      description: "OWASP top 10, auth, injection, secrets exposure"
+      modelRef: reasoning-heavy
+      qualityHint: 0.85
+      epistemicDomains:
+        java: 0.9
+        python: 0.8
+        typescript: 0.7
+
+- agentId: code-analyzer
+  name: Code Analysis Agent
+  slot: reviewer
+  tenancyId: default
+  capabilities:
+    - name: code-analysis
+      description: "Code characterisation: scope, security sensitivity, architecture crossing"
+      modelRef: standard-review
+      qualityHint: 0.8
+
+- agentId: architecture-reviewer
+  name: Architecture Review Agent
+  slot: reviewer
+  tenancyId: default
+  capabilities:
+    - name: architecture-review
+      description: "Structural impact, coupling, API surface changes"
+      modelRef: reasoning-heavy
+      qualityHint: 0.8
+
+- agentId: style-reviewer
+  name: Style Review Agent
+  slot: reviewer
+  tenancyId: default
+  capabilities:
+    - name: style-review
+      description: "Naming, consistency, idiomatic patterns"
+      modelRef: cheap-fast
+      qualityHint: 0.7
+
+- agentId: test-coverage-reviewer
+  name: Test Coverage Review Agent
+  slot: reviewer
+  tenancyId: default
+  capabilities:
+    - name: test-coverage
+      description: "Untested paths, missing edge cases"
+      modelRef: standard-review
+      qualityHint: 0.75
+
+- agentId: performance-reviewer
+  name: Performance Review Agent
+  slot: reviewer
+  tenancyId: default
+  capabilities:
+    - name: performance-analysis
+      description: "N+1 queries, unbounded loops, memory issues"
+      modelRef: standard-review
+      qualityHint: 0.75

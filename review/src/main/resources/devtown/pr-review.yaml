@@ -34,27 +34,27 @@ spec:
     - name: security-review
       description: "Security specialist review — fires only on security-sensitive code"
       inputProjection: "{ pr: .pr, codeAnalysis: .codeAnalysis }"
-      outputProjection: "{ securityReview: { outcome: . } }"
+      outputProjection: "{ securityReview: . }"
 
     - name: architecture-review
       description: "Architecture review — fires only when cross-API changes are detected"
       inputProjection: "{ pr: .pr, codeAnalysis: .codeAnalysis }"
-      outputProjection: "{ architectureReview: { outcome: . } }"
+      outputProjection: "{ architectureReview: . }"
 
     - name: style-review
       description: "Style and formatting check"
       inputProjection: "{ pr: .pr }"
-      outputProjection: "{ styleCheck: { outcome: . } }"
+      outputProjection: "{ styleCheck: . }"
 
     - name: test-coverage
       description: "Test coverage analysis"
       inputProjection: "{ pr: .pr }"
-      outputProjection: "{ testCoverage: { outcome: . } }"
+      outputProjection: "{ testCoverage: . }"
 
     - name: performance-analysis
       description: "Performance impact analysis"
       inputProjection: "{ pr: .pr }"
-      outputProjection: "{ performanceAnalysis: { outcome: . } }"
+      outputProjection: "{ performanceAnalysis: . }"
 
     - name: ci-runner
       description: "Runs the CI suite for the PR"

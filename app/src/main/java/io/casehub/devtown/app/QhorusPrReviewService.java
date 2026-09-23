@@ -6,7 +6,10 @@ import io.casehub.devtown.review.PrPayload;
 import io.casehub.devtown.review.PrReviewApplicationService;
 import io.casehub.devtown.review.PrReviewOutcome;
 import io.casehub.devtown.review.ReviewContext;
+import io.casehub.devtown.review.PrDiff;
+import io.casehub.devtown.review.PrDiffCache;
 import io.casehub.devtown.review.ReviewerAgent;
+import io.casehub.devtown.review.ReviewerAgentRegistry;
 import io.casehub.devtown.review.ReviewerOutcome;
 import io.casehub.devtown.review.SupersedeResult;
 import io.casehub.platform.api.identity.ActorType;
@@ -20,7 +23,6 @@ import io.casehub.qhorus.runtime.message.MessageService;
 import jakarta.annotation.Priority;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.inject.Alternative;
-import jakarta.enterprise.inject.Instance;
 import jakarta.inject.Inject;
 
 import java.time.Instant;
@@ -65,7 +67,10 @@ public class QhorusPrReviewService implements PrReviewApplicationService {
     MessageService messageService;
 
     @Inject
-    Instance<ReviewerAgent> agents;
+    ReviewerAgentRegistry registry;
+
+    @Inject
+    PrDiffCache diffCache;
 
     private static Channel requireContract(final Channel ch, final Set<MessageType> expectedTypes,
                                            final String expectedWriter) {
@@ -90,9 +95,17 @@ public class QhorusPrReviewService implements PrReviewApplicationService {
         findOrCreateObserveChannel(prefix);
         findOrCreateOversightChannel(prefix);
 
+        PrDiff diff = null;
+        try {
+            diff = diffCache.get(pr.repo(), pr.prNumber(), pr.headSha());
+        } catch (Exception e) {
+            // diff fetch failure — agents will work with null diff
+        }
+        final ReviewContext context = new ReviewContext(pr, diff);
+
         final List<ReviewFinding> allFindings = new ArrayList<>();
 
-        for (ReviewerAgent agent : agents) {
+        for (ReviewerAgent agent : registry.all()) {
             final String correlationId = UUID.randomUUID().toString();
 
             var commandResult = messageService.dispatch(MessageDispatch.builder()
@@ -105,7 +118,12 @@ public class QhorusPrReviewService implements PrReviewApplicationService {
                                                                        .actorType(ActorType.SYSTEM)
                                                                        .build());
 
-            ReviewerOutcome outcome = agent.handle(new ReviewContext(pr, null));
+            ReviewerOutcome outcome;
+            try {
+                outcome = agent.handle(context);
+            } catch (Exception e) {
+                outcome = new ReviewerOutcome.Failed("agent error: " + e.getMessage());
+            }
 
             switch (outcome) {
                 case ReviewerOutcome.Completed completed -> {

@@ -8,24 +8,19 @@ import io.casehub.devtown.review.PrReviewApplicationService;
 import io.casehub.platform.api.preferences.PreferenceProvider;
 import io.casehub.platform.api.preferences.Preferences;
 import io.casehub.platform.api.preferences.SettingsScope;
-import jakarta.annotation.security.PermitAll;
+import io.casehub.platform.api.mcp.HeaderParam;
+import io.casehub.platform.api.mcp.McpDomain;
+import io.casehub.platform.api.mcp.PlatformWebhook;
+import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
-import jakarta.ws.rs.Consumes;
-import jakarta.ws.rs.HeaderParam;
-import jakarta.ws.rs.POST;
-import jakarta.ws.rs.Path;
-import jakarta.ws.rs.Produces;
-import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jboss.logging.Logger;
 
 import java.util.Map;
 
-@Path("/api/github/webhook")
-@Produces(MediaType.APPLICATION_JSON)
-@Consumes(MediaType.APPLICATION_JSON)
-@PermitAll
+@McpDomain(value = "devtown/github-webhook", basePath = "/api/github")
+@ApplicationScoped
 public class GitHubWebhookResource {
 
     private static final Logger LOG = Logger.getLogger(GitHubWebhookResource.class);
@@ -46,7 +41,7 @@ public class GitHubWebhookResource {
     private static final SettingsScope MERGE_QUEUE_SCOPE =
             SettingsScope.of("casehubio", io.casehub.platform.api.path.Path.parse("casehubio/devtown/merge-queue"));
 
-    @POST
+    @PlatformWebhook("Receive GitHub webhook event")
     public Response receive(String body,
                             @HeaderParam("X-GitHub-Event") String eventType,
                             @HeaderParam("X-Hub-Signature-256") String signature,

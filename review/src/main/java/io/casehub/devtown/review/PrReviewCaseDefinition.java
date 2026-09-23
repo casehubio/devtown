@@ -53,11 +53,11 @@ public final class PrReviewCaseDefinition {
 
     public static CaseDefinition build(int humanApprovalThreshold) {
         var codeAnalysisCap   = cap(ReviewDomain.CODE_ANALYSIS, "{ pr: .pr }", "{ codeAnalysis: . }");
-        var securityReviewCap = cap(ReviewDomain.SECURITY_REVIEW, "{ pr: .pr, codeAnalysis: .codeAnalysis }", "{ securityReview: { outcome: . } }");
-        var archReviewCap     = cap(ReviewDomain.ARCHITECTURE_REVIEW, "{ pr: .pr, codeAnalysis: .codeAnalysis }", "{ architectureReview: { outcome: . } }");
-        var styleReviewCap    = cap(ReviewDomain.STYLE_REVIEW, "{ pr: .pr }", "{ styleCheck: { outcome: . } }");
-        var testCoverageCap   = cap(ReviewDomain.TEST_COVERAGE, "{ pr: .pr }", "{ testCoverage: { outcome: . } }");
-        var perfAnalysisCap   = cap(ReviewDomain.PERFORMANCE_ANALYSIS, "{ pr: .pr }", "{ performanceAnalysis: { outcome: . } }");
+        var securityReviewCap = cap(ReviewDomain.SECURITY_REVIEW, "{ pr: .pr, codeAnalysis: .codeAnalysis }", "{ securityReview: . }");
+        var archReviewCap     = cap(ReviewDomain.ARCHITECTURE_REVIEW, "{ pr: .pr, codeAnalysis: .codeAnalysis }", "{ architectureReview: . }");
+        var styleReviewCap    = cap(ReviewDomain.STYLE_REVIEW, "{ pr: .pr }", "{ styleCheck: . }");
+        var testCoverageCap   = cap(ReviewDomain.TEST_COVERAGE, "{ pr: .pr }", "{ testCoverage: . }");
+        var perfAnalysisCap   = cap(ReviewDomain.PERFORMANCE_ANALYSIS, "{ pr: .pr }", "{ performanceAnalysis: . }");
         var ciRunnerCap       = cap(AgentQualification.CI_RUNNER, "{ pr: .pr }", "{ ci: { status: . } }");
         var mergeExecutorCap  = cap(AgentQualification.MERGE_EXECUTOR, "{ pr: .pr }", ".");
         var mergeQueueEnqueueCap = cap("merge-queue-enqueue", "{ pr: .pr, codeAnalysis: .codeAnalysis }", "{ enqueueResult: . }");

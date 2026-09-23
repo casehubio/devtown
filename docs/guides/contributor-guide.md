@@ -503,20 +503,33 @@ All NoOp defaults are `@DefaultBean` in `app/` -- displaced by real implementati
 
 ---
 
-## Reviewer Agent Stubs (app/agents/)
+## Reviewer Agents (app/agents/)
 
-Four in-process stub agents implementing `ReviewerAgent`:
+### Stub Agents (priority 0)
 
 | Agent | Capability | Behavior |
 |-------|-----------|----------|
 | `SecurityReviewAgent` | `security-review` | Returns `Completed` with rate-limiting finding |
-| `ArchitectureReviewAgent` | `architecture-review` | Returns `Declined` with reason: "distributed transaction outside scope" |
+| `ArchitectureReviewAgent` | `architecture-review` | Returns `Declined` |
 | `TestCoverageReviewAgent` | `test-coverage` | Returns `Completed` with coverage finding |
-| `PerformanceAnalysisAgent` | `performance-analysis` | Stub |
+| `PerformanceAnalysisAgent` | `performance-analysis` | Returns `Failed` |
+| `StyleReviewAgent` | `style-review` | Returns `Completed` with naming finding |
+| `CodeAnalysisAgentStub` | `code-analysis` | Returns default classification (no security, no architecture crossing) |
 
-These are placeholders for future Claudony agents. The CDI wiring, channel structure, and commitment lifecycle are production-correct regardless of whether agents are in-process or out-of-process.
+### LLM Agents (priority 1 — displace stubs via ReviewerAgentRegistry)
 
-`ReviewerOutcome` is a sealed interface: `Completed(List<String> findings)` + `Declined(String reason)`.
+| Agent | Capability | System Prompt Focus |
+|-------|-----------|---------------------|
+| `LlmSecurityReviewAgent` | `security-review` | OWASP top 10, auth, injection, secrets |
+| `LlmArchitectureReviewAgent` | `architecture-review` | Structural impact, coupling, API changes |
+| `LlmStyleReviewAgent` | `style-review` | Naming, consistency, idiomatic patterns |
+| `LlmTestCoverageReviewAgent` | `test-coverage` | Untested paths, edge cases |
+| `LlmPerformanceReviewAgent` | `performance-analysis` | N+1 queries, unbounded loops, memory |
+| `LlmCodeAnalysisAgent` | `code-analysis` | PR classification: security sensitivity, architecture crossing |
+
+LLM agents extend `LlmReviewerAgent` (review/) which uses `StructuredAgentInvoker` for batched diff analysis. `ReviewerAgentRegistry` resolves the highest-priority agent per capability — deploying an LLM agent displaces only its stub, not others.
+
+`ReviewerOutcome` is a sealed interface: `Completed(List<ReviewFinding> findings)` + `Declined(String reason)` + `Failed(String reason)`. `ReviewFinding` is a domain record with `Severity`, `category`, `filePath`, `lineRange`, `message`, and `confidence` (clamped to [0.0, 1.0]).
 
 ---
 

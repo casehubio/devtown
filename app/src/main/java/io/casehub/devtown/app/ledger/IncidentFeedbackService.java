@@ -10,7 +10,7 @@ import io.casehub.ledger.model.WorkerDecisionEntry;
 import io.casehub.ledger.runtime.config.LedgerConfig;
 import io.casehub.ledger.api.model.LedgerAttestation;
 import io.casehub.ledger.api.model.LedgerEntry;
-import io.casehub.ledger.runtime.persistence.LedgerPersistenceUnit;
+import io.casehub.ledger.jpa.LedgerPersistenceUnit;
 import io.casehub.ledger.api.spi.LedgerEntryRepository;
 import io.casehub.platform.api.identity.ActorType;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -125,7 +125,7 @@ public class IncidentFeedbackService {
     }
 
     private LedgerAttestation buildAttestation(WorkerDecisionEntry wde, IncidentFeedback feedback) {
-        LedgerAttestation att = new io.casehub.ledger.runtime.model.LedgerAttestation();
+        LedgerAttestation att = new io.casehub.ledger.jpa.LedgerAttestation();
         att.ledgerEntryId = wde.id;
         att.subjectId = wde.subjectId;
         att.attestorId = ATTESTOR_ID;

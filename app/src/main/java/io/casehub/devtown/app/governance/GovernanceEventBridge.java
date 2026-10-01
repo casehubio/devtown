@@ -5,7 +5,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.casehub.engine.common.spi.event.CaseContextUpdatedEvent;
 import io.casehub.engine.common.spi.event.CaseLifecycleEvent;
 import io.casehub.engine.common.spi.event.PlanItemStateChangedEvent;
-import io.casehub.ledger.runtime.service.routing.TrustScoreActorUpdatedEvent;
+import io.casehub.ledger.core.event.TrustScoreActorUpdatedEvent;
 import io.casehub.qhorus.api.message.CommitmentDeclinedEvent;
 import io.casehub.qhorus.api.message.CommitmentExpiredEvent;
 import io.casehub.work.runtime.event.SlaBreachEvent;

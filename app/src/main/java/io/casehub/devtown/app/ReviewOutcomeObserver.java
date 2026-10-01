@@ -73,7 +73,7 @@ public class ReviewOutcomeObserver {
         // Lookup CaseInstance
         CaseInstance caseInstance;
         try {
-            caseInstance = caseInstanceRepository.findByUuid(event.caseId());
+            caseInstance = caseInstanceRepository.findByUuid(event.caseId()).orElse(null);
         } catch (Exception e) {
             LOG.warnf(e, "Failed to lookup CaseInstance for caseId=%s", event.caseId());
             return;

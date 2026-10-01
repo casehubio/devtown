@@ -150,7 +150,7 @@ class CrossRepoCoordinatedMergeTest {
 
     private void awaitCaseStatus(UUID caseId, CaseStatus expected) {
         await().atMost(10, SECONDS).pollInterval(100, MILLISECONDS).untilAsserted(() -> {
-            var instance = caseInstanceRepository.findByUuid(caseId);
+            var instance = caseInstanceRepository.findByUuid(caseId).orElseThrow();
             assertThat(instance).as("Case %s should exist", caseId).isNotNull();
             assertThat(instance.getState()).as("Case %s status", caseId).isEqualTo(expected);
         });
@@ -158,7 +158,7 @@ class CrossRepoCoordinatedMergeTest {
 
     private void awaitCaseTerminal(UUID caseId) {
         await().atMost(10, SECONDS).pollInterval(100, MILLISECONDS).untilAsserted(() -> {
-            var instance = caseInstanceRepository.findByUuid(caseId);
+            var instance = caseInstanceRepository.findByUuid(caseId).orElseThrow();
             assertThat(instance).isNotNull();
             assertThat(TERMINAL).as("Case %s should be terminal but is %s", caseId, instance.getState())
                 .contains(instance.getState());
@@ -166,7 +166,7 @@ class CrossRepoCoordinatedMergeTest {
     }
 
     private Object contextValue(UUID caseId, String path) {
-        var instance = caseInstanceRepository.findByUuid(caseId);
+        var instance = caseInstanceRepository.findByUuid(caseId).orElseThrow();
         return instance.getCaseContext().getPath(path);
     }
 
@@ -195,7 +195,7 @@ class CrossRepoCoordinatedMergeTest {
         assertThat(tracker.findByReviewCaseId(reviewA).parentCaseId()).isEqualTo(parentCaseId);
         assertThat(tracker.findByReviewCaseId(reviewB).parentCaseId()).isEqualTo(parentCaseId);
 
-        var parentInstance = caseInstanceRepository.findByUuid(parentCaseId);
+        var parentInstance = caseInstanceRepository.findByUuid(parentCaseId).orElseThrow();
         assertThat(parentInstance).isNotNull();
         assertThat(parentInstance.getCaseContext().getPath("reviewCases")).isNotNull();
 
@@ -229,7 +229,7 @@ class CrossRepoCoordinatedMergeTest {
         // ── Phase 5: Terminal state ──────────────────────────────────
         awaitCaseStatus(parentCaseId, CaseStatus.COMPLETED);
 
-        var reviewAInstance = caseInstanceRepository.findByUuid(reviewA);
+        var reviewAInstance = caseInstanceRepository.findByUuid(reviewA).orElseThrow();
         assertThat(reviewAInstance.getCaseContext().getPath("coordinatedChange")).isEqualTo(true);
 
         // ── Phase 6: EventLog ────────────────────────────────────────
@@ -281,7 +281,7 @@ class CrossRepoCoordinatedMergeTest {
         // ── Phase 4: Terminal + cancel propagation ───────────────────
         awaitCaseTerminal(parentCaseId);
 
-        var reviewAInstance = caseInstanceRepository.findByUuid(reviewA);
+        var reviewAInstance = caseInstanceRepository.findByUuid(reviewA).orElseThrow();
         assertThat(reviewAInstance.getState()).isEqualTo(CaseStatus.COMPLETED);
 
         assertThat(testMergeClient.calls()).isEmpty();
@@ -434,7 +434,7 @@ class CrossRepoCoordinatedMergeTest {
 
         // ── Parent may already be terminal from merge-failed goal ────
         // Signal only if case is still active — terminal cases reject signals
-        var instance = caseInstanceRepository.findByUuid(parentCaseId);
+        var instance = caseInstanceRepository.findByUuid(parentCaseId).orElseThrow();
         if (!TERMINAL.contains(instance.getState())) {
             caseHubRuntime.signal(parentCaseId, "probe", "idempotency-check");
         }

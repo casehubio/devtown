@@ -150,7 +150,7 @@ class TrustGatedAttestationPolicyActivationTest {
                 UUID entryId = pair.getKey();
                 UUID caseId  = pair.getValue();
 
-                LedgerAttestation att = new io.casehub.ledger.runtime.model.LedgerAttestation();
+                LedgerAttestation att = new io.casehub.ledger.jpa.LedgerAttestation();
                 att.ledgerEntryId = entryId;
                 att.subjectId     = caseId;
                 att.attestorId    = verdict == AttestationVerdict.SOUND ? agentId : "system";

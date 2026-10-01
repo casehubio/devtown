@@ -22,19 +22,19 @@ export function createDatasets(prefs: Record<string, string>) {
   const caseRefresh = prefs["refresh.caseDetail"] ?? "30second";
 
   return [
-    rest("queue-status", "/api/governance/queue-status", { dataPath: "reviews", refreshTime: opRefresh }),
-    rest("problems", "/api/governance/problems?threshold_minutes=0", { dataPath: "items", refreshTime: opRefresh }),
-    rest("merge-queue", "/api/governance/merge-queue", { dataPath: "queuedPrs", refreshTime: opRefresh }),
-    rest("active-batches", "/api/governance/merge-queue", { dataPath: "activeBatches", refreshTime: opRefresh }),
-    rest("triage", "/api/governance/triage", { dataPath: "items", refreshTime: opRefresh }),
+    rest("queue-status", "/api/devtown/governance/queue-status", { dataPath: "reviews", refreshTime: opRefresh }),
+    rest("problems", "/api/devtown/governance/problems?threshold_minutes=0", { dataPath: "items", refreshTime: opRefresh }),
+    rest("merge-queue", "/api/devtown/governance/merge-queue", { dataPath: "queuedPrs", refreshTime: opRefresh }),
+    rest("active-batches", "/api/devtown/governance/merge-queue", { dataPath: "activeBatches", refreshTime: opRefresh }),
+    rest("triage", "/api/devtown/governance/triage", { dataPath: "items", refreshTime: opRefresh }),
 
-    rest("system-health", "/api/governance/system-health", { expression: "[$]", refreshTime: metRefresh }),
-    rest("merge-queue-metrics", "/api/governance/merge-queue/metrics", { expression: "[$]", refreshTime: metRefresh }),
-    rest("reviewers", "/api/governance/reviewers", { dataPath: "items", refreshTime: metRefresh }),
-    rest("contributors", "/api/governance/contributors", { dataPath: "items", refreshTime: metRefresh }),
-    rest("sla-comparison", "/api/governance/sla-comparison", { dataPath: "entries", refreshTime: metRefresh }),
+    rest("system-health", "/api/devtown/governance/system-health", { expression: "[$]", refreshTime: metRefresh }),
+    rest("merge-queue-metrics", "/api/devtown/governance/merge-queue/metrics", { expression: "[$]", refreshTime: metRefresh }),
+    rest("reviewers", "/api/devtown/reviews/reviewers", { dataPath: "items", refreshTime: metRefresh }),
+    rest("contributors", "/api/devtown/reviews/contributors", { dataPath: "items", refreshTime: metRefresh }),
+    rest("sla-comparison", "/api/devtown/governance/sla-comparison", { dataPath: "entries", refreshTime: metRefresh }),
 
-    rest("recent-events", "/api/governance/recent-events?limit=100", { refreshTime: opRefresh }),
+    rest("recent-events", "/api/devtown/governance/recent-events?limit=100", { refreshTime: opRefresh }),
 
     rest("case-definitions", "/api/v1/case-definitions"),
 

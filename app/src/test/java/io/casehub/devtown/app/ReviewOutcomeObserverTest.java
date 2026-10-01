@@ -64,7 +64,7 @@ class ReviewOutcomeObserverTest {
 
         // Wait for context to be updated
         await().atMost(3, SECONDS).pollInterval(50, MILLISECONDS).untilAsserted(() -> {
-            var instance = caseInstanceRepository.findByUuid(caseId)
+            var instance = caseInstanceRepository.findByUuid(caseId).orElseThrow()
                     ;
             assertThat(instance.getCaseContext().getPathAsString("styleCheck.outcome"))
                     .isEqualTo("APPROVED");
@@ -130,7 +130,7 @@ class ReviewOutcomeObserverTest {
 
         caseHub.signal(caseId, "testCoverage", Map.of("outcome", "APPROVED"));
         await().atMost(3, SECONDS).pollInterval(50, MILLISECONDS).untilAsserted(() -> {
-            var instance = caseInstanceRepository.findByUuid(caseId)
+            var instance = caseInstanceRepository.findByUuid(caseId).orElseThrow()
                     ;
             assertThat(instance.getCaseContext().getPathAsString("testCoverage.outcome"))
                     .isEqualTo("APPROVED");
@@ -154,7 +154,7 @@ class ReviewOutcomeObserverTest {
         // Manually set humanApproval.status in context
         caseHub.signal(caseId, "humanApproval", Map.of("status", "approved"));
         await().atMost(3, SECONDS).pollInterval(50, MILLISECONDS).untilAsserted(() -> {
-            var instance = caseInstanceRepository.findByUuid(caseId)
+            var instance = caseInstanceRepository.findByUuid(caseId).orElseThrow()
                     ;
             assertThat(instance.getCaseContext().getPathAsString("humanApproval.status"))
                     .isEqualTo("approved");

@@ -114,7 +114,7 @@ class HumanApprovalLifecycleTest {
                 .pollInterval(100, MILLISECONDS)
                 .untilAsserted(() -> {
                     var instance = caseInstanceRepository
-                            .findByUuid(caseId)
+                            .findByUuid(caseId).orElseThrow()
                             ;
                     assertThat(instance).isNotNull();
                     Object outcome = instance.getCaseContext().getPath("humanApproval.outcome");
@@ -137,7 +137,7 @@ class HumanApprovalLifecycleTest {
                 .pollInterval(100, MILLISECONDS)
                 .untilAsserted(() -> {
                     var instance = caseInstanceRepository
-                            .findByUuid(caseId)
+                            .findByUuid(caseId).orElseThrow()
                             ;
                     assertThat(instance).isNotNull();
                     assertThat(instance.getState()).isEqualTo(CaseStatus.COMPLETED);

@@ -88,7 +88,7 @@ class MergeQueueBatchLifecycleTest {
         await().atMost(10, SECONDS)
             .pollInterval(200, MILLISECONDS)
             .untilAsserted(() -> {
-                var instance = caseInstanceRepository.findByUuid(caseId)
+                var instance = caseInstanceRepository.findByUuid(caseId).orElseThrow()
                     ;
                 assertThat(instance).isNotNull();
                 assertThat(instance.getCaseContext().getPath("tipTest.status"))
@@ -103,7 +103,7 @@ class MergeQueueBatchLifecycleTest {
         await().atMost(10, SECONDS)
             .pollInterval(200, MILLISECONDS)
             .untilAsserted(() -> {
-                var instance = caseInstanceRepository.findByUuid(caseId)
+                var instance = caseInstanceRepository.findByUuid(caseId).orElseThrow()
                     ;
                 assertThat(instance).isNotNull();
                 assertThat(instance.getState())
@@ -111,7 +111,7 @@ class MergeQueueBatchLifecycleTest {
                     .isEqualTo(CaseStatus.COMPLETED);
             });
 
-        var instance = caseInstanceRepository.findByUuid(caseId)
+        var instance = caseInstanceRepository.findByUuid(caseId).orElseThrow()
             ;
         assertThat(instance.getCaseContext().getPath("tipTest.status"))
             .isEqualTo("passing");
@@ -135,7 +135,7 @@ class MergeQueueBatchLifecycleTest {
         await().atMost(10, SECONDS)
             .pollInterval(200, MILLISECONDS)
             .untilAsserted(() -> {
-                var instance = caseInstanceRepository.findByUuid(caseId)
+                var instance = caseInstanceRepository.findByUuid(caseId).orElseThrow()
                     ;
                 assertThat(instance).isNotNull();
                 assertThat(instance.getState())
@@ -143,7 +143,7 @@ class MergeQueueBatchLifecycleTest {
                     .isEqualTo(CaseStatus.COMPLETED);
             });
 
-        var instance = caseInstanceRepository.findByUuid(caseId)
+        var instance = caseInstanceRepository.findByUuid(caseId).orElseThrow()
             ;
         assertThat(instance.getCaseContext().getPath("rejectedPrs"))
             .as("rejectedPrs should be populated")

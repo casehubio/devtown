@@ -2,7 +2,7 @@ package io.casehub.devtown.app.governance;
 
 import io.casehub.ledger.api.model.AttestationVerdict;
 import io.casehub.ledger.model.WorkerDecisionEntry;
-import io.casehub.ledger.runtime.model.LedgerAttestation;
+import io.casehub.ledger.jpa.LedgerAttestation;
 import io.casehub.ledger.core.trust.TrustGateService;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.TypedQuery;

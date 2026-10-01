@@ -6,7 +6,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import io.casehub.ledger.api.model.LedgerEntryType;
 import io.casehub.ledger.model.CaseLedgerEntry;
 import io.casehub.ledger.api.spi.ActorIdentityProvider;
-import io.casehub.ledger.runtime.model.ErasureReceiptLedgerEntry;
+import io.casehub.ledger.jpa.ErasureReceiptLedgerEntry;
 import io.casehub.ledger.api.spi.LedgerEntryRepository;
 import io.casehub.platform.api.identity.ActorType;
 import io.casehub.platform.api.identity.CurrentPrincipal;

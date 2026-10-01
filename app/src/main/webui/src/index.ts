@@ -22,7 +22,7 @@ registerPanel("reviewer-workbench", "devtown-reviewer-workbench");
 registerPanel("contributor-workbench", "blocks-contributor-workbench");
 
 async function start() {
-  const prefs = await fetch("/api/governance/preferences")
+  const prefs = await fetch("/api/devtown/governance/preferences")
     .then(r => r.ok ? r.json() : {})
     .then(json => {
       const flat: Record<string, string> = {};

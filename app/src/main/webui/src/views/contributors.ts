@@ -21,7 +21,7 @@ export const contributorsView = page("Contributors",
     }),
 
     hostPanel("contributor-workbench", {
-      endpoint: "/api/governance",
+      endpoint: "/api/devtown/reviews",
       "actor-id": "#{row.actorId}",
     }),
   ),

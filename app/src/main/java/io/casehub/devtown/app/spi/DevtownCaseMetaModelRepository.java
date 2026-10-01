@@ -1,6 +1,6 @@
 package io.casehub.devtown.app.spi;
 
-import io.casehub.persistence.memory.InMemoryCaseMetaModelRepository;
+import io.casehub.engine.persistence.memory.InMemoryCaseMetaModelRepository;
 import jakarta.enterprise.context.ApplicationScoped;
 
 @ApplicationScoped

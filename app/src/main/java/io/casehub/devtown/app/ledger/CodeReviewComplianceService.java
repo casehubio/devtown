@@ -12,7 +12,7 @@ import io.casehub.devtown.review.compliance.ReviewSlaRequirement;
 import io.casehub.ledger.model.CaseLedgerEntry;
 import io.casehub.ledger.model.WorkerDecisionEntry;
 import io.casehub.ledger.api.model.LedgerEntry;
-import io.casehub.ledger.runtime.persistence.LedgerPersistenceUnit;
+import io.casehub.ledger.jpa.LedgerPersistenceUnit;
 import io.casehub.ledger.api.spi.LedgerEntryRepository;
 import io.casehub.ledger.runtime.service.LedgerVerificationService;
 import io.casehub.ledger.core.merkle.InclusionProof;

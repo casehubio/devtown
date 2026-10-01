@@ -105,7 +105,7 @@ class MergeQueueEscalationTest {
         await().atMost(10, SECONDS)
             .pollInterval(200, MILLISECONDS)
             .untilAsserted(() -> {
-                var instance = caseInstanceRepository.findByUuid(caseId)
+                var instance = caseInstanceRepository.findByUuid(caseId).orElseThrow()
                     ;
                 assertThat(instance).isNotNull();
                 // merge-approval-rejected is a failure goal: '.mergeApproval.outcome == "REJECTED"'
@@ -114,7 +114,7 @@ class MergeQueueEscalationTest {
                     .isIn(CaseStatus.COMPLETED, CaseStatus.FAULTED, CaseStatus.CANCELLED);
             });
 
-        var instance = caseInstanceRepository.findByUuid(caseId)
+        var instance = caseInstanceRepository.findByUuid(caseId).orElseThrow()
             ;
         assertThat(instance.getCaseContext().getPath("mergeApproval.outcome"))
             .as("mergeApproval.outcome should be REJECTED")
@@ -153,7 +153,7 @@ class MergeQueueEscalationTest {
         await().atMost(10, SECONDS)
             .pollInterval(200, MILLISECONDS)
             .untilAsserted(() -> {
-                var instance = caseInstanceRepository.findByUuid(caseId)
+                var instance = caseInstanceRepository.findByUuid(caseId).orElseThrow()
                     ;
                 assertThat(instance).isNotNull();
                 assertThat(instance.getState())
@@ -161,7 +161,7 @@ class MergeQueueEscalationTest {
                     .isIn(CaseStatus.COMPLETED, CaseStatus.FAULTED, CaseStatus.CANCELLED);
             });
 
-        var instance = caseInstanceRepository.findByUuid(caseId)
+        var instance = caseInstanceRepository.findByUuid(caseId).orElseThrow()
             ;
         assertThat(instance.getCaseContext().getPath("tipTestEscalation.outcome"))
             .as("tipTestEscalation.outcome should be REJECT_BATCH")
@@ -203,7 +203,7 @@ class MergeQueueEscalationTest {
         await().atMost(5, SECONDS)
             .pollInterval(200, MILLISECONDS)
             .untilAsserted(() -> {
-                var instance = caseInstanceRepository.findByUuid(caseId)
+                var instance = caseInstanceRepository.findByUuid(caseId).orElseThrow()
                     ;
                 assertThat(instance.getCaseContext().getPath("mergeEscalation.outcome"))
                     .as("mergeEscalation.outcome should be APPROVED after WorkItem completion")
@@ -217,7 +217,7 @@ class MergeQueueEscalationTest {
         await().atMost(10, SECONDS)
             .pollInterval(200, MILLISECONDS)
             .untilAsserted(() -> {
-                var instance = caseInstanceRepository.findByUuid(caseId)
+                var instance = caseInstanceRepository.findByUuid(caseId).orElseThrow()
                     ;
                 assertThat(instance).isNotNull();
                 assertThat(instance.getState())
@@ -252,7 +252,7 @@ class MergeQueueEscalationTest {
         await().atMost(10, SECONDS)
             .pollInterval(200, MILLISECONDS)
             .untilAsserted(() -> {
-                var instance = caseInstanceRepository.findByUuid(caseId)
+                var instance = caseInstanceRepository.findByUuid(caseId).orElseThrow()
                     ;
                 assertThat(instance).isNotNull();
                 assertThat(instance.getState())
@@ -260,7 +260,7 @@ class MergeQueueEscalationTest {
                     .isIn(CaseStatus.COMPLETED, CaseStatus.FAULTED, CaseStatus.CANCELLED);
             });
 
-        var instance = caseInstanceRepository.findByUuid(caseId)
+        var instance = caseInstanceRepository.findByUuid(caseId).orElseThrow()
             ;
         assertThat(instance.getCaseContext().getPath("mergeEscalation.outcome"))
             .isEqualTo("REJECTED");

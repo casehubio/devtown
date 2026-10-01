@@ -48,7 +48,7 @@ export const queueView = page("Merge Queue",
     }),
 
     hostPanel("contributor-workbench", {
-      endpoint: "/api/governance",
+      endpoint: "/api/devtown/reviews",
       "actor-id": "#{row.author}",
     }),
   ),

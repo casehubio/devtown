@@ -97,7 +97,7 @@ class MergeQueueBisectionTest {
         await().atMost(10, SECONDS)
             .pollInterval(200, MILLISECONDS)
             .untilAsserted(() -> {
-                var instance = caseInstanceRepository.findByUuid(caseId)
+                var instance = caseInstanceRepository.findByUuid(caseId).orElseThrow()
                     ;
                 assertThat(instance).isNotNull();
                 assertThat(instance.getCaseContext().getPath("tipTest.status"))
@@ -111,7 +111,7 @@ class MergeQueueBisectionTest {
         // Verify split result structure — the outputSchema "{ splitResult: . }" maps
         // the raw worker output (which itself contains "splitResult" key) into context.
         // The actual context path depends on the engine's output mapping implementation.
-        var instance = caseInstanceRepository.findByUuid(caseId)
+        var instance = caseInstanceRepository.findByUuid(caseId).orElseThrow()
             ;
 
         // The worker returns WorkerResult.of(Map.of("splitResult", {left, right}))
@@ -143,12 +143,12 @@ class MergeQueueBisectionTest {
         await().atMost(10, SECONDS)
             .pollInterval(200, MILLISECONDS)
             .untilAsserted(() -> {
-                var instance = caseInstanceRepository.findByUuid(caseId)
+                var instance = caseInstanceRepository.findByUuid(caseId).orElseThrow()
                     ;
                 assertThat(instance.getCaseContext().getPath("splitResult")).isNotNull();
             });
 
-        var instance = caseInstanceRepository.findByUuid(caseId)
+        var instance = caseInstanceRepository.findByUuid(caseId).orElseThrow()
             ;
 
         // Resolve left slice path — outputSchema wrapping may nest under splitResult.splitResult
@@ -189,7 +189,7 @@ class MergeQueueBisectionTest {
         await().atMost(10, SECONDS)
             .pollInterval(200, MILLISECONDS)
             .untilAsserted(() -> {
-                var instance = caseInstanceRepository.findByUuid(caseId)
+                var instance = caseInstanceRepository.findByUuid(caseId).orElseThrow()
                     ;
                 assertThat(instance.getCaseContext().getPath("splitResult")).isNotNull();
             });
@@ -202,7 +202,7 @@ class MergeQueueBisectionTest {
         await().atMost(30, SECONDS)
             .pollInterval(500, MILLISECONDS)
             .untilAsserted(() -> {
-                var instance = caseInstanceRepository.findByUuid(caseId)
+                var instance = caseInstanceRepository.findByUuid(caseId).orElseThrow()
                     ;
                 assertThat(instance).isNotNull();
                 // Accept any terminal-ish state or WAITING (for sub-case completion)
@@ -211,7 +211,7 @@ class MergeQueueBisectionTest {
                     .isIn(CaseStatus.COMPLETED, CaseStatus.WAITING, CaseStatus.FAULTED);
             });
 
-        var instance = caseInstanceRepository.findByUuid(caseId)
+        var instance = caseInstanceRepository.findByUuid(caseId).orElseThrow()
             ;
 
         if (instance.getState() == CaseStatus.COMPLETED) {
@@ -245,12 +245,12 @@ class MergeQueueBisectionTest {
         await().atMost(10, SECONDS)
             .pollInterval(200, MILLISECONDS)
             .untilAsserted(() -> {
-                var instance = caseInstanceRepository.findByUuid(caseId)
+                var instance = caseInstanceRepository.findByUuid(caseId).orElseThrow()
                     ;
                 assertThat(instance.getCaseContext().getPath("splitResult")).isNotNull();
             });
 
-        var instance = caseInstanceRepository.findByUuid(caseId)
+        var instance = caseInstanceRepository.findByUuid(caseId).orElseThrow()
             ;
 
         // Resolve paths — outputSchema wrapping may nest under splitResult.splitResult

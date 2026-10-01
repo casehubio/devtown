@@ -6,7 +6,7 @@
 
 type: java
 
-**Stack:** Java 21 (on Java 26 JVM), Quarkus 3.32.2, GraalVM 25 (native image target)
+**Stack:** Java 21 (on Java 26 JVM), Quarkus 3.39.3, GraalVM 25 (native image target)
 
 **Modules:** domain, review, queue, merge, github, app, templates/pr-review
 
@@ -307,7 +307,7 @@ Frontend lives at `app/src/main/webui/`. Quinoa runs `npm install` and `npm run 
 
 ## Ecosystem Conventions
 
-**Quarkus version:** All projects use `3.32.2`. When bumping, bump all projects together.
+**Quarkus version:** All projects use `3.39.3`. When bumping, bump all projects together.
 
 **GitHub Packages — dependency resolution:** Add to `pom.xml` `<repositories>`:
 ```xml

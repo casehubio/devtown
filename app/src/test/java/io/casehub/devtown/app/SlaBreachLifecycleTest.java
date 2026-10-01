@@ -82,7 +82,7 @@ class SlaBreachLifecycleTest {
         });
 
         // Case context unchanged after Tier 1 (only Fail triggers case signal)
-        var instanceAfterTier1 = caseInstanceRepository.findByUuid(caseId)
+        var instanceAfterTier1 = caseInstanceRepository.findByUuid(caseId).orElseThrow()
                 ;
         assertThat(instanceAfterTier1.getCaseContext().getPath("humanApproval"))
                 .as("humanApproval context unchanged after escalation").isNull();
@@ -92,7 +92,7 @@ class SlaBreachLifecycleTest {
         expiryService.checkExpired();
 
         await().atMost(10, SECONDS).pollInterval(100, MILLISECONDS).untilAsserted(() -> {
-            var instance = caseInstanceRepository.findByUuid(caseId)
+            var instance = caseInstanceRepository.findByUuid(caseId).orElseThrow()
                     ;
             assertThat(instance).isNotNull();
             Object outcome = instance.getCaseContext().getPath("humanApproval.outcome");

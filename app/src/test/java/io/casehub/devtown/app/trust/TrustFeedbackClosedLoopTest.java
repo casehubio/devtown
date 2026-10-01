@@ -162,8 +162,8 @@ class TrustFeedbackClosedLoopTest {
 
         if (attestationVerdict != null) {
             QuarkusTransaction.requiringNew().run(() -> {
-                io.casehub.ledger.runtime.model.LedgerAttestation att =
-                        new io.casehub.ledger.runtime.model.LedgerAttestation();
+                io.casehub.ledger.jpa.LedgerAttestation att =
+                        new io.casehub.ledger.jpa.LedgerAttestation();
                 att.ledgerEntryId = entryId;
                 att.subjectId     = caseId;
                 att.attestorId    = "test-attestor";

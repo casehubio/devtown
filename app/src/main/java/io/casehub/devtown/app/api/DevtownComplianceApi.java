@@ -1,6 +1,6 @@
 package io.casehub.devtown.app.api;
 
-import io.casehub.devtown.app.ledger.CodeReviewComplianceEvidence;
+import io.casehub.devtown.review.compliance.CodeReviewComplianceEvidence;
 import io.casehub.devtown.app.ledger.CodeReviewComplianceService;
 import io.casehub.devtown.app.ledger.GdprErasureService;
 import io.casehub.devtown.domain.memory.DevtownMemoryDomain;

@@ -60,7 +60,7 @@ class SlaBreachHandlerWiringTest {
         assertThat(caseId).isNotNull();
 
         String planItemId = await().atMost(5, SECONDS).pollInterval(100, MILLISECONDS).until(() -> {
-            var records = planItemStore.findDelegatedCrossTenant(caseId);
+            var records = planItemStore.findDelegated(caseId, "dev-tenant");
             return records.stream()
                     .filter(r -> "human-approval".equals(r.bindingName()))
                     .map(PlanItemRecord::planItemId)
@@ -76,7 +76,7 @@ class SlaBreachHandlerWiringTest {
         breachEvents.fire(new SlaBreachEvent(ctx, new BreachDecision.Fail("sla-breach"), "default"));
 
         await().atMost(5, SECONDS).pollInterval(100, MILLISECONDS).untilAsserted(() -> {
-            var instance = caseInstanceRepository.findByUuid(caseId)
+            var instance = caseInstanceRepository.findByUuid(caseId).orElseThrow()
                     ;
             assertThat(instance.getCaseContext().getPath("humanApproval.outcome"))
                     .isEqualTo("BLOCKED");

@@ -125,7 +125,7 @@ public class IncidentFeedbackService {
     }
 
     private LedgerAttestation buildAttestation(WorkerDecisionEntry wde, IncidentFeedback feedback) {
-        LedgerAttestation att = new io.casehub.ledger.runtime.model.LedgerAttestation();
+        LedgerAttestation att = new io.casehub.ledger.jpa.LedgerAttestation();
         att.ledgerEntryId = wde.id;
         att.subjectId = wde.subjectId;
         att.attestorId = ATTESTOR_ID;

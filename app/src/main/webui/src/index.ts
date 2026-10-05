@@ -3,6 +3,8 @@ import { page, tabs, hostPanel } from "@casehubio/pages-ui";
 import "@casehubio/blocks-ui-session-workbench";
 import "@casehubio/blocks-ui-trust-workbench";
 import "./components/reviewer-workbench";
+import "./components/review-workbench";
+import "./components/operations-workbench";
 import "@casehubio/blocks-ui-contributor-workbench";
 import { createDatasets } from "./datasets";
 import { operationsView } from "./views/operations";
@@ -19,6 +21,8 @@ const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
 registerPanel("session-workbench", "blocks-session-workbench");
 registerPanel("trust-workbench", "blocks-trust-workbench");
 registerPanel("reviewer-workbench", "devtown-reviewer-workbench");
+registerPanel("review-workbench", "devtown-review-workbench");
+registerPanel("operations-workbench", "devtown-operations-workbench");
 registerPanel("contributor-workbench", "blocks-contributor-workbench");
 
 async function start() {
@@ -37,8 +41,8 @@ async function start() {
 
   const app = page("DevTown",
     tabs(
-      ["Operations", operationsView],
-      ["Reviews", reviewsView],
+      ["Operations", hostPanel("operations-workbench", { endpoint: "/api/devtown/governance" })],
+      ["Reviews", hostPanel("review-workbench", { endpoint: "/api/devtown/governance" })],
       ["Merge Queue", queueView],
       ["Reviewers", reviewersView],
       ["Contributors", contributorsView],
@@ -58,6 +62,7 @@ async function start() {
     window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", (e) => {
       site.setTheme(e.matches ? "dark" : "light");
     });
+
   }
 }
 

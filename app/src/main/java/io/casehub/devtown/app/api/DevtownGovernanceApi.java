@@ -6,6 +6,7 @@ import io.casehub.devtown.app.mcp.TrackedEvent;
 import io.casehub.devtown.domain.governance.GovernancePreferenceKeys;
 import io.casehub.platform.api.mcp.McpDomain;
 import io.casehub.platform.api.mcp.PathParam;
+import io.casehub.platform.api.mcp.PlatformMutation;
 import io.casehub.platform.api.mcp.PlatformQuery;
 import io.casehub.platform.api.mcp.RestPath;
 import io.casehub.platform.api.preferences.PreferenceProvider;
@@ -27,6 +28,8 @@ public class DevtownGovernanceApi {
 
     @Inject GovernanceQueryService queryService;
     @Inject PreferenceProvider preferenceProvider;
+    @Inject
+    io.casehub.work.api.spi.WorkItemOperations workItemOperations;
 
     @PlatformQuery("Get queue status")
     @RestPath("/queue-status")
@@ -83,6 +86,31 @@ public class DevtownGovernanceApi {
             @QueryParam("limit") @DefaultValue("50") int limit) {
         return PagedResult.paginate(queryService.triageItems(), cursor, limit);
     }
+
+    @PlatformMutation("Claim a triage work item")
+    @RestPath("/triage/{workItemId}/claim")
+    public io.casehub.work.api.WorkItem claimTriageItem(
+            @PathParam UUID workItemId,
+            @QueryParam("claimant") @DefaultValue("dev-user") String claimant) {
+        return workItemOperations.claim(workItemId, claimant);
+    }
+
+    public record TriageDecision(String outcome) {}
+
+    @PlatformMutation("Decide a triage work item")
+    @RestPath("/triage/{workItemId}/decide")
+    public io.casehub.work.api.WorkItem decideTriageItem(
+            @PathParam UUID workItemId,
+            TriageDecision decision) {
+        String actor = "dev-user";
+        return switch (decision.outcome().toUpperCase()) {
+            case "APPROVED" -> workItemOperations.complete(workItemId, actor, null, "APPROVED");
+            case "REJECTED" -> workItemOperations.reject(workItemId, actor, "Rejected by reviewer", "REJECTED");
+            case "BLOCKED" -> workItemOperations.suspend(workItemId, actor, "Blocked by reviewer");
+            default -> throw new IllegalArgumentException("Unknown outcome: " + decision.outcome());
+        };
+    }
+
 
     @PlatformQuery("Get SLA comparison")
     @RestPath("/sla-comparison")

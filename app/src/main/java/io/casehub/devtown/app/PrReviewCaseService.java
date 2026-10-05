@@ -71,6 +71,10 @@ public class PrReviewCaseService implements PrReviewApplicationService {
     @Inject jakarta.enterprise.event.Event<io.casehub.devtown.review.PrLifecycleEvent.ChangesRequested> changesRequestedEvent;
     @Inject
     io.casehub.devtown.review.sla.SlaCalibrationStore slaCalibrationStore;
+    @Inject
+    io.casehub.work.api.spi.WorkItemStore workItemStore;
+    @Inject
+    io.casehub.work.api.spi.WorkItemOperations workItemOperations;
 
 
     @Override
@@ -216,21 +220,43 @@ public class PrReviewCaseService implements PrReviewApplicationService {
 
     @Override
     public LifecycleResult signalReviewSubmitted(io.casehub.devtown.review.PrReviewSubmission review) {
-        if (!"changes_requested".equals(review.reviewState())) {
-            return LifecycleResult.UPDATED;
-        }
         var active = caseTracker.findActiveCaseByPr(review.repo(), review.prNumber());
         if (active.isEmpty()) {return LifecycleResult.NO_ACTIVE_CASE;}
 
         UUID caseId = active.get().caseId();
-        caseHub.signal(caseId, "review.changesRequestedReviews." + review.reviewId(),
-                       java.time.Instant.now().toString());
 
-        String contributorId = "github-id:" + review.contributorNumericId();
-        changesRequestedEvent.fire(new PrLifecycleEvent.ChangesRequested(
-                review.repo(), review.prNumber(), contributorId, caseId));
+        if ("approved".equals(review.reviewState())) {
+            caseHub.signal(caseId, "externalApprovals.github." + review.reviewId(),
+                           java.time.Instant.now().toString());
+
+            completeMatchingWorkItems(caseId, review.contributorLogin());
+            return LifecycleResult.UPDATED;
+        }
+
+        if ("changes_requested".equals(review.reviewState())) {
+            caseHub.signal(caseId, "review.changesRequestedReviews." + review.reviewId(),
+                           java.time.Instant.now().toString());
+
+            String contributorId = "github-id:" + review.contributorNumericId();
+            changesRequestedEvent.fire(new PrLifecycleEvent.ChangesRequested(
+                    review.repo(), review.prNumber(), contributorId, caseId));
+            return LifecycleResult.UPDATED;
+        }
+
         return LifecycleResult.UPDATED;
     }
+
+    private void completeMatchingWorkItems(UUID caseId, String reviewer) {
+        if (workItemStore == null) {return;}
+        var activeItems = workItemStore.findByParentIdWithStatuses(caseId,
+                                                                   java.util.List.of(io.casehub.work.api.WorkItemStatus.PENDING, io.casehub.work.api.WorkItemStatus.ASSIGNED));
+        for (var wi : activeItems) {
+            if (wi.types().contains("human-decision")) {
+                workItemOperations.complete(wi.id(), reviewer, null, "APPROVED");
+            }
+        }
+    }
+
 
     @SuppressWarnings("unchecked")
     private int readReviewRounds(UUID caseId) {

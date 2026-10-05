@@ -1,4 +1,6 @@
 providers:
+  - vendor: google-vertex
+    credential: env:GOOGLE_APPLICATION_CREDENTIALS
   - vendor: anthropic
     credential: env:ANTHROPIC_API_KEY
 aliases:
@@ -11,4 +13,4 @@ aliases:
     tier: FAST
     max-cost: LOW
 defaults:
-  backend: claude
+  backend: gemini

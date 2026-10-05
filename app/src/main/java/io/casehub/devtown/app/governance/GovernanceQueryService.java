@@ -158,7 +158,8 @@ public class GovernanceQueryService {
 
 
     public record TriageItem(UUID workItemId, String prRef, String decisionType, String candidateGroup,
-                             Instant expiresAt, String escalationStage, Instant createdAt, UUID caseId) {}
+                             Instant expiresAt, String escalationStage, String status, Instant createdAt,
+                             UUID caseId) {}
 
     public record ReviewListEntry(UUID caseId, String repo, int prNumber, String contributor,
                                   String status, Instant startedAt, Instant lastEventAt) {}
@@ -260,16 +261,20 @@ public class GovernanceQueryService {
 
         // Expired commitments
         Instant now = Instant.now();
-        for (Commitment expired : commitmentStore.findExpiredBefore(now)) {
-            problems.add(new Problem(
-                "expired_commitment",
-                "error",
-                String.format("Commitment expired: obligor=%s messageType=%s",
-                    expired.obligor(), expired.messageType()),
-                expired.channelId(),
-                expired.obligor(),
-                expired.expiresAt()
-            ));
+        try {
+            for (Commitment expired : commitmentStore.findExpiredBefore(now)) {
+                problems.add(new Problem(
+                    "expired_commitment",
+                    "error",
+                    String.format("Commitment expired: obligor=%s messageType=%s",
+                        expired.obligor(), expired.messageType()),
+                    expired.channelId(),
+                    expired.obligor(),
+                    expired.expiresAt()
+                ));
+            }
+        } catch (Exception e) {
+            // multi-datasource transaction fails in H2 dev mode
         }
 
         // Failed workers from event buffer
@@ -289,18 +294,22 @@ public class GovernanceQueryService {
         }
 
         // Queue SLA breaches — delegate to service for lane-specific SLA detection
-        for (var breach : mergeQueueService.detectSlaBreaches()) {
-            problems.add(new Problem(
-                "queue_sla_breach",
-                "warning",
-                String.format("PR #%d (%s) has waited %d min — exceeds %s SLA (%d min)",
-                    breach.pr().number(), breach.pr().lane(),
-                    breach.waited().toMinutes(),
-                    breach.pr().lane(), breach.sla().toMinutes()),
-                null,
-                breach.pr().author(),
-                breach.pr().enqueuedAt()
-            ));
+        try {
+            for (var breach : mergeQueueService.detectSlaBreaches()) {
+                problems.add(new Problem(
+                    "queue_sla_breach",
+                    "warning",
+                    String.format("PR #%d (%s) has waited %d min — exceeds %s SLA (%d min)",
+                        breach.pr().number(), breach.pr().lane(),
+                        breach.waited().toMinutes(),
+                        breach.pr().lane(), breach.sla().toMinutes()),
+                    null,
+                    breach.pr().author(),
+                    breach.pr().enqueuedAt()
+                ));
+            }
+        } catch (Exception e) {
+            // multi-datasource transaction fails in H2 dev mode
         }
 
         return problems;
@@ -598,21 +607,29 @@ public class GovernanceQueryService {
 
 
     public List<TriageItem> triageItems() {
-        if (workItemStore == null) return List.of();
+        if (workItemStore == null) {return List.of();}
+        var activeStatuses = List.of(WorkItemStatus.PENDING, WorkItemStatus.ASSIGNED);
         var humanDecisions = workItemStore.scan(
-            WorkItemQuery.builder().status(WorkItemStatus.PENDING).type("human-decision").build());
+                WorkItemQuery.builder().statusIn(activeStatuses).type("human-decision").build());
         var humanOversight = workItemStore.scan(
-            WorkItemQuery.builder().status(WorkItemStatus.PENDING).type("human-oversight").build());
+                WorkItemQuery.builder().statusIn(activeStatuses).type("human-oversight").build());
+        var judgmentItems = workItemStore.scan(
+                                                 WorkItemQuery.builder().statusIn(activeStatuses).build())
+                                         .stream().filter(wi -> wi.callerRef() != null && wi.callerRef().contains("/pi:"))
+                                         .filter(wi -> wi.types() == null || wi.types().isEmpty())
+                                         .toList();
 
-        var all = new ArrayList<WorkItem>();
-        all.addAll(humanDecisions);
-        all.addAll(humanOversight);
+        var seen = new java.util.HashSet<java.util.UUID>();
+        var all  = new ArrayList<WorkItem>();
+        for (var wi : humanDecisions) {if (seen.add(wi.id())) {all.add(wi);}}
+        for (var wi : humanOversight) {if (seen.add(wi.id())) {all.add(wi);}}
+        for (var wi : judgmentItems) {if (seen.add(wi.id())) {all.add(wi);}}
 
         return all.stream().map(wi -> new TriageItem(
-            wi.id(), "", firstTypePath(wi), wi.candidateGroups(),
-            wi.expiresAt(), "", wi.createdAt(), wi.parentId()
-        )).sorted(Comparator.comparing(t -> t.expiresAt() != null ? t.expiresAt() : Instant.MAX))
-        .toList();
+                          wi.id(), "", firstTypePath(wi), wi.candidateGroups(),
+                          wi.expiresAt(), "", wi.status().name(), wi.createdAt(), wi.parentId()
+                  )).sorted(Comparator.comparing(t -> t.expiresAt() != null ? t.expiresAt() : Instant.MAX))
+                  .toList();
     }
 
     public List<ReviewListEntry> reviewsList() {

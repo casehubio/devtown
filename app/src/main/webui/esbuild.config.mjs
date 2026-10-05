@@ -8,7 +8,7 @@ const options = {
   bundle: true,
   outfile: "dist/app.js",
   format: "esm",
-  target: "es2020",
+  target: "es2024",
   minify: !isWatch,
   sourcemap: isWatch,
 };

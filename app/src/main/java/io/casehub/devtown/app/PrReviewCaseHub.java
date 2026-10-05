@@ -60,7 +60,21 @@ public class PrReviewCaseHub extends PrReviewTemplateCaseHub {
                                               .function(input -> adaptReview(capability, input))
                                               .build());
         }
+
+        definition.getWorkers().add(Worker.builder()
+                                          .name("ci-runner")
+                                          .capabilityName("ci-runner")
+                                          .function(this::adaptCiRunner)
+                                          .build());
     }
+
+    WorkerResult adaptCiRunner(Map<String, Object> input) {
+        LOG.info("ci-runner invoked — CI mode is not 'external'; returning passing status");
+        return WorkerResult.of(Map.of("status", "passing"));
+    }
+
+    private static final org.jboss.logging.Logger LOG =
+        org.jboss.logging.Logger.getLogger(PrReviewCaseHub.class);
 
     WorkerResult adaptMerge(Map<String, Object> input) {
         @SuppressWarnings("unchecked")

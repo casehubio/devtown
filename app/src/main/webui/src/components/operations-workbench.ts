@@ -4,6 +4,7 @@ import { columnId, ColumnType } from '@casehubio/pages-data/dist/dataset/types.j
 import type { TypedDataSet } from '@casehubio/pages-data/dist/dataset/types.js';
 import { fromRows } from '@casehubio/pages-data/dist/dataset/conversion.js';
 import type { TableColumnConfig } from '@casehubio/pages-table';
+import { emitPagesEvent } from '@casehubio/blocks-ui-core';
 import '@casehubio/pages-table';
 
 // ── Types ──────────────────────────────────────────────
@@ -84,22 +85,7 @@ const EVENT_CONFIG: readonly TableColumnConfig[] = [
   { id: CS_COL, sortable: true },
 ];
 
-// Detail-pane event columns (filtered to one case)
-const DTS_COL = columnId('dTimestamp');
-const DEVT_COL = columnId('dEventType');
-const DACTOR_COL = columnId('dActorId');
-const DCS_COL = columnId('dCaseStatus');
-
-const DETAIL_EVENT_COLUMNS = [
-  { id: DTS_COL, name: 'Time', type: ColumnType.TEXT, getValue: (r: EventEntry) => r.timestamp },
-  { id: DEVT_COL, name: 'Event', type: ColumnType.TEXT, getValue: (r: EventEntry) => r.eventType },
-  { id: DACTOR_COL, name: 'Actor', type: ColumnType.TEXT, getValue: (r: EventEntry) => r.actorId ?? '' },
-  { id: DCS_COL, name: 'Status', type: ColumnType.TEXT, getValue: (r: EventEntry) => r.caseStatus },
-];
-const DETAIL_EVENT_CONFIG: readonly TableColumnConfig[] = [
-  { id: DTS_COL, sortable: true }, { id: DEVT_COL, sortable: true },
-  { id: DACTOR_COL, sortable: true }, { id: DCS_COL, sortable: true },
-];
+// Detail pane removed — clicking reviews/events navigates to Reviews tab
 
 @customElement('devtown-operations-workbench')
 export class OperationsWorkbench extends LitElement {
@@ -114,21 +100,8 @@ export class OperationsWorkbench extends LitElement {
   @state() private _problemData: TypedDataSet | undefined;
   @state() private _eventData: TypedDataSet | undefined;
 
-  @state() private _selectedCaseId = '';
-  @state() private _detailEvents: TypedDataSet | undefined;
-
   static override styles = css`
-    :host { display: flex; height: 100%; font-family: var(--pages-font-family, system-ui); }
-    .main { flex: 1; overflow: auto; padding: 16px; min-width: 0; }
-    .detail {
-      width: 40%; min-width: 320px; max-width: 500px;
-      border-left: 1px solid var(--pages-neutral-4, #d4d4d4);
-      overflow: auto; padding: 16px;
-    }
-    .detail.empty {
-      display: flex; align-items: center; justify-content: center;
-      color: var(--pages-neutral-7, #525252); font-size: 13px;
-    }
+    :host { display: block; height: 100%; font-family: var(--pages-font-family, system-ui); overflow: auto; padding: 16px; }
     h3 { font-size: 14px; font-weight: 600; margin: 20px 0 8px; }
     h3:first-child { margin-top: 0; }
     .vitals {
@@ -136,32 +109,11 @@ export class OperationsWorkbench extends LitElement {
     }
     .vital {
       background: var(--pages-neutral-2, #f5f5f5); border-radius: 6px;
-      padding: 10px 12px; text-align: center;
+      padding: 10px 12px; text-align: center; cursor: pointer;
     }
+    .vital:hover { background: var(--pages-neutral-3, #e5e5e5); }
     .vital-value { font-size: 24px; font-weight: 700; }
     .vital-label { font-size: 11px; color: var(--pages-neutral-7, #525252); text-transform: uppercase; }
-    .detail-header { font-size: 16px; font-weight: 600; margin-bottom: 10px; }
-    .detail-meta { display: grid; grid-template-columns: auto 1fr; gap: 3px 10px; font-size: 12px; margin-bottom: 14px; }
-    .detail-meta dt { font-weight: 600; color: var(--pages-neutral-8, #404040); }
-    .detail-meta dd { margin: 0; }
-    .section-title { font-size: 13px; font-weight: 600; margin: 14px 0 6px; }
-    .actions { display: flex; gap: 8px; margin: 10px 0; }
-    .actions button {
-      padding: 5px 12px; border-radius: 4px; font-size: 12px; font-weight: 500;
-      cursor: pointer; border: 1px solid var(--pages-neutral-5, #a3a3a3);
-      background: white; color: var(--pages-neutral-9, #171717);
-    }
-    .actions button:hover { background: var(--pages-neutral-2, #f5f5f5); }
-    .actions button.primary {
-      background: var(--pages-primary-9, #1d4ed8); color: white;
-      border-color: var(--pages-primary-9, #1d4ed8);
-    }
-    .actions button.primary:hover { background: var(--pages-primary-10, #1e40af); }
-    .actions button.warn { border-color: var(--pages-warning-7, #a16207); color: var(--pages-warning-9, #854d0e); }
-    .action-result {
-      font-size: 11px; padding: 4px 8px; margin: 4px 0 8px;
-      background: var(--pages-neutral-2, #f5f5f5); border-radius: 3px;
-    }
   `;
 
   override connectedCallback(): void {
@@ -208,14 +160,18 @@ export class OperationsWorkbench extends LitElement {
       this._health = await hRes.json();
     }
 
-    if (this._selectedCaseId) {
-      this._updateDetailEvents();
-    }
   }
 
-  private _updateDetailEvents(): void {
-    const filtered = this._events.filter(e => e.caseId === this._selectedCaseId);
-    this._detailEvents = fromRows([...filtered], DETAIL_EVENT_COLUMNS);
+  private _navigateToReview(caseId: string): void {
+    emitPagesEvent(document, 'review:selected', { caseId });
+    const reviewTab = document.querySelector('button[data-tab="Reviews"], [role="tab"]');
+    const allTabs = document.querySelectorAll('[role="tab"]');
+    for (const tab of allTabs) {
+      if (tab.textContent?.trim() === 'Reviews') {
+        (tab as HTMLElement).click();
+        break;
+      }
+    }
   }
 
   private _handleReviewClick = (e: Event): void => {
@@ -223,11 +179,7 @@ export class OperationsWorkbench extends LitElement {
     if (!row) return;
     const pr = row.number(PR_COL);
     const entry = this._reviews.find(r => r.prNumber === pr);
-    if (entry && entry.caseId !== this._selectedCaseId) {
-      this._selectedCaseId = entry.caseId;
-      this._detailEvents = undefined;
-      this._updateDetailEvents();
-    }
+    if (entry) this._navigateToReview(entry.caseId);
   };
 
   private _handleEventClick = (e: Event): void => {
@@ -235,53 +187,42 @@ export class OperationsWorkbench extends LitElement {
     if (!row) return;
     const pr = row.number(EVT_PR_COL);
     const entry = this._reviews.find(r => r.prNumber === pr);
-    if (entry && entry.caseId !== this._selectedCaseId) {
-      this._selectedCaseId = entry.caseId;
-      this._detailEvents = undefined;
-      this._updateDetailEvents();
-    }
+    if (entry) this._navigateToReview(entry.caseId);
   };
 
-  private _selectedReview(): ReviewEntry | undefined {
-    return this._reviews.find(r => r.caseId === this._selectedCaseId);
-  }
+  private _handleProblemClick = (e: Event): void => {
+    const row = (e as CustomEvent).detail?.row;
+    if (!row) return;
+    const caseId = row.text(columnId('caseId'));
+    if (caseId) this._navigateToReview(caseId);
+  };
 
   override render() {
-    const selected = this._selectedReview();
     return html`
-      <div class="main">
-        <div class="vitals">
-          ${this._renderVital(this._health.activeCases, 'Active Cases')}
-          ${this._renderVital(this._health.fleetSize, 'Fleet Size')}
-          ${this._renderVital(this._health.openCommitments, 'Commitments')}
-          ${this._renderVital(this._health.pendingWorkItems, 'Work Items')}
-        </div>
-
-        ${this._problems.length > 0 ? html`
-          <h3>Problems</h3>
-          ${this._problemData ? html`<pages-table .dataSet=${this._problemData} .columnConfig=${PROBLEM_CONFIG}></pages-table>` : nothing}
-        ` : nothing}
-
-        <h3>Active Reviews</h3>
-        ${this._reviewData ? html`
-          <pages-table .dataSet=${this._reviewData} .columnConfig=${REVIEW_CONFIG}
-            @row-activate=${this._handleReviewClick}></pages-table>
-        ` : html`<div>No active reviews</div>`}
-
-        <h3>Event Stream</h3>
-        ${this._eventData ? html`
-          <pages-table .dataSet=${this._eventData} .columnConfig=${EVENT_CONFIG}
-            @row-activate=${this._handleEventClick}></pages-table>
-        ` : html`<div>No events</div>`}
+      <div class="vitals">
+        ${this._renderVital(this._health.activeCases, 'Active Cases')}
+        ${this._renderVital(this._health.fleetSize, 'Fleet Size')}
+        ${this._renderVital(this._health.openCommitments, 'Commitments')}
+        ${this._renderVital(this._health.pendingWorkItems, 'Work Items')}
       </div>
 
-      ${selected ? html`
-        <div class="detail">
-          ${this._renderDetail(selected)}
-        </div>
-      ` : html`
-        <div class="detail empty">Click a review or event to see details</div>
-      `}
+      ${this._problems.length > 0 ? html`
+        <h3>Problems</h3>
+        ${this._problemData ? html`<pages-table .dataSet=${this._problemData} .columnConfig=${PROBLEM_CONFIG}
+          @row-activate=${this._handleProblemClick}></pages-table>` : nothing}
+      ` : nothing}
+
+      <h3>Active Reviews</h3>
+      ${this._reviewData ? html`
+        <pages-table .dataSet=${this._reviewData} .columnConfig=${REVIEW_CONFIG}
+          @row-activate=${this._handleReviewClick}></pages-table>
+      ` : html`<div>No active reviews</div>`}
+
+      <h3>Event Stream</h3>
+      ${this._eventData ? html`
+        <pages-table .dataSet=${this._eventData} .columnConfig=${EVENT_CONFIG}
+          @row-activate=${this._handleEventClick}></pages-table>
+      ` : html`<div>No events</div>`}
     `;
   }
 
@@ -291,46 +232,6 @@ export class OperationsWorkbench extends LitElement {
         <div class="vital-value">${value}</div>
         <div class="vital-label">${label}</div>
       </div>
-    `;
-  }
-
-  @state() private _actionResult = '';
-
-  private async _doAction(action: string, entry: ReviewEntry): Promise<void> {
-    try {
-      const res = await fetch(`/api/actions/${action}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ repo: entry.repo, prNumber: entry.prNumber, contributor: entry.contributor, headSha: 'dev-' + entry.prNumber }),
-      });
-      const json = await res.json();
-      this._actionResult = `${json.action}: ${json.result}`;
-      this._fetchAll();
-    } catch (err) {
-      this._actionResult = `Error: ${err}`;
-    }
-  }
-
-  private _renderDetail(entry: ReviewEntry) {
-    return html`
-      <div class="detail-header">PR #${entry.prNumber} — ${entry.repo}</div>
-      <dl class="detail-meta">
-        <dt>Author</dt><dd>${entry.contributor}</dd>
-        <dt>Status</dt><dd>${entry.status}</dd>
-        <dt>Lines</dt><dd>${entry.linesChanged}</dd>
-        <dt>Started</dt><dd>${entry.startedAt}</dd>
-        <dt>Last Event</dt><dd>${entry.lastEventAt}</dd>
-      </dl>
-      <div class="actions">
-        <button @click=${() => this._doAction('approve', entry)}>Approve</button>
-        <button class="warn" @click=${() => this._doAction('request-changes', entry)}>Request Changes</button>
-        <button class="primary" @click=${() => this._doAction('enqueue', entry)}>Merge Queue</button>
-      </div>
-      ${this._actionResult ? html`<div class="action-result">${this._actionResult}</div>` : nothing}
-      <div class="section-title">Case Events</div>
-      ${this._detailEvents ? html`
-        <pages-table .dataSet=${this._detailEvents} .columnConfig=${DETAIL_EVENT_CONFIG}></pages-table>
-      ` : html`<div>Loading...</div>`}
     `;
   }
 }

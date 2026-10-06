@@ -194,12 +194,14 @@ class GovernanceQueryResolverTest {
     @Test
     void reviewDetail_knownCase_returnsDetailWithTimeline() {
         Instant now = Instant.now();
-        var timelineEvent = new GovernanceQueryService.EventEntry(
-                now, "CASE_STARTED", "system", "Case started");
+        var timelineEvent = new GovernanceQueryService.TimelineEvent(
+                now, GovernanceQueryService.TimelineCategory.LIFECYCLE,
+                "CASE_STARTED", "system", "Case started", null);
         var capability = new GovernanceQueryService.CapabilityStatus(
                 "code-analysis", "COMPLETED", "APPROVED", now.plusSeconds(10));
         var detail = new GovernanceQueryService.ReviewDetail(
-                testCaseId, testPayload, List.of(timelineEvent), List.of(capability));
+                testCaseId, testPayload, List.of(timelineEvent), List.of(capability),
+                new GovernanceQueryService.RoutingSummary(List.of(), null), Map.of());
         when(governanceQuery.reviewDetail(eq(testCaseId), anyString())).thenReturn(detail);
 
         GovernanceQueryResolver.ReviewDetailResult result = resolver.reviewDetail(testCaseId);

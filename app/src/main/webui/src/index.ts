@@ -4,10 +4,8 @@ import "@casehubio/blocks-ui-session-workbench";
 import "@casehubio/blocks-ui-trust-workbench";
 import "./components/reviewer-workbench";
 import "./components/review-workbench";
-import "./components/operations-workbench";
 import "@casehubio/blocks-ui-contributor-workbench";
 import { createDatasets } from "./datasets";
-import { operationsView } from "./views/operations";
 import { reviewsView } from "./views/reviews";
 import { queueView } from "./views/queue";
 import { reviewersView } from "./views/reviewers";
@@ -22,7 +20,6 @@ registerPanel("session-workbench", "blocks-session-workbench");
 registerPanel("trust-workbench", "blocks-trust-workbench");
 registerPanel("reviewer-workbench", "devtown-reviewer-workbench");
 registerPanel("review-workbench", "devtown-review-workbench");
-registerPanel("operations-workbench", "devtown-operations-workbench");
 registerPanel("contributor-workbench", "blocks-contributor-workbench");
 
 async function start() {
@@ -41,7 +38,6 @@ async function start() {
 
   const app = page("DevTown",
     tabs(
-      ["Operations", hostPanel("operations-workbench", { endpoint: "/api/devtown/governance" })],
       ["Reviews", hostPanel("review-workbench", { endpoint: "/api/devtown/governance" })],
       ["Merge Queue", queueView],
       ["Reviewers", reviewersView],

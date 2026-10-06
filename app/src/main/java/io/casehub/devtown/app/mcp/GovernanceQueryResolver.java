@@ -68,7 +68,9 @@ public class GovernanceQueryResolver {
                 new PrInfo(pr.repo(), pr.prNumber(), pr.headSha(), pr.baseRef(),
                            pr.linesChanged(), pr.contributor(), pr.changedPaths()),
                 detail.timeline(),
-                detail.capabilities());
+                detail.capabilities(),
+                detail.routing(),
+                detail.findings());
     }
 
     @Query
@@ -144,7 +146,9 @@ public class GovernanceQueryResolver {
                          int linesChanged, String contributor, java.util.List<String> changedPaths) {}
 
     public record ReviewDetailResult(UUID caseId, PrInfo pr,
-                                     java.util.List<GovernanceQueryService.EventEntry> timeline,
-                                     java.util.List<GovernanceQueryService.CapabilityStatus> capabilities) {}
+                                     java.util.List<GovernanceQueryService.TimelineEvent> timeline,
+                                     java.util.List<GovernanceQueryService.CapabilityStatus> capabilities,
+                                     GovernanceQueryService.RoutingSummary routing,
+                                     java.util.Map<String, java.util.List<GovernanceQueryService.FindingEntry>> findings) {}
 
 }

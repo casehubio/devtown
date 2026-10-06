@@ -104,10 +104,24 @@ public class GovernanceQueryService {
     public record SystemHealth(int activeCases, int fleetSize, Map<String, Double> avgTrustByCapability,
                                int openCommitments, int pendingWorkItems) {}
 
-    public record ReviewDetail(UUID caseId, PrPayload pr, List<EventEntry> timeline,
-                               List<CapabilityStatus> capabilities) {}
+    public enum TimelineCategory { LIFECYCLE, ORCHESTRATION, AGENT, WORKITEM, TRUST, CI, SIGNAL }
+
+    public record ReviewDetail(UUID caseId, PrPayload pr, List<TimelineEvent> timeline,
+                               List<CapabilityStatus> capabilities,
+                               RoutingSummary routing,
+                               Map<String, List<FindingEntry>> findings) {}
 
     public record EventEntry(Instant timestamp, String eventType, String actor, String summary) {}
+
+    public record TimelineEvent(Instant timestamp, TimelineCategory category, String eventType,
+                                String actor, String summary, String metadata) {}
+
+    public record RoutingSummary(List<RoutingDecision> decisions, String featureVector) {}
+
+    public record RoutingDecision(String capability, String reason, double confidence, String bindingName) {}
+
+    public record FindingEntry(String severity, String category, String filePath, String message,
+                               double confidence, Integer startLine, Integer endLine) {}
 
     public record CapabilityStatus(String name, String status, String outcome, Instant completedAt) {}
 
@@ -317,42 +331,33 @@ public class GovernanceQueryService {
 
     public ReviewDetail reviewDetail(UUID caseId, String tenant) {
         CaseInfo caseInfo = tracker.getCase(caseId);
-
         if (caseInfo == null) {
             throw new IllegalArgumentException("Case not found: " + caseId);
         }
 
-        // Event log timeline (await async result)
-        List<CaseEventLogRecord> events = caseHubRuntime.eventLog(caseId);
-        List<EventEntry> timeline = events.stream()
-            .map(e -> {
-                // Extract actorId from metadata if present
-                String actorId = "system";
-                if (e.metadata() != null && e.metadata().has("actorId")) {
-                    actorId = e.metadata().get("actorId").asText();
-                }
-                return new EventEntry(
-                    e.timestamp(),
-                    e.eventType().toString(),
-                    actorId,
-                    e.eventType().toString()
-                );
-            })
-            .toList();
+        List<CaseEventLogRecord> allEvents = caseHubRuntime.eventLog(caseId);
 
-        var workerEvents = caseHubRuntime.eventLog(caseId, java.util.Set.of(
-            CaseHubEventType.WORK_SUBMITTED,
-            CaseHubEventType.WORKER_EXECUTION_COMPLETED,
-            CaseHubEventType.WORKER_EXECUTION_FAILED,
-            CaseHubEventType.WORKER_OUTCOME_DECLINED
-        ));
+        // Build rich timeline
+        List<TimelineEvent> timeline = allEvents.stream()
+                                                .map(this::toTimelineEvent)
+                                                .sorted(Comparator.comparing(TimelineEvent::timestamp))
+                                                .toList();
+
+        // Extract capabilities from worker events
+        var workerEvents = allEvents.stream()
+                                    .filter(e -> Set.of(
+                                            CaseHubEventType.WORK_SUBMITTED,
+                                            CaseHubEventType.WORKER_EXECUTION_COMPLETED,
+                                            CaseHubEventType.WORKER_EXECUTION_FAILED,
+                                            CaseHubEventType.WORKER_OUTCOME_DECLINED
+                                                       ).contains(e.eventType()))
+                                    .toList();
 
         Map<String, CapabilityStatus> capabilityMap = new LinkedHashMap<>();
         for (CaseEventLogRecord event : workerEvents) {
             String capName = event.metadata() != null && event.metadata().has("capabilityName")
-                ? event.metadata().get("capabilityName").asText()
-                : null;
-            if (capName == null) continue;
+                             ? event.metadata().get("capabilityName").asText() : null;
+            if (capName == null) {continue;}
             String status = switch (event.eventType()) {
                 case WORKER_EXECUTION_COMPLETED -> "COMPLETED";
                 case WORKER_EXECUTION_FAILED -> "FAILED";
@@ -362,9 +367,80 @@ public class GovernanceQueryService {
             capabilityMap.put(capName, new CapabilityStatus(capName, status, null, event.timestamp()));
         }
 
-        List<CapabilityStatus> capabilities = new ArrayList<>(capabilityMap.values());
+        // Extract routing decisions from AGENT_ROUTED events
+        List<RoutingDecision> routingDecisions = allEvents.stream()
+                                                          .filter(e -> e.eventType() == CaseHubEventType.AGENT_ROUTED)
+                                                          .map(e -> {
+                                                              var meta = e.metadata();
+                                                              return new RoutingDecision(
+                                                                      meta != null && meta.has("capabilityName") ? meta.get("capabilityName").asText() : "unknown",
+                                                                      meta != null && meta.has("reason") ? meta.get("reason").asText() : "",
+                                                                      meta != null && meta.has("confidence") ? meta.get("confidence").asDouble(0.0) : 0.0,
+                                                                      meta != null && meta.has("bindingName") ? meta.get("bindingName").asText() : ""
+                                                              );
+                                                          })
+                                                          .toList();
 
-        return new ReviewDetail(caseId, caseInfo.payload(), timeline, capabilities);
+        // Extract feature vector from code-analysis worker output
+        Map<String, Object> featureVector = new HashMap<>();
+        allEvents.stream()
+                 .filter(e -> e.eventType() == CaseHubEventType.WORKER_EXECUTION_COMPLETED)
+                 .filter(e -> "code-analysis".equals(extractCapabilityFromHash(e.metadata())))
+                 .findFirst()
+                 .ifPresent(e -> {
+                     var output = e.payload() != null ? e.payload().path("codeAnalysis") : null;
+                if (output != null && !output.isMissingNode()) {
+                         if (output.has("securitySensitive")) {
+                             featureVector.put("securitySensitive", output.get("securitySensitive").asBoolean());
+                         }
+                         if (output.has("architectureCrossing")) {
+                             featureVector.put("architectureCrossing", output.get("architectureCrossing").asBoolean());
+                         }
+                         if (output.has("scope")) {featureVector.put("scope", output.get("scope").asText());}
+                         if (output.has("flaggedFiles")) {
+                             var files = new ArrayList<String>();
+                             output.get("flaggedFiles").forEach(n -> files.add(n.asText()));
+                             featureVector.put("flaggedFiles", files);
+                         }
+                     }
+                 });
+
+        // Extract findings from worker outputs
+        Map<String, List<FindingEntry>> findings = new HashMap<>();
+        allEvents.stream()
+                 .filter(e -> e.eventType() == CaseHubEventType.WORKER_EXECUTION_COMPLETED)
+                 .forEach(e -> {
+                     if (e.payload() == null) return;
+                     String capName = extractCapabilityFromHash(e.metadata());
+                     if (capName == null || "code-analysis".equals(capName)) {return;}
+
+                     String contextKey = CAPABILITY_CONTEXT_KEYS.getOrDefault(capName, capName);
+                     var capNode = e.payload().path(contextKey).path("outcome");
+                     if (capNode.isMissingNode()) capNode = e.payload();
+                     if (capNode.has("findings")) {
+                         var findingsNode = capNode.get("findings");
+                         List<FindingEntry> capFindings = new ArrayList<>();
+                         findingsNode.forEach(f -> capFindings.add(new FindingEntry(
+                                 f.has("severity") ? f.get("severity").asText() : "INFO",
+                                 f.has("category") ? f.get("category").asText() : "",
+                                 f.has("filePath") ? f.get("filePath").asText() : "",
+                                 f.has("message") ? f.get("message").asText() : "",
+                                 f.has("confidence") ? f.get("confidence").asDouble(0.0) : 0.0,
+                                 f.has("startLine") && !f.get("startLine").isNull() ? f.get("startLine").asInt() : null,
+                                 f.has("endLine") && !f.get("endLine").isNull() ? f.get("endLine").asInt() : null
+                         )));
+                         if (!capFindings.isEmpty()) {
+                             findings.put(capName, capFindings);
+                         }
+                     }
+                 });
+
+        return new ReviewDetail(
+                caseId, caseInfo.payload(), timeline,
+                new ArrayList<>(capabilityMap.values()),
+                new RoutingSummary(routingDecisions, featureVector.isEmpty() ? null : featureVector.toString()),
+                findings
+        );
     }
 
     public ReviewerHealth reviewerHealth(String reviewerId) {
@@ -674,6 +750,74 @@ public class GovernanceQueryService {
 
     public ReviewDetail reviewDetail(UUID caseId) {
         return reviewDetail(caseId, "default");
+    }
+
+
+    private TimelineEvent toTimelineEvent(CaseEventLogRecord e) {
+        String actorId = "system";
+        if (e.metadata() != null && e.metadata().has("actorId")) {
+            actorId = e.metadata().get("actorId").asText();
+        }
+
+        TimelineCategory category = switch (e.eventType()) {
+            case CASE_STARTED, CASE_COMPLETED, CASE_FAULTED, CASE_CANCELLED,
+                 CASE_STATUS_CHANGED, GOAL_REACHED -> TimelineCategory.LIFECYCLE;
+            case ORCHESTRATION_STARTED, ORCHESTRATION_COMPLETED,
+                 AGENT_ROUTED, ORCHESTRATION_ESCALATED -> TimelineCategory.ORCHESTRATION;
+            case AGENT_DISPATCHED, AGENT_COMPLETED, AGENT_FAILED,
+                 WORKER_SCHEDULED, WORKER_EXECUTION_STARTED, WORKER_EXECUTION_COMPLETED,
+                 WORKER_EXECUTION_FAILED, WORKER_OUTCOME_DECLINED,
+                 WORKER_OUTCOME_FAILED -> TimelineCategory.AGENT;
+            case WORK_SUBMITTED, WORK_COMPLETED, TASK_CREATED, TASK_COMPLETED,
+                 ACTION_GATE_PENDING, ACTION_GATE_APPROVED, ACTION_GATE_REJECTED -> TimelineCategory.WORKITEM;
+            case SIGNAL_RECEIVED, CONTEXT_SIGNAL_APPLIED -> TimelineCategory.SIGNAL;
+            default -> TimelineCategory.LIFECYCLE;
+        };
+
+        String summary = buildSummary(e);
+
+        String metadataJson = null;
+    if (e.metadata() != null) {
+        try { metadataJson = e.metadata().toString(); } catch (Exception ignored) {}
+    }
+    return new TimelineEvent(e.timestamp(), category, e.eventType().toString(), actorId, summary, metadataJson);
+    }
+
+    private String buildSummary(CaseEventLogRecord e) {
+        var    meta    = e.metadata();
+        String capName = meta != null && meta.has("capabilityName") ? meta.get("capabilityName").asText()
+        : extractCapabilityFromHash(meta) != null ? extractCapabilityFromHash(meta) : "";
+
+        return switch (e.eventType()) {
+            case CASE_STARTED -> "Case started";
+            case CASE_COMPLETED -> "Case completed";
+            case CASE_FAULTED -> "Case faulted";
+            case ORCHESTRATION_STARTED -> "Routing started for " + capName;
+            case AGENT_ROUTED -> "Agent selected for " + capName;
+            case AGENT_DISPATCHED -> "Agent dispatched for " + capName;
+            case WORKER_EXECUTION_COMPLETED -> capName + " completed";
+            case WORKER_EXECUTION_FAILED -> capName + " failed";
+            case WORKER_OUTCOME_DECLINED -> capName + " declined";
+            case SIGNAL_RECEIVED -> {
+                String key = meta != null && meta.has("signalKey") ? meta.get("signalKey").asText() : "signal";
+                yield "Signal: " + key;
+            }
+            case GOAL_REACHED -> {
+                String goal = meta != null && meta.has("goalName") ? meta.get("goalName").asText() : "goal";
+                yield "Goal reached: " + goal;
+            }
+            case ACTION_GATE_PENDING -> "Human gate pending";
+            case ACTION_GATE_APPROVED -> "Human gate approved";
+            default -> e.eventType().toString();
+        };
+    }
+
+
+    static String extractCapabilityFromHash(com.fasterxml.jackson.databind.JsonNode metadata) {
+        if (metadata == null || !metadata.has("inputDataHash")) {return null;}
+        String   hash  = metadata.get("inputDataHash").asText();
+        String[] parts = hash.split(":");
+        return parts.length >= 3 ? parts[2] : null;
     }
 
     private static String firstTypePath(WorkItem wi) {

@@ -4,7 +4,10 @@ import { columnId, ColumnType } from '@casehubio/pages-data/dist/dataset/types.j
 import type { TypedDataSet } from '@casehubio/pages-data/dist/dataset/types.js';
 import { fromRows } from '@casehubio/pages-data/dist/dataset/conversion.js';
 import type { TableColumnConfig } from '@casehubio/pages-table';
+import { emitPagesEvent, onPagesEvent } from '@casehubio/blocks-ui-core';
 import '@casehubio/pages-table';
+import '@casehubio/blocks-ui-split-workbench';
+import './review-detail.js';
 
 interface ReviewEntry {
   caseId: string;
@@ -17,14 +20,20 @@ interface ReviewEntry {
   lastEventAt: string;
 }
 
-interface EventEntry {
-  timestamp: string;
-  eventType: string;
-  actorId: string;
-  caseStatus: string;
+interface SystemHealth {
+  activeCases: number;
+  fleetSize: number;
+  openCommitments: number;
+  pendingWorkItems: number;
 }
 
-const CASE_COL = columnId('caseId');
+interface Problem {
+  category: string;
+  severity: string;
+  description: string;
+  caseId: string | null;
+}
+
 const PR_COL = columnId('prNumber');
 const REPO_COL = columnId('repo');
 const CONTRIB_COL = columnId('contributor');
@@ -47,80 +56,58 @@ const LIST_TABLE_CONFIG: readonly TableColumnConfig[] = [
   { id: LINES_COL, sortable: true },
 ];
 
-const TS_COL = columnId('timestamp');
-const EVT_COL = columnId('eventType');
-const ACTOR_COL = columnId('actorId');
-const CS_COL = columnId('caseStatus');
-
-const EVENT_COLUMNS = [
-  { id: TS_COL, name: 'Time', type: ColumnType.TEXT, getValue: (r: EventEntry) => r.timestamp },
-  { id: EVT_COL, name: 'Event', type: ColumnType.TEXT, getValue: (r: EventEntry) => r.eventType },
-  { id: ACTOR_COL, name: 'Actor', type: ColumnType.TEXT, getValue: (r: EventEntry) => r.actorId ?? '' },
-  { id: CS_COL, name: 'Status', type: ColumnType.TEXT, getValue: (r: EventEntry) => r.caseStatus },
-];
-
-const EVENT_TABLE_CONFIG: readonly TableColumnConfig[] = [
-  { id: TS_COL, sortable: true },
-  { id: EVT_COL, sortable: true },
-  { id: ACTOR_COL, sortable: true },
-  { id: CS_COL, sortable: true },
-];
-
 @customElement('devtown-review-workbench')
 export class ReviewWorkbench extends LitElement {
   @property({ type: String }) endpoint = '';
 
   @state() private _selectedCaseId = '';
   @state() private _listData: TypedDataSet | undefined;
-  @state() private _eventData: TypedDataSet | undefined;
   @state() private _entries: ReviewEntry[] = [];
-  @state() private _loading = true;
+  @state() private _health: SystemHealth = { activeCases: 0, fleetSize: 0, openCommitments: 0, pendingWorkItems: 0 };
+  @state() private _problems: Problem[] = [];
+
+  private _unsubs: Array<() => void> = [];
 
   static override styles = css`
-    :host { display: flex; height: 100%; font-family: var(--pages-font-family, system-ui); }
-    .list-panel {
-      width: 40%; min-width: 320px;
-      border-right: 1px solid var(--pages-neutral-4, #d4d4d4);
-      display: flex; flex-direction: column; overflow: hidden;
+    :host { display: block; height: 100%; font-family: var(--pages-font-family, system-ui); }
+    blocks-split-workbench { height: 100%; }
+    .list-panel { height: 100%; overflow: auto; padding: 0 12px; }
+    .detail-panel { height: 100%; }
+    .vitals {
+      display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px;
+      padding: 10px 0; border-bottom: 1px solid var(--pages-neutral-4, #d4d4d4);
     }
-    .list-header {
-      padding: 12px 16px; font-size: 14px; font-weight: 600;
-      border-bottom: 1px solid var(--pages-neutral-4, #d4d4d4);
+    .vital { text-align: center; padding: 6px; }
+    .vital-value { font-size: 20px; font-weight: 700; }
+    .vital-label { font-size: 10px; color: var(--pages-neutral-7, #525252); text-transform: uppercase; }
+    .problems-banner {
+      padding: 8px 12px; margin: 8px 0;
+      background: var(--pages-warning-3, #fef3c7); border: 1px solid var(--pages-warning-6, #d97706);
+      border-radius: 6px; font-size: 12px;
     }
-    .list-table { flex: 1; overflow: auto; }
-    .detail-panel { flex: 1; overflow: auto; padding: 16px; }
-    .detail-header { font-size: 18px; font-weight: 600; margin-bottom: 12px; }
-    .detail-meta { display: grid; grid-template-columns: auto 1fr; gap: 4px 12px; margin-bottom: 16px; font-size: 13px; }
-    .detail-meta dt { font-weight: 600; color: var(--pages-neutral-8, #404040); }
-    .detail-meta dd { margin: 0; }
-    .section-title { font-size: 14px; font-weight: 600; margin: 16px 0 8px; }
-    .empty-detail {
-      display: flex; align-items: center; justify-content: center;
-      height: 100%; color: var(--pages-neutral-7, #525252); font-size: 13px;
+    .problem-item { padding: 3px 0; display: flex; gap: 8px; align-items: center; cursor: pointer; }
+    .problem-item:hover { text-decoration: underline; }
+    .problem-severity {
+      font-size: 10px; font-weight: 600; padding: 1px 5px; border-radius: 3px;
+      background: var(--pages-warning-9, #92400e); color: white;
     }
-    .error { color: var(--pages-danger-9, #dc2626); padding: 16px; }
-    .actions { display: flex; gap: 8px; margin: 12px 0; }
-    .actions button {
-      padding: 6px 14px; border-radius: 4px; font-size: 13px; font-weight: 500;
-      cursor: pointer; border: 1px solid var(--pages-neutral-5, #a3a3a3);
-      background: white; color: var(--pages-neutral-9, #171717);
-    }
-    .actions button:hover { background: var(--pages-neutral-2, #f5f5f5); }
-    .actions button.primary {
-      background: var(--pages-primary-9, #1d4ed8); color: white;
-      border-color: var(--pages-primary-9, #1d4ed8);
-    }
-    .actions button.primary:hover { background: var(--pages-primary-10, #1e40af); }
-    .actions button.secondary { border-color: var(--pages-warning-7, #a16207); color: var(--pages-warning-9, #854d0e); }
-    .action-result {
-      font-size: 12px; padding: 6px 10px; margin: 4px 0 8px;
-      background: var(--pages-neutral-2, #f5f5f5); border-radius: 3px;
-    }
+    .problem-severity.error { background: var(--pages-danger-9, #dc2626); }
+    h3 { font-size: 13px; font-weight: 600; margin: 12px 0 6px; color: var(--pages-neutral-9, #404040); }
+    h3.section-first { margin-top: 4px; }
   `;
 
   override connectedCallback(): void {
     super.connectedCallback();
     this._fetchReviews();
+    this._unsubs.push(
+      onPagesEvent(document, 'review:deselected', () => { this._selectedCaseId = ''; }),
+    );
+  }
+
+  override disconnectedCallback(): void {
+    super.disconnectedCallback();
+    this._unsubs.forEach(u => u());
+    this._unsubs = [];
   }
 
   configure(props: Record<string, unknown>): void {
@@ -128,28 +115,21 @@ export class ReviewWorkbench extends LitElement {
   }
 
   private async _fetchReviews(): Promise<void> {
-    this._loading = true;
     try {
-      const res = await fetch(`${this.endpoint}/queue-status`);
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const json = await res.json();
-      this._entries = json.reviews ?? [];
-      this._listData = fromRows([...this._entries], LIST_COLUMNS);
-    } finally {
-      this._loading = false;
-    }
-  }
-
-  private async _fetchEvents(caseId: string): Promise<void> {
-    this._eventData = undefined;
-    try {
-      const res = await fetch(`${this.endpoint}/recent-events?limit=100`);
-      if (!res.ok) return;
-      const events: EventEntry[] = await res.json();
-      const filtered = events.filter((e: any) => e.caseId === caseId);
-      this._eventData = fromRows([...filtered], EVENT_COLUMNS);
+      const [qRes, hRes, pRes] = await Promise.all([
+        fetch(`${this.endpoint}/queue-status`).catch(() => null),
+        fetch(`${this.endpoint}/system-health`).catch(() => null),
+        fetch(`${this.endpoint}/problems?threshold_minutes=0`).catch(() => null),
+      ]);
+      if (qRes?.ok) {
+        const json = await qRes.json();
+        this._entries = json.reviews ?? [];
+        this._listData = fromRows([...this._entries], LIST_COLUMNS);
+      }
+      if (hRes?.ok) { this._health = await hRes.json(); }
+      if (pRes?.ok) { this._problems = (await pRes.json()).items ?? []; }
     } catch (err) {
-      console.warn('Failed to fetch events', err);
+      console.warn('Failed to fetch reviews', err);
     }
   }
 
@@ -158,24 +138,46 @@ export class ReviewWorkbench extends LitElement {
     if (detail?.row) {
       const pr = detail.row.number(PR_COL);
       const entry = this._entries.find(r => r.prNumber === pr);
-      if (entry && entry.caseId !== this._selectedCaseId) {
+      if (entry) {
         this._selectedCaseId = entry.caseId;
-        this._eventData = undefined;
-        this._fetchEvents(entry.caseId);
+        emitPagesEvent(document, 'review:selected', { caseId: entry.caseId });
       }
     }
   };
 
-  private _selectedEntry(): ReviewEntry | undefined {
-    return this._entries.find(r => r.caseId === this._selectedCaseId);
+  private _handleProblemClick(p: Problem): void {
+    if (p.caseId) {
+      this._selectedCaseId = p.caseId;
+      emitPagesEvent(document, 'review:selected', { caseId: p.caseId });
+    }
   }
 
   override render() {
-    const selected = this._selectedEntry();
+    const h = this._health;
     return html`
-      <div class="list-panel">
-        <div class="list-header">Reviews</div>
-        <div class="list-table">
+      <blocks-split-workbench selection-topic="review" title="Reviews">
+        <div slot="list" class="list-panel">
+          <h3 class="section-first">System</h3>
+          <div class="vitals">
+            <div class="vital"><div class="vital-value">${h.activeCases}</div><div class="vital-label">Active</div></div>
+            <div class="vital"><div class="vital-value">${h.fleetSize}</div><div class="vital-label">Fleet</div></div>
+            <div class="vital"><div class="vital-value">${h.openCommitments}</div><div class="vital-label">Commits</div></div>
+            <div class="vital"><div class="vital-value">${h.pendingWorkItems}</div><div class="vital-label">Work Items</div></div>
+          </div>
+
+          ${this._problems.length > 0 ? html`
+            <h3>Problems</h3>
+            <div class="problems-banner">
+              ${this._problems.map(p => html`
+                <div class="problem-item" @click=${() => this._handleProblemClick(p)}>
+                  <span class="problem-severity ${p.severity === 'error' ? 'error' : ''}">${p.severity}</span>
+                  <span>${p.description}</span>
+                </div>
+              `)}
+            </div>
+          ` : nothing}
+
+          <h3>Active Reviews</h3>
           ${this._listData ? html`
             <pages-table
               .dataSet=${this._listData}
@@ -184,56 +186,13 @@ export class ReviewWorkbench extends LitElement {
             ></pages-table>
           ` : nothing}
         </div>
-      </div>
-      <div class="detail-panel">
-        ${selected ? this._renderDetail(selected) :
-          html`<div class="empty-detail">Select a review to see details</div>`}
-      </div>
-    `;
-  }
-
-  private async _doAction(action: string, entry: ReviewEntry): Promise<void> {
-    try {
-      const res = await fetch(`/api/actions/${action}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ repo: entry.repo, prNumber: entry.prNumber, contributor: entry.contributor, headSha: 'dev-' + entry.prNumber }),
-      });
-      const json = await res.json();
-      this._actionResult = `${json.action}: ${json.result}`;
-      this._fetchReviews();
-      this._fetchEvents(entry.caseId);
-    } catch (err) {
-      this._actionResult = `Error: ${err}`;
-    }
-  }
-
-  @state() private _actionResult = '';
-
-  private _renderDetail(entry: ReviewEntry) {
-    return html`
-      <div class="detail-header">PR #${entry.prNumber} — ${entry.repo}</div>
-      <dl class="detail-meta">
-        <dt>Author</dt><dd>${entry.contributor}</dd>
-        <dt>Status</dt><dd>${entry.status}</dd>
-        <dt>Lines Changed</dt><dd>${entry.linesChanged}</dd>
-        <dt>Started</dt><dd>${entry.startedAt}</dd>
-        <dt>Last Event</dt><dd>${entry.lastEventAt}</dd>
-        <dt>Case ID</dt><dd style="font-size:11px">${entry.caseId}</dd>
-      </dl>
-      <div class="actions">
-        <button @click=${() => this._doAction('approve', entry)}>Approve</button>
-        <button class="secondary" @click=${() => this._doAction('request-changes', entry)}>Request Changes</button>
-        <button class="primary" @click=${() => this._doAction('enqueue', entry)}>Add to Merge Queue</button>
-      </div>
-      ${this._actionResult ? html`<div class="action-result">${this._actionResult}</div>` : nothing}
-      <div class="section-title">Event Timeline</div>
-      ${this._eventData ? html`
-        <pages-table
-          .dataSet=${this._eventData}
-          .columnConfig=${EVENT_TABLE_CONFIG}
-        ></pages-table>
-      ` : html`<div>Loading events...</div>`}
+        <div slot="detail" class="detail-panel">
+          <devtown-review-detail
+            case-id=${this._selectedCaseId}
+            endpoint="/api/devtown/reviews"
+          ></devtown-review-detail>
+        </div>
+      </blocks-split-workbench>
     `;
   }
 }

@@ -20,7 +20,6 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.inject.Instance;
 import jakarta.inject.Inject;
 
-import java.util.Comparator;
 import java.util.Map;
 
 @ApplicationScoped
@@ -109,12 +108,17 @@ public class PrReviewCaseHub extends PrReviewTemplateCaseHub {
                     yield WorkerResult.of(Map.of(
                             "outcome", verdict,
                             "findings", c.findings().stream()
-                                         .map(f -> Map.of(
-                                                 "severity", f.severity().name(),
-                                                 "category", f.category(),
-                                                 "filePath", f.filePath(),
-                                                 "message", f.message(),
-                                                 "confidence", f.confidence()))
+                                         .map(f -> {
+                                             var m = new java.util.LinkedHashMap<String, Object>();
+                                             m.put("severity", f.severity().name());
+                                             m.put("category", f.category());
+                                             m.put("filePath", f.filePath());
+                                             m.put("message", f.message());
+                                             m.put("confidence", f.confidence());
+                                             m.put("startLine", f.lineRange() != null ? f.lineRange().startLine() : null);
+                                             m.put("endLine", f.lineRange() != null ? f.lineRange().endLine() : null);
+                                             return (Map<String, Object>) m;
+                                         })
                                          .toList()));
                 }
                 case ReviewerOutcome.Declined d -> WorkerResult.of(Map.of("outcome", "APPROVED"));
@@ -128,20 +132,36 @@ public class PrReviewCaseHub extends PrReviewTemplateCaseHub {
     @SuppressWarnings("unchecked")
     WorkerResult adaptCodeAnalysis(Map<String, Object> input) {
         try {
-            CodeAnalysisAgent agent = codeAnalysisAgents.stream()
-                                                        .max(Comparator.comparingInt(CodeAnalysisAgent::priority))
-                                                        .orElseThrow(() -> new IllegalStateException("no CodeAnalysisAgent registered"));
+            ReviewContext context = buildContext(input);
 
-            ReviewContext      context = buildContext(input);
-            CodeAnalysisResult result  = agent.analyse(context);
+            var sortedAgents = codeAnalysisAgents.stream()
+                                                 .sorted(java.util.Comparator.comparingInt(CodeAnalysisAgent::priority).reversed())
+                                                 .toList();
 
-            return WorkerResult.of(Map.of(
-                    "complete", result.complete(),
-                    "securitySensitive", result.securitySensitive(),
-                    "architectureCrossing", result.architectureCrossing(),
-                    "scope", result.scope(),
-                    "flaggedFiles", result.flaggedFiles(),
-                    "crossingPoints", result.crossingPoints()));
+            LOG.infof("adaptCodeAnalysis: found %d CodeAnalysisAgent(s): %s",
+                sortedAgents.size(),
+                sortedAgents.stream().map(a -> a.getClass().getSimpleName()).toList());
+
+            if (sortedAgents.isEmpty()) {
+                return WorkerResult.failed("no CodeAnalysisAgent registered");
+            }
+
+            for (CodeAnalysisAgent agent : sortedAgents) {
+                try {
+                    CodeAnalysisResult result = agent.analyse(context);
+                    return WorkerResult.of(Map.of(
+                            "complete", result.complete(),
+                            "securitySensitive", result.securitySensitive(),
+                            "architectureCrossing", result.architectureCrossing(),
+                            "scope", result.scope(),
+                            "flaggedFiles", result.flaggedFiles(),
+                            "crossingPoints", result.crossingPoints()));
+                } catch (Exception e) {
+                    LOG.warnf("CodeAnalysisAgent %s failed, trying next: %s",
+                              agent.getClass().getSimpleName(), e.getMessage());
+                }
+            }
+            return WorkerResult.failed("all CodeAnalysisAgents failed");
         } catch (Exception e) {
             return WorkerResult.failed("code-analysis adapter error: " + e.getMessage());
         }

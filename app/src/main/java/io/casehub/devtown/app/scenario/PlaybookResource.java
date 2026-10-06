@@ -27,7 +27,7 @@ import java.util.Map;
 @Path("/scenario")
 @jakarta.annotation.security.PermitAll
 @io.casehub.platform.api.mcp.HandWrittenEndpoint("Scenario step controller for demo walkthrough")
-public class ScenarioResource {
+public class PlaybookResource {
 
     @Inject PrReviewApplicationService reviewService;
     @Inject MergeQueuePort mergeQueue;

@@ -1,0 +1,31 @@
+dsl: "0.1"
+version: "1.0.0"
+name: evolution
+namespace: devtown
+title: Continuous improvement for devtown's PR review pipeline
+
+improvementConfig:
+  evolutionEnabled: false
+  enabledCategories:
+    - reviewer-calibration
+    - routing-adjustment
+    - sla-tuning
+    - gate-tightening
+    - queue-optimization
+  gatePolicy:
+    modes:
+      propose: GATED
+      review: GATED
+    gateTimeoutMinutes: 1440
+  escalationPolicy:
+    categoryRules:
+      alwaysEscalate:
+        - reviewer-calibration
+        - routing-adjustment
+      neverEscalate: []
+    confidenceThreshold: 0.7
+  budget:
+    maxConcurrent: 1
+    maxPerDay: 3
+    cooldownMinutes: 60
+    maxChangeSize: 10

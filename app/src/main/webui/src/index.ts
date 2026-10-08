@@ -5,7 +5,7 @@ import "@casehubio/blocks-ui-trust-workbench";
 import "./components/reviewer-workbench";
 import "./components/review-workbench";
 import "@casehubio/blocks-ui-contributor-workbench";
-import "@casehubio/blocks-ui-evolution-workbench";
+// import "@casehubio/blocks-ui-evolution-workbench"; // TODO: enable after pack-all.sh
 import { createDatasets } from "./datasets";
 import { reviewsView } from "./views/reviews";
 import { queueView } from "./views/queue";

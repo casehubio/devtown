@@ -59,6 +59,12 @@
     </dependency>
     <dependency>
       <groupId>io.casehub</groupId>
+      <artifactId>casehub-platform-agent-session-core</artifactId>
+      <version>${project.version}</version>
+      <scope>runtime</scope>
+    </dependency>
+    <dependency>
+      <groupId>io.casehub</groupId>
       <artifactId>casehub-platform-agent-gemini</artifactId>
       <version>${project.version}</version>
       <scope>runtime</scope>

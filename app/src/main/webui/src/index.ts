@@ -5,7 +5,6 @@ import "@casehubio/blocks-ui-trust-workbench";
 import "./components/reviewer-workbench";
 import "./components/review-workbench";
 import "@casehubio/blocks-ui-contributor-workbench";
-// import "@casehubio/blocks-ui-evolution-workbench"; // TODO: enable after pack-all.sh
 import { createDatasets } from "./datasets";
 import { reviewsView } from "./views/reviews";
 import { queueView } from "./views/queue";
@@ -14,7 +13,6 @@ import { contributorsView } from "./views/contributors";
 import { triageView } from "./views/triage";
 import { systemView } from "./views/system";
 import { definitionsView } from "./views/definitions";
-import { evolutionView } from "./views/evolution";
 
 const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
 
@@ -23,7 +21,6 @@ registerPanel("trust-workbench", "blocks-trust-workbench");
 registerPanel("reviewer-workbench", "devtown-reviewer-workbench");
 registerPanel("review-workbench", "devtown-review-workbench");
 registerPanel("contributor-workbench", "blocks-contributor-workbench");
-registerPanel("evolution-workbench", "blocks-evolution-workbench");
 
 async function start() {
   const prefs = await fetch("/api/devtown/governance/preferences")
@@ -48,7 +45,6 @@ async function start() {
       ["Workers", hostPanel("session-workbench", { endpoint: "/api/sessions" })],
       ["Triage", triageView],
       ["System", systemView],
-      ["Evolution", evolutionView],
       ["Definitions", definitionsView],
     ),
     { settings: { mode: prefersDark ? "dark" : "light" }, datasets: createDatasets(prefs) },

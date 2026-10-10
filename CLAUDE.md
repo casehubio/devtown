@@ -301,6 +301,7 @@ Frontend lives at `app/src/main/webui/`. Quinoa runs `npm install` and `npm run 
 - `@casehubio` packages resolved from Maven SNAPSHOT artifacts (no npm auth needed — see ADR-0001)
 - Dev mode: `mvn quarkus:dev -pl app` hot-reloads both Java and TypeScript
 - TypeScript only: `npm run dev` from `app/src/main/webui/` (esbuild watch mode)
+- Mock server: `npm run dev:mock` from `app/src/main/webui/` — serves real frontend bundle with canned JSON fixtures (no Java/Quarkus needed)
 - Type check: `npm run typecheck` from `app/src/main/webui/`
 
 ---

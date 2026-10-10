@@ -1,6 +1,6 @@
 import { createServer } from 'http';
 import { readFileSync, existsSync, statSync } from 'fs';
-import { join, extname } from 'path';
+import { join, extname, resolve } from 'path';
 import { fileURLToPath } from 'url';
 
 const __dir = fileURLToPath(new URL('.', import.meta.url));
@@ -43,7 +43,8 @@ createServer((req, res) => {
     return;
   }
 
-  const filePath = join(staticDir, path === '/' ? 'index.html' : path);
+  const filePath = resolve(staticDir, (path === '/' ? 'index.html' : path).replace(/^\//, ''));
+  if (!filePath.startsWith(resolve(staticDir))) { res.writeHead(403); res.end('Forbidden'); return; }
   if (existsSync(filePath) && statSync(filePath).isFile()) {
     const mime = MIME[extname(filePath)] || 'application/octet-stream';
     res.writeHead(200, { 'Content-Type': mime });

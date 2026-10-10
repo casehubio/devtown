@@ -73,12 +73,14 @@ const BATCH_RISK_COL = columnId('riskLevel');
 const BATCH_ID_COL = columnId('batchId');
 
 const BATCH_COLUMNS = [
+  { id: BATCH_ID_COL, name: 'ID', type: ColumnType.TEXT, getValue: (r: ActiveBatchEntry) => r.batchId },
   { id: BATCH_PRS_COL, name: 'PRs', type: ColumnType.TEXT, getValue: (r: ActiveBatchEntry) => (r.prNumbers ?? []).map(n => `#${n}`).join(', ') || `${r.prCount} PRs` },
   { id: BATCH_CI_COL, name: 'CI', type: ColumnType.TEXT, getValue: (r: ActiveBatchEntry) => r.ciStatus ?? '—' },
   { id: BATCH_RISK_COL, name: 'Risk', type: ColumnType.TEXT, getValue: (r: ActiveBatchEntry) => r.riskLevel },
 ];
 
 const BATCH_TABLE_CONFIG: readonly TableColumnConfig[] = [
+  { id: BATCH_ID_COL, sortable: false, visible: false },
   { id: BATCH_PRS_COL, sortable: false },
   { id: BATCH_CI_COL, sortable: true },
   { id: BATCH_RISK_COL, sortable: true },
@@ -168,8 +170,8 @@ export class MergeQueueWorkbench extends LitElement {
   private _handleBatchRowActivate = (e: Event): void => {
     const detail = (e as CustomEvent).detail;
     if (detail?.row) {
-      const prListText = detail.row.text(BATCH_PRS_COL);
-      const entry = this._batchEntries.find(r => (r.prNumbers ?? []).map(n => `#${n}`).join(', ') === prListText);
+      const batchId = detail.row.text(BATCH_ID_COL);
+      const entry = this._batchEntries.find(r => r.batchId === batchId);
       if (entry) {
         this._selectionKind = 'batch';
         this._selectedBatch = entry;

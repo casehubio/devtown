@@ -118,16 +118,21 @@ export class MergeQueueDetail extends LitElement {
   `;
 
   override willUpdate(changed: Map<PropertyKey, unknown>): void {
-    if (changed.has('queuedPr') && this.queuedPr && this.queuedPr.author !== this._prevAuthor) {
-      this._prevAuthor = this.queuedPr.author;
-      this._fetchContributor(this.queuedPr.author);
+    if (changed.has('queuedPr')) {
+      if (this.queuedPr && this.queuedPr.author !== this._prevAuthor) {
+        this._prevAuthor = this.queuedPr.author;
+        this._fetchContributor(this.queuedPr.author);
+      } else if (!this.queuedPr) {
+        this._prevAuthor = '';
+        this._contributor = null;
+      }
     }
   }
 
   private async _fetchContributor(actorId: string): Promise<void> {
     this._contributor = null;
     try {
-      const res = await fetch(`/api/devtown/reviews/contributors/${actorId}`);
+      const res = await fetch(`${this.endpoint}/contributors/${actorId}`);
       if (res.ok) this._contributor = await res.json();
     } catch { /* no contributor data available */ }
   }

@@ -121,6 +121,7 @@ export class ReviewerDetail extends LitElement {
 
   private _buildNarrative(d: ReviewerHealth): string {
     const caps = Object.keys(d.trustByCapability);
+    if (caps.length === 0) return `${d.reviewerId} has no capability trust scores recorded yet.`;
     const capList = caps.map(c => c.replace(/-/g, ' ')).join(', ');
     const topCap = caps.reduce((a, b) => (d.trustByCapability[a] ?? 0) >= (d.trustByCapability[b] ?? 0) ? a : b, caps[0]);
     const topScore = Math.round((d.trustByCapability[topCap] ?? 0) * 100);

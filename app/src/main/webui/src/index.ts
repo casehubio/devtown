@@ -1,12 +1,10 @@
 import { loadSite, registerPanel } from "@casehubio/pages-runtime";
 import { page, tabs, hostPanel } from "@casehubio/pages-ui";
 import "@casehubio/blocks-ui-session-workbench";
-import "@casehubio/blocks-ui-trust-workbench";
 import "./components/reviewer-workbench";
 import "./components/review-workbench";
 import "./components/contributor-workbench";
 import "./components/merge-queue-workbench";
-import "@casehubio/blocks-ui-contributor-workbench";
 import { createDatasets } from "./datasets";
 import { reviewsView } from "./views/reviews";
 import { reviewersView } from "./views/reviewers";
@@ -17,7 +15,6 @@ import { definitionsView } from "./views/definitions";
 const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
 
 registerPanel("session-workbench", "blocks-session-workbench");
-registerPanel("trust-workbench", "blocks-trust-workbench");
 registerPanel("reviewer-workbench", "devtown-reviewer-workbench");
 registerPanel("review-workbench", "devtown-review-workbench");
 registerPanel("contributor-workbench", "devtown-contributor-workbench");

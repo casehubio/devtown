@@ -4,7 +4,8 @@
   "scripts": {
     "build": "node esbuild.config.mjs",
     "dev": "node esbuild.config.mjs --watch",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "dev:mock": "node esbuild.config.mjs && node mock-server.mjs"
   },
   "dependencies": {
     "@casehubio/blocks-ui-approval-gate": "file:.casehub-packages/tarballs/approval-gate.tgz",

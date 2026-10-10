@@ -1,0 +1,173 @@
+{
+  "/api/devtown/governance/queue-status": {
+    "total": 4,
+    "countsByStatus": {"IN_PROGRESS": 3, "WAITING": 1},
+    "reviews": [
+      {"caseId": "a1b2c3d4-0001-0001-0001-000000000001", "repo": "casehubio/engine", "prNumber": 142, "contributor": "alice", "linesChanged": 320, "status": "IN_PROGRESS", "startedAt": "2026-10-09T08:00:00Z", "lastEventAt": "2026-10-09T09:15:00Z"},
+      {"caseId": "a1b2c3d4-0001-0001-0001-000000000002", "repo": "casehubio/devtown", "prNumber": 218, "contributor": "bob", "linesChanged": 85, "status": "IN_PROGRESS", "startedAt": "2026-10-09T08:30:00Z", "lastEventAt": "2026-10-09T09:10:00Z"},
+      {"caseId": "a1b2c3d4-0001-0001-0001-000000000003", "repo": "casehubio/ledger", "prNumber": 97, "contributor": "carol", "linesChanged": 1200, "status": "IN_PROGRESS", "startedAt": "2026-10-09T07:00:00Z", "lastEventAt": "2026-10-09T09:00:00Z"},
+      {"caseId": "a1b2c3d4-0001-0001-0001-000000000004", "repo": "casehubio/qhorus", "prNumber": 55, "contributor": "dave", "linesChanged": 42, "status": "WAITING", "startedAt": "2026-10-09T09:00:00Z", "lastEventAt": "2026-10-09T09:00:00Z"}
+    ]
+  },
+  "/api/devtown/governance/system-health": {
+    "activeCases": 4, "fleetSize": 6,
+    "avgTrustByCapability": {"code-analysis": 0.82, "security-review": 0.71, "architecture-review": 0.65},
+    "openCommitments": 8, "pendingWorkItems": 2
+  },
+  "/api/devtown/governance/problems": {"items": [
+    {"category": "stalled_case", "severity": "warning", "description": "PR review stalled for casehubio/ledger#97 — no progress for 120+ minutes", "caseId": "a1b2c3d4-0001-0001-0001-000000000003", "actorId": null, "since": "2026-10-09T07:00:00Z"},
+    {"category": "expired_commitment", "severity": "error", "description": "Commitment expired: obligor=agent-sec-01 messageType=RESPONSE", "caseId": "a1b2c3d4-0001-0001-0001-000000000003", "actorId": "agent-sec-01", "since": "2026-10-09T08:30:00Z"}
+  ]},
+  "/api/devtown/governance/merge-queue": {
+    "queuedCount": 5, "activeBatchCount": 2,
+    "queuedPrs": [
+      {"number": 142, "repository": "casehubio/engine", "headSha": "abc1234", "author": "alice", "trustScore": 0.88, "priorityLane": "FAST_TRACK", "enqueuedAt": "2026-10-09T07:30:00Z", "waitMinutes": 105, "dependsOn": []},
+      {"number": 218, "repository": "casehubio/devtown", "headSha": "def5678", "author": "bob", "trustScore": 0.72, "priorityLane": "STANDARD", "enqueuedAt": "2026-10-09T08:00:00Z", "waitMinutes": 75, "dependsOn": [142]},
+      {"number": 97, "repository": "casehubio/ledger", "headSha": "fed9876", "author": "carol", "trustScore": 0.45, "priorityLane": "ENHANCED_REVIEW", "enqueuedAt": "2026-10-09T06:00:00Z", "waitMinutes": 195, "dependsOn": []},
+      {"number": 55, "repository": "casehubio/qhorus", "headSha": "cba4321", "author": "dave", "trustScore": 0.91, "priorityLane": "FAST_TRACK", "enqueuedAt": "2026-10-09T08:45:00Z", "waitMinutes": 30, "dependsOn": []},
+      {"number": 301, "repository": "casehubio/platform", "headSha": "111aaa2", "author": "eve", "trustScore": 0.63, "priorityLane": "STANDARD", "enqueuedAt": "2026-10-09T07:15:00Z", "waitMinutes": 120, "dependsOn": [97]}
+    ],
+    "activeBatches": [
+      {"caseId": "b2c3d4e5-0002-0002-0002-000000000001", "batchId": "batch-2026-1009-001", "prCount": 3, "riskLevel": "ROUTINE", "ciStatus": "RUNNING", "prNumbers": [55, 142, 301], "startedAt": "2026-10-09T08:50:00Z"},
+      {"caseId": "b2c3d4e5-0002-0002-0002-000000000002", "batchId": "batch-2026-1009-002", "prCount": 2, "riskLevel": "ELEVATED", "ciStatus": "BISECTING", "prNumbers": [97, 218], "startedAt": "2026-10-09T07:30:00Z", "suspectedPr": 97}
+    ]
+  },
+  "/api/devtown/governance/merge-queue/metrics": {
+    "queueDepth": 5, "activeBatches": 2, "oldestWaitMinutes": 195, "avgWaitMinutes": 105,
+    "avgTrustScore": 0.72, "countsByLane": {"FAST_TRACK": 2, "STANDARD": 2, "ENHANCED_REVIEW": 1},
+    "throughput24h": 7, "failureRate": 0.14, "batchSizeDistribution": {"2": 3, "3": 2, "4": 1}
+  },
+  "/api/devtown/reviews/reviewers": {"items": [
+    {"actorId": "agent-code-01", "trustByCapability": {"code-analysis": 0.85, "style-review": 0.92}, "maturityPhase": "Active", "openCommitments": 2, "totalDecisions": 47},
+    {"actorId": "agent-sec-01", "trustByCapability": {"security-review": 0.71, "code-analysis": 0.68}, "maturityPhase": "Active", "openCommitments": 1, "totalDecisions": 32},
+    {"actorId": "agent-arch-01", "trustByCapability": {"architecture-review": 0.65}, "maturityPhase": "Emerging", "openCommitments": 3, "totalDecisions": 12},
+    {"actorId": "agent-perf-01", "trustByCapability": {"performance-analysis": 0.78}, "maturityPhase": "Active", "openCommitments": 0, "totalDecisions": 21},
+    {"actorId": "agent-test-01", "trustByCapability": {"test-coverage": 0.88}, "maturityPhase": "Active", "openCommitments": 2, "totalDecisions": 55},
+    {"actorId": "agent-style-01", "trustByCapability": {"style-review": 0.95}, "maturityPhase": "Bootstrap", "openCommitments": 0, "totalDecisions": 3}
+  ]},
+  "/api/devtown/reviews/contributors": {"items": [
+    {"actorId": "alice", "trustScore": 0.88, "intakeLane": "FAST_TRACK", "observationCount": 34, "mergeRate": 0.94, "firstAttemptQuality": 0.82},
+    {"actorId": "bob", "trustScore": 0.72, "intakeLane": "STANDARD", "observationCount": 18, "mergeRate": 0.78, "firstAttemptQuality": 0.65},
+    {"actorId": "carol", "trustScore": 0.45, "intakeLane": "ENHANCED_REVIEW", "observationCount": 8, "mergeRate": 0.50, "firstAttemptQuality": 0.38},
+    {"actorId": "dave", "trustScore": 0.91, "intakeLane": "FAST_TRACK", "observationCount": 52, "mergeRate": 0.96, "firstAttemptQuality": 0.90},
+    {"actorId": "eve", "trustScore": 0.63, "intakeLane": "STANDARD", "observationCount": 11, "mergeRate": 0.73, "firstAttemptQuality": 0.55}
+  ]},
+  "/api/devtown/governance/preferences": {
+    "refresh": {"operational": "10second", "metrics": "30second", "caseDetail": "30second"}
+  },
+  "/api/devtown/reviews/contributors/alice": {
+    "actorId": "alice", "globalScore": 0.88,
+    "capabilityScores": {"pr-contribution": 0.88},
+    "dimensionScores": {"merge-rate": 0.94, "first-attempt-quality": 0.82},
+    "intakeClassification": {"lane": "FAST_TRACK", "trustScore": 0.88, "observationCount": 34, "classificationReason": "High trust score with sufficient observations", "fastTrackThreshold": 0.80, "standardThreshold": 0.50},
+    "recentOutcomes": [
+      {"caseId": "a1b2c3d4-0001-0001-0001-000000000001", "capability": "pr-contribution", "outcome": "MERGED", "timestamp": "2026-10-08T14:00:00Z"},
+      {"caseId": "a1b2c3d4-0001-0001-0001-000000000005", "capability": "pr-contribution", "outcome": "MERGED", "timestamp": "2026-10-07T11:00:00Z"},
+      {"caseId": "a1b2c3d4-0001-0001-0001-000000000006", "capability": "pr-contribution", "outcome": "MERGED", "timestamp": "2026-10-06T16:30:00Z"}
+    ],
+    "githubIntelligence": {"mergedCount": 32, "closedCount": 2, "mergeRatio": 0.94, "tier": "HIGH", "maturity": "WARM", "lastRefreshAt": "2026-10-09T06:00:00Z", "available": true, "summary": "bootstrapped from 34 PRs in casehubio/engine"}
+  },
+  "/api/devtown/reviews/contributors/bob": {
+    "actorId": "bob", "globalScore": 0.72,
+    "capabilityScores": {"pr-contribution": 0.72},
+    "dimensionScores": {"merge-rate": 0.78, "first-attempt-quality": 0.65},
+    "intakeClassification": {"lane": "STANDARD", "trustScore": 0.72, "observationCount": 18, "classificationReason": "Moderate trust, standard review lane", "fastTrackThreshold": 0.80, "standardThreshold": 0.50},
+    "recentOutcomes": [
+      {"caseId": "a1b2c3d4-0001-0001-0001-000000000002", "capability": "pr-contribution", "outcome": "MERGED", "timestamp": "2026-10-08T10:00:00Z"},
+      {"caseId": "a1b2c3d4-0001-0001-0001-000000000007", "capability": "pr-contribution", "outcome": "CLOSED", "timestamp": "2026-10-05T09:00:00Z"}
+    ],
+    "githubIntelligence": {"mergedCount": 14, "closedCount": 4, "mergeRatio": 0.78, "tier": "MEDIUM", "maturity": "WARM", "lastRefreshAt": "2026-10-09T06:00:00Z", "available": true, "summary": "bootstrapped from 18 PRs in casehubio/devtown"}
+  },
+  "/api/devtown/reviews/contributors/carol": {
+    "actorId": "carol", "globalScore": 0.45,
+    "capabilityScores": {"pr-contribution": 0.45},
+    "dimensionScores": {"merge-rate": 0.50, "first-attempt-quality": 0.38},
+    "intakeClassification": {"lane": "ENHANCED_REVIEW", "trustScore": 0.45, "observationCount": 8, "classificationReason": "Low trust score — enhanced review required", "fastTrackThreshold": 0.80, "standardThreshold": 0.50},
+    "recentOutcomes": [
+      {"caseId": "a1b2c3d4-0001-0001-0001-000000000003", "capability": "pr-contribution", "outcome": "CLOSED", "timestamp": "2026-10-07T15:00:00Z"}
+    ],
+    "githubIntelligence": {"mergedCount": 4, "closedCount": 4, "mergeRatio": 0.50, "tier": "LOW", "maturity": "COLD", "lastRefreshAt": "2026-10-09T06:00:00Z", "available": true, "summary": "bootstrapped from 8 PRs in casehubio/ledger"}
+  },
+  "/api/devtown/reviews/contributors/dave": {
+    "actorId": "dave", "globalScore": 0.91,
+    "capabilityScores": {"pr-contribution": 0.91},
+    "dimensionScores": {"merge-rate": 0.96, "first-attempt-quality": 0.90},
+    "intakeClassification": {"lane": "FAST_TRACK", "trustScore": 0.91, "observationCount": 52, "classificationReason": "High trust score with extensive history", "fastTrackThreshold": 0.80, "standardThreshold": 0.50},
+    "recentOutcomes": [
+      {"caseId": "a1b2c3d4-0001-0001-0001-000000000004", "capability": "pr-contribution", "outcome": "MERGED", "timestamp": "2026-10-09T08:00:00Z"},
+      {"caseId": "a1b2c3d4-0001-0001-0001-000000000008", "capability": "pr-contribution", "outcome": "MERGED", "timestamp": "2026-10-08T17:00:00Z"},
+      {"caseId": "a1b2c3d4-0001-0001-0001-000000000009", "capability": "pr-contribution", "outcome": "MERGED", "timestamp": "2026-10-08T12:00:00Z"}
+    ],
+    "githubIntelligence": {"mergedCount": 50, "closedCount": 2, "mergeRatio": 0.96, "tier": "HIGH", "maturity": "HOT", "lastRefreshAt": "2026-10-09T06:00:00Z", "available": true, "summary": "bootstrapped from 52 PRs in casehubio/qhorus"}
+  },
+  "/api/devtown/reviews/contributors/eve": {
+    "actorId": "eve", "globalScore": 0.63,
+    "capabilityScores": {"pr-contribution": 0.63},
+    "dimensionScores": {"merge-rate": 0.73, "first-attempt-quality": 0.55},
+    "intakeClassification": {"lane": "STANDARD", "trustScore": 0.63, "observationCount": 11, "classificationReason": "Moderate trust, approaching fast-track threshold", "fastTrackThreshold": 0.80, "standardThreshold": 0.50},
+    "recentOutcomes": [],
+    "githubIntelligence": {"mergedCount": 8, "closedCount": 3, "mergeRatio": 0.73, "tier": "MEDIUM", "maturity": "WARM", "lastRefreshAt": "2026-10-09T06:00:00Z", "available": true, "summary": "bootstrapped from 11 PRs in casehubio/platform"}
+  },
+  "/api/devtown/governance/triage": {"items": [
+    {"workItemId": "w1w1w1w1-0001-0001-0001-000000000001", "prRef": "casehubio/ledger#97", "decisionType": "human-decision:pr-approval", "candidateGroup": "senior-reviewers", "expiresAt": "2026-10-09T12:00:00Z", "escalationStage": "initial", "status": "PENDING", "createdAt": "2026-10-09T07:30:00Z", "caseId": "a1b2c3d4-0001-0001-0001-000000000003"},
+    {"workItemId": "w1w1w1w1-0001-0001-0001-000000000002", "prRef": "casehubio/engine#142", "decisionType": "human-oversight:routing-review", "candidateGroup": "platform-leads", "expiresAt": "2026-10-09T14:00:00Z", "escalationStage": "initial", "status": "PENDING", "createdAt": "2026-10-09T08:15:00Z", "caseId": "a1b2c3d4-0001-0001-0001-000000000001"},
+    {"workItemId": "w1w1w1w1-0001-0001-0001-000000000003", "prRef": "casehubio/platform#301", "decisionType": "human-decision:pr-approval", "candidateGroup": "security-team", "expiresAt": "2026-10-09T16:00:00Z", "escalationStage": "escalated", "status": "ASSIGNED", "createdAt": "2026-10-09T06:00:00Z", "caseId": "b2c3d4e5-0002-0002-0002-000000000001"}
+  ]},
+  "/api/devtown/governance/sla-comparison": {"entries": [
+    {"capability": "code-analysis", "configuredSeconds": 3600, "estimatedMedianSeconds": 2400, "estimatedMinSeconds": 900, "estimatedMaxSeconds": 5400, "sampleCount": 47, "deviationPercent": -33.3},
+    {"capability": "security-review", "configuredSeconds": 3600, "estimatedMedianSeconds": 4200, "estimatedMinSeconds": 1800, "estimatedMaxSeconds": 7200, "sampleCount": 32, "deviationPercent": 16.7},
+    {"capability": "architecture-review", "configuredSeconds": 3600, "estimatedMedianSeconds": 3000, "estimatedMinSeconds": 1200, "estimatedMaxSeconds": 6000, "sampleCount": 12, "deviationPercent": -16.7},
+    {"capability": "style-review", "configuredSeconds": 3600, "estimatedMedianSeconds": 1200, "estimatedMinSeconds": 300, "estimatedMaxSeconds": 2400, "sampleCount": 55, "deviationPercent": -66.7},
+    {"capability": "test-coverage", "configuredSeconds": 3600, "estimatedMedianSeconds": 1800, "estimatedMinSeconds": 600, "estimatedMaxSeconds": 3600, "sampleCount": 21, "deviationPercent": -50.0}
+  ], "calibratedAt": "2026-10-09T06:00:00Z"},
+  "/api/devtown/governance/recent-events": [
+    {"timestamp": "2026-10-09T09:15:00Z", "eventType": "WORKER_EXECUTION_COMPLETED", "repo": "casehubio/engine", "prNumber": 142, "actorId": "agent-code-01", "caseId": "a1b2c3d4-0001-0001-0001-000000000001"},
+    {"timestamp": "2026-10-09T09:10:00Z", "eventType": "AGENT_ROUTED", "repo": "casehubio/devtown", "prNumber": 218, "actorId": "agent-sec-01", "caseId": "a1b2c3d4-0001-0001-0001-000000000002"},
+    {"timestamp": "2026-10-09T09:05:00Z", "eventType": "CASE_STARTED", "repo": "casehubio/qhorus", "prNumber": 55, "actorId": "system", "caseId": "a1b2c3d4-0001-0001-0001-000000000004"},
+    {"timestamp": "2026-10-09T09:00:00Z", "eventType": "ACTION_GATE_PENDING", "repo": "casehubio/ledger", "prNumber": 97, "actorId": "system", "caseId": "a1b2c3d4-0001-0001-0001-000000000003"},
+    {"timestamp": "2026-10-09T08:45:00Z", "eventType": "WORKER_EXECUTION_FAILED", "repo": "casehubio/ledger", "prNumber": 97, "actorId": "agent-sec-01", "caseId": "a1b2c3d4-0001-0001-0001-000000000003"},
+    {"timestamp": "2026-10-09T08:30:00Z", "eventType": "ORCHESTRATION_STARTED", "repo": "casehubio/devtown", "prNumber": 218, "actorId": "system", "caseId": "a1b2c3d4-0001-0001-0001-000000000002"},
+    {"timestamp": "2026-10-09T08:15:00Z", "eventType": "SIGNAL_RECEIVED", "repo": "casehubio/engine", "prNumber": 142, "actorId": "github-webhook", "caseId": "a1b2c3d4-0001-0001-0001-000000000001"},
+    {"timestamp": "2026-10-09T08:00:00Z", "eventType": "CASE_STARTED", "repo": "casehubio/engine", "prNumber": 142, "actorId": "system", "caseId": "a1b2c3d4-0001-0001-0001-000000000001"}
+  ],
+  "/api/sessions": [
+    {"sessionId": "sess-001", "agentId": "agent-code-01", "status": "ACTIVE", "startedAt": "2026-10-09T08:00:00Z", "caseId": "a1b2c3d4-0001-0001-0001-000000000001", "capability": "code-analysis"},
+    {"sessionId": "sess-002", "agentId": "agent-sec-01", "status": "ACTIVE", "startedAt": "2026-10-09T08:30:00Z", "caseId": "a1b2c3d4-0001-0001-0001-000000000002", "capability": "security-review"},
+    {"sessionId": "sess-003", "agentId": "agent-arch-01", "status": "IDLE", "startedAt": "2026-10-09T07:00:00Z", "caseId": null, "capability": "architecture-review"}
+  ],
+  "/api/v1/case-definitions": [
+    {"name": "pr-review", "description": "PR Review — content-driven routing with parallel checks, HITL gate, trust-weighted assignment", "version": "1.0", "goals": ["pr-approved", "security-verified", "ci-passing"]},
+    {"name": "merge-batch", "description": "Merge Queue Batch — batch-then-bisect with tip-of-batch CI verification", "version": "1.0", "goals": ["batch-verified", "all-merged"]},
+    {"name": "merge-queue-entry", "description": "Merge Queue Entry — single PR lifecycle within a batch", "version": "1.0", "goals": ["pr-merged"]},
+    {"name": "coordinated-change", "description": "Cross-Repo Coordinated Change — parent case tracking per-repo sub-cases with rollback binding", "version": "1.0", "goals": ["all-repos-merged", "coordination-complete"]}
+  ],
+
+  "_review_detail_template": {
+    "timeline": [
+      {"timestamp": "2026-10-09T08:00:00Z", "category": "LIFECYCLE", "eventType": "CASE_STARTED", "actor": "system", "summary": "Case started", "metadata": null},
+      {"timestamp": "2026-10-09T08:05:00Z", "category": "ORCHESTRATION", "eventType": "ORCHESTRATION_STARTED", "actor": "system", "summary": "Routing started for code-analysis", "metadata": null},
+      {"timestamp": "2026-10-09T08:06:00Z", "category": "ORCHESTRATION", "eventType": "AGENT_ROUTED", "actor": "system", "summary": "Agent selected for code-analysis", "metadata": null},
+      {"timestamp": "2026-10-09T08:10:00Z", "category": "AGENT", "eventType": "WORKER_EXECUTION_COMPLETED", "actor": "agent-code-01", "summary": "code-analysis completed", "metadata": null},
+      {"timestamp": "2026-10-09T08:15:00Z", "category": "ORCHESTRATION", "eventType": "AGENT_ROUTED", "actor": "system", "summary": "Agent selected for security-review", "metadata": null},
+      {"timestamp": "2026-10-09T09:00:00Z", "category": "AGENT", "eventType": "WORKER_EXECUTION_COMPLETED", "actor": "agent-sec-01", "summary": "security-review completed", "metadata": null},
+      {"timestamp": "2026-10-09T09:10:00Z", "category": "WORKITEM", "eventType": "ACTION_GATE_PENDING", "actor": "system", "summary": "Human gate pending", "metadata": null}
+    ],
+    "capabilities": [
+      {"name": "code-analysis", "status": "COMPLETED", "outcome": "APPROVED", "completedAt": "2026-10-09T08:10:00Z"},
+      {"name": "security-review", "status": "COMPLETED", "outcome": "APPROVED", "completedAt": "2026-10-09T09:00:00Z"},
+      {"name": "architecture-review", "status": "SCHEDULED", "outcome": null, "completedAt": null}
+    ],
+    "routing": {
+      "decisions": [
+        {"capability": "code-analysis", "reason": "Trust score 0.85 exceeds threshold 0.50", "confidence": 0.92, "bindingName": "code-analysis-binding"},
+        {"capability": "security-review", "reason": "Security-sensitive files detected", "confidence": 0.88, "bindingName": "security-review-binding"}
+      ],
+      "featureVector": "{securitySensitive=true, scope=multi-module, flaggedFiles=[auth/TokenHandler.java]}"
+    },
+    "findings": {
+      "security-review": [
+        {"severity": "WARNING", "category": "auth", "filePath": "auth/TokenHandler.java", "message": "Token expiry not validated before refresh", "confidence": 0.85, "startLine": 42, "endLine": 45}
+      ]
+    }
+  }
+}

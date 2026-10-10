@@ -5,7 +5,7 @@ import type { TypedDataSet } from '@casehubio/pages-data/dist/dataset/types.js';
 import { fromRows } from '@casehubio/pages-data/dist/dataset/conversion.js';
 import type { TableColumnConfig } from '@casehubio/pages-table';
 import '@casehubio/pages-table';
-import '@casehubio/blocks-ui-contributor-workbench';
+import './contributor-detail.js';
 
 interface ContributorEntry {
   actorId: string;
@@ -117,10 +117,10 @@ export class ContributorWorkbench extends LitElement {
       </div>
       <div class="detail-panel">
         ${this._actorId ? html`
-          <blocks-contributor-workbench
+          <devtown-contributor-detail
             endpoint=${this.endpoint}
             actor-id=${this._actorId}
-          ></blocks-contributor-workbench>
+          ></devtown-contributor-detail>
         ` : html`<div class="empty-detail">Select a contributor to view details</div>`}
       </div>
     `;

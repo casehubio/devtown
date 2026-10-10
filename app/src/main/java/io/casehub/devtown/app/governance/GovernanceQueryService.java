@@ -141,7 +141,9 @@ public class GovernanceQueryService {
                                 double trustScore, String priorityLane, Instant enqueuedAt,
                                 long waitMinutes, Set<Integer> dependsOn) {}
 
-    public record ActiveBatchEntry(UUID caseId, String batchId, int prCount, String riskLevel) {}
+    public record ActiveBatchEntry(UUID caseId, String batchId, int prCount, String riskLevel,
+                                       String ciStatus, List<Integer> prNumbers, Instant startedAt,
+                                       Integer suspectedPr) {}
 
     public record BatchStatus(String batchId, UUID caseId, List<BatchPrEntry> prs,
                               String riskLevel, String bisectionStrategy) {}
@@ -502,7 +504,8 @@ public class GovernanceQueryService {
             .toList();
 
         List<ActiveBatchEntry> batchEntries = batches.values().stream()
-            .map(b -> new ActiveBatchEntry(b.caseId(), b.batchId(), b.prNumbers().size(), "ROUTINE"))
+            .map(b -> new ActiveBatchEntry(b.caseId(), b.batchId(), b.prNumbers().size(), "ROUTINE",
+                    "RUNNING", b.prNumbers(), b.dispatchedAt(), null))
             .toList();
 
         return new MergeQueueStatus(queued.size(), batches.size(), prEntries, batchEntries);

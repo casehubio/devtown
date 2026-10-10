@@ -52,6 +52,98 @@
     {"actorId": "dave", "trustScore": 0.91, "intakeLane": "FAST_TRACK", "observationCount": 52, "mergeRate": 0.96, "firstAttemptQuality": 0.90},
     {"actorId": "eve", "trustScore": 0.63, "intakeLane": "STANDARD", "observationCount": 11, "mergeRate": 0.73, "firstAttemptQuality": 0.55}
   ]},
+  "/api/devtown/reviews/reviewers/agent-code-01": {
+    "reviewerId": "agent-code-01", "openCommitments": 2,
+    "trustByCapability": {"code-analysis": 0.85, "style-review": 0.92},
+    "trustByDimension": {"review-thoroughness": 0.88, "false-positive-rate": 0.90, "scope-calibration": 0.82},
+    "totalDecisions": 47,
+    "recentOutcomes": [
+      {"caseId": "a1b2c3d4-0001-0001-0001-000000000001", "capability": "code-analysis", "outcome": "DONE", "timestamp": "2026-10-09T09:15:00Z",
+       "pr": {"repo": "casehubio/engine", "prNumber": 142, "contributor": "alice"},
+       "findingCount": 2, "findingSummary": "Unused import in TokenHandler.java; method complexity above threshold in AuthService.java",
+       "feedbackOutcome": "ACCEPTED"},
+      {"caseId": "a1b2c3d4-0001-0001-0001-000000000005", "capability": "code-analysis", "outcome": "DONE", "timestamp": "2026-10-08T14:00:00Z",
+       "pr": {"repo": "casehubio/engine", "prNumber": 138, "contributor": "dave"},
+       "findingCount": 0, "findingSummary": null,
+       "feedbackOutcome": null},
+      {"caseId": "a1b2c3d4-0001-0001-0001-000000000006", "capability": "style-review", "outcome": "DONE", "timestamp": "2026-10-07T11:00:00Z",
+       "pr": {"repo": "casehubio/devtown", "prNumber": 210, "contributor": "bob"},
+       "findingCount": 3, "findingSummary": "Missing Javadoc on public API; inconsistent naming in test fixtures; unused parameter in factory method",
+       "feedbackOutcome": "PARTIALLY_ACCEPTED"},
+      {"caseId": "a1b2c3d4-0001-0001-0001-000000000010", "capability": "code-analysis", "outcome": "DONE", "timestamp": "2026-10-06T09:00:00Z",
+       "pr": {"repo": "casehubio/ledger", "prNumber": 91, "contributor": "carol"},
+       "findingCount": 1, "findingSummary": "Potential null dereference in LedgerEntryValidator — contributor acknowledged and fixed",
+       "feedbackOutcome": "ACCEPTED"}
+    ]
+  },
+  "/api/devtown/reviews/reviewers/agent-sec-01": {
+    "reviewerId": "agent-sec-01", "openCommitments": 1,
+    "trustByCapability": {"security-review": 0.71, "code-analysis": 0.68},
+    "trustByDimension": {"review-thoroughness": 0.75, "false-positive-rate": 0.65, "scope-calibration": 0.70},
+    "totalDecisions": 32,
+    "recentOutcomes": [
+      {"caseId": "a1b2c3d4-0001-0001-0001-000000000003", "capability": "security-review", "outcome": "DECLINED", "timestamp": "2026-10-09T08:45:00Z",
+       "pr": {"repo": "casehubio/ledger", "prNumber": 97, "contributor": "carol"},
+       "findingCount": 0, "findingSummary": null,
+       "declineReason": "PR modifies database migration files — outside security-review capability scope"},
+      {"caseId": "a1b2c3d4-0001-0001-0001-000000000002", "capability": "security-review", "outcome": "DONE", "timestamp": "2026-10-08T16:00:00Z",
+       "pr": {"repo": "casehubio/devtown", "prNumber": 218, "contributor": "bob"},
+       "findingCount": 1, "findingSummary": "Token expiry not validated before refresh in auth/TokenHandler.java",
+       "feedbackOutcome": "ACCEPTED"},
+      {"caseId": "a1b2c3d4-0001-0001-0001-000000000011", "capability": "security-review", "outcome": "DONE", "timestamp": "2026-10-07T10:00:00Z",
+       "pr": {"repo": "casehubio/platform", "prNumber": 295, "contributor": "eve"},
+       "findingCount": 2, "findingSummary": "Hardcoded secret in test fixture; overly permissive CORS configuration",
+       "feedbackOutcome": "REJECTED"}
+    ]
+  },
+  "/api/devtown/reviews/reviewers/agent-arch-01": {
+    "reviewerId": "agent-arch-01", "openCommitments": 3,
+    "trustByCapability": {"architecture-review": 0.65},
+    "trustByDimension": {"review-thoroughness": 0.60, "false-positive-rate": 0.72, "scope-calibration": 0.58},
+    "totalDecisions": 12,
+    "recentOutcomes": [
+      {"caseId": "a1b2c3d4-0001-0001-0001-000000000012", "capability": "architecture-review", "outcome": "DONE", "timestamp": "2026-10-08T12:00:00Z",
+       "pr": {"repo": "casehubio/engine", "prNumber": 139, "contributor": "alice"},
+       "findingCount": 1, "findingSummary": "New module dependency crosses layer boundary — domain module imports from app layer",
+       "feedbackOutcome": "ACCEPTED"}
+    ]
+  },
+  "/api/devtown/reviews/reviewers/agent-perf-01": {
+    "reviewerId": "agent-perf-01", "openCommitments": 0,
+    "trustByCapability": {"performance-analysis": 0.78},
+    "trustByDimension": {"review-thoroughness": 0.80, "false-positive-rate": 0.75, "scope-calibration": 0.77},
+    "totalDecisions": 21,
+    "recentOutcomes": [
+      {"caseId": "a1b2c3d4-0001-0001-0001-000000000013", "capability": "performance-analysis", "outcome": "DONE", "timestamp": "2026-10-08T15:00:00Z",
+       "pr": {"repo": "casehubio/engine", "prNumber": 140, "contributor": "dave"},
+       "findingCount": 1, "findingSummary": "N+1 query in CaseInstanceRepository.findByStatus — suggest batch loading",
+       "feedbackOutcome": "ACCEPTED"}
+    ]
+  },
+  "/api/devtown/reviews/reviewers/agent-test-01": {
+    "reviewerId": "agent-test-01", "openCommitments": 2,
+    "trustByCapability": {"test-coverage": 0.88},
+    "trustByDimension": {"review-thoroughness": 0.85, "false-positive-rate": 0.92, "scope-calibration": 0.84},
+    "totalDecisions": 55,
+    "recentOutcomes": [
+      {"caseId": "a1b2c3d4-0001-0001-0001-000000000014", "capability": "test-coverage", "outcome": "DONE", "timestamp": "2026-10-09T07:00:00Z",
+       "pr": {"repo": "casehubio/devtown", "prNumber": 215, "contributor": "bob"},
+       "findingCount": 2, "findingSummary": "New public method MergeQueueService.admit() has no unit test; edge case for empty batch not covered",
+       "feedbackOutcome": "ACCEPTED"}
+    ]
+  },
+  "/api/devtown/reviews/reviewers/agent-style-01": {
+    "reviewerId": "agent-style-01", "openCommitments": 0,
+    "trustByCapability": {"style-review": 0.95},
+    "trustByDimension": {"review-thoroughness": 0.90, "false-positive-rate": 0.97, "scope-calibration": 0.88},
+    "totalDecisions": 3,
+    "recentOutcomes": [
+      {"caseId": "a1b2c3d4-0001-0001-0001-000000000015", "capability": "style-review", "outcome": "DONE", "timestamp": "2026-10-09T06:30:00Z",
+       "pr": {"repo": "casehubio/qhorus", "prNumber": 52, "contributor": "dave"},
+       "findingCount": 1, "findingSummary": "Inconsistent brace style in MessageDispatcher — project uses K&R style",
+       "feedbackOutcome": "ACCEPTED"}
+    ]
+  },
   "/api/devtown/governance/preferences": {
     "refresh": {"operational": "10second", "metrics": "30second", "caseDetail": "30second"}
   },

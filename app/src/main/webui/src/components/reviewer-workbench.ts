@@ -5,7 +5,7 @@ import type { TypedDataSet } from '@casehubio/pages-data/dist/dataset/types.js';
 import { fromRows } from '@casehubio/pages-data/dist/dataset/conversion.js';
 import type { TableColumnConfig } from '@casehubio/pages-table';
 import '@casehubio/pages-table';
-import '@casehubio/blocks-ui-trust-workbench';
+import './reviewer-detail.js';
 
 interface ReviewerEntry {
   actorId: string;
@@ -39,6 +39,8 @@ export class ReviewerWorkbench extends LitElement {
   @property({ type: String }) endpoint = '';
 
   @state() private _actorId = '';
+  @state() private _phase = '';
+  @state() private _entries: ReviewerEntry[] = [];
   @state() private _fleetData: TypedDataSet | undefined;
   @state() private _loading = true;
   @state() private _error: string | null = null;
@@ -79,8 +81,8 @@ export class ReviewerWorkbench extends LitElement {
       const res = await fetch(`${this.endpoint}/reviewers`);
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const json = await res.json();
-      const items: ReviewerEntry[] = json.items ?? json;
-      this._fleetData = fromRows([...items], FLEET_COLUMNS);
+      this._entries = json.items ?? json;
+      this._fleetData = fromRows([...this._entries], FLEET_COLUMNS);
     } catch (err) {
       this._error = err instanceof Error ? err.message : String(err);
     } finally {
@@ -92,7 +94,11 @@ export class ReviewerWorkbench extends LitElement {
     const detail = (e as CustomEvent).detail;
     if (detail?.row) {
       const id = detail.row.text(ACTOR_COL);
-      if (id) this._actorId = id;
+      if (id) {
+        this._actorId = id;
+        const entry = this._entries.find(r => r.actorId === id);
+        this._phase = entry?.maturityPhase ?? '';
+      }
     }
   };
 
@@ -113,10 +119,11 @@ export class ReviewerWorkbench extends LitElement {
       </div>
       <div class="detail-panel">
         ${this._actorId ? html`
-          <blocks-trust-workbench
+          <devtown-reviewer-detail
             endpoint=${this.endpoint}
             actor-id=${this._actorId}
-          ></blocks-trust-workbench>
+            maturity-phase=${this._phase}
+          ></devtown-reviewer-detail>
         ` : html`<div class="empty-detail">Select a reviewer to view trust details</div>`}
       </div>
     `;

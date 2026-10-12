@@ -166,6 +166,8 @@ export class MergeQueueDetail extends LitElement {
       });
       const json = await res.json();
       this._actionResult = `${json.action}: ${json.result}`;
+      const review = this.reviews.find(r => r.caseId);
+      if (review) this._fetchReviewDetail(review.caseId);
     } catch (err) {
       this._actionResult = `Error: ${err}`;
     }
@@ -205,7 +207,7 @@ export class MergeQueueDetail extends LitElement {
     if (lane.includes('fast')) {
       parts.push(`Trust score ${trustPct}% exceeds the fast-track threshold (${ftPct}%), so this PR skips enhanced scrutiny.`);
     } else if (lane.includes('enhanced')) {
-      parts.push(`Trust score ${trustPct}% is below the standard threshold (${stdPct}%), so this PR gets additional review scrutiny before merge.`);
+      parts.push(`Trust score ${trustPct}% is below the standard threshold (${stdPct}%), so this PR gets additional review scrutiny.`);
     } else {
       parts.push(`Trust score ${trustPct}% is between standard (${stdPct}%) and fast-track (${ftPct}%) thresholds — standard review applies.`);
     }

@@ -2,13 +2,10 @@ import { loadSite, registerPanel } from "@casehubio/pages-runtime";
 import { page, tabs, hostPanel } from "@casehubio/pages-ui";
 import "@casehubio/blocks-ui-session-workbench";
 import "./components/reviewer-workbench";
-import "./components/review-workbench";
 import "./components/contributor-workbench";
-import "./components/merge-queue-workbench";
+import "./components/pr-cases-workbench";
 import { createDatasets } from "./datasets";
-import { reviewsView } from "./views/reviews";
 import { reviewersView } from "./views/reviewers";
-import { triageView } from "./views/triage";
 import { systemView } from "./views/system";
 import { definitionsView } from "./views/definitions";
 
@@ -16,9 +13,8 @@ const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
 
 registerPanel("session-workbench", "blocks-session-workbench");
 registerPanel("reviewer-workbench", "devtown-reviewer-workbench");
-registerPanel("review-workbench", "devtown-review-workbench");
 registerPanel("contributor-workbench", "devtown-contributor-workbench");
-registerPanel("merge-queue-workbench", "devtown-merge-queue-workbench");
+registerPanel("pr-cases-workbench", "devtown-pr-cases-workbench");
 
 async function start() {
   const prefs = await fetch("/api/devtown/governance/preferences")
@@ -36,12 +32,10 @@ async function start() {
 
   const app = page("DevTown",
     tabs(
-      ["Reviews", hostPanel("review-workbench", { endpoint: "/api/devtown/governance" })],
-      ["Merge Queue", hostPanel("merge-queue-workbench", { endpoint: "/api/devtown/governance" })],
+      ["PR Cases", hostPanel("pr-cases-workbench", { endpoint: "/api/devtown/governance" })],
       ["Reviewers", reviewersView],
       ["Contributors", hostPanel("contributor-workbench", { endpoint: "/api/devtown/reviews" })],
       ["Workers", hostPanel("session-workbench", { endpoint: "/api/sessions" })],
-      ["Triage", triageView],
       ["System", systemView],
       ["Definitions", definitionsView],
     ),

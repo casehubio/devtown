@@ -138,3 +138,51 @@ export const badgeStyles = css`
   .badge.emerging { background: var(--pages-primary-3, #dbeafe); color: var(--pages-primary-9, #1d4ed8); }
   .badge.bootstrap { background: var(--pages-neutral-3, #e5e5e5); color: var(--pages-neutral-7, #525252); }
 `;
+
+export const workItemAlertStyles = css`
+  .work-item-alert {
+    padding: 10px 14px; margin: 0 0 16px; border-radius: 6px;
+    background: var(--pages-warning-2, #fffbeb);
+    border: 1px solid var(--pages-warning-6, #d97706);
+    font-size: 12px;
+  }
+  .work-item-alert.escalated {
+    background: var(--pages-danger-2, #fef2f2);
+    border-color: var(--pages-danger-6, #dc2626);
+  }
+  .wia-header { display: flex; align-items: center; gap: 6px; margin-bottom: 6px; font-weight: 600; font-size: 13px; }
+  .wia-details { display: grid; grid-template-columns: auto 1fr; gap: 2px 12px; }
+  .wia-row { display: contents; }
+  .wia-label { font-weight: 500; color: var(--pages-neutral-7, #525252); }
+`;
+
+export const vitalsStyles = css`
+  .vitals {
+    display: grid; gap: 6px;
+    padding: 10px 0; border-bottom: 1px solid var(--pages-neutral-4, #d4d4d4);
+  }
+  .vital { text-align: center; padding: 6px; }
+  .vital-value { font-size: 20px; font-weight: 700; }
+  .vital-label { font-size: 10px; color: var(--pages-neutral-7, #525252); text-transform: uppercase; }
+`;
+
+export const filterChipStyles = css`
+  .filter-chips {
+    display: flex; gap: 6px; padding: 10px 0;
+    border-bottom: 1px solid var(--pages-neutral-4, #d4d4d4);
+  }
+  .filter-chip {
+    padding: 4px 12px; border-radius: 16px; font-size: 12px; font-weight: 500;
+    cursor: pointer; border: 1px solid var(--pages-neutral-4, #d4d4d4);
+    background: white; color: var(--pages-neutral-9, #171717);
+    transition: all 0.15s;
+  }
+  .filter-chip:hover { background: var(--pages-neutral-2, #f5f5f5); }
+  .filter-chip.active {
+    background: var(--pages-primary-9, #1d4ed8); color: white;
+    border-color: var(--pages-primary-9, #1d4ed8);
+  }
+  .filter-count {
+    margin-left: 4px; font-size: 11px; opacity: 0.8;
+  }
+`;

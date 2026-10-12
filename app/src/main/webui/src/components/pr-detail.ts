@@ -5,9 +5,11 @@ import { renderTrustBar } from './shared/trust-bar.js';
 import { renderDimensionGrid } from './shared/dimension-grid.js';
 import { renderReviewCard } from './shared/review-card.js';
 import { renderBadge } from './shared/badge.js';
+import { renderWorkItemAlert } from './shared/work-item-alert.js';
+import type { WorkItemData } from './shared/work-item-alert.js';
 import type { DimensionEntry } from './shared/types.js';
 import type { ReviewOutcome } from './shared/review-card.js';
-import { hostStyles, sectionTitleStyles, narrativeStyles, emptyStyles, trustBarStyles, dimensionGridStyles, reviewCardStyles, badgeStyles } from './shared/shared-styles.js';
+import { hostStyles, sectionTitleStyles, narrativeStyles, emptyStyles, trustBarStyles, dimensionGridStyles, reviewCardStyles, badgeStyles, workItemAlertStyles } from './shared/shared-styles.js';
 import './routing-summary.js';
 import './findings-panel.js';
 import '@casehubio/blocks-ui-blocks-timeline';
@@ -30,10 +32,42 @@ interface ReviewDetailData {
   findings: Record<string, Array<{ severity: string; category: string; filePath: string; message: string; confidence: number; startLine: number | null; endLine: number | null }>>;
 }
 
-@customElement('devtown-review-detail')
-export class ReviewDetail extends LitElement {
+interface QueueContext {
+  priorityLane: string;
+  trustScore: number;
+  waitMinutes: number;
+  headSha: string;
+  dependsOn: number[];
+}
+
+interface TriageContext {
+  caseId: string;
+  decisionType: string;
+  candidateGroup: string;
+  expiresAt: string;
+  escalationStage: string;
+}
+
+interface BatchData {
+  batchId: string;
+  caseId: string;
+  prCount: number;
+  riskLevel: string;
+  ciStatus?: string;
+  prNumbers?: number[];
+  startedAt?: string;
+  suspectedPr?: number;
+}
+
+@customElement('devtown-pr-detail')
+export class PrDetail extends LitElement {
   @property({ type: String, attribute: 'case-id' }) caseId = '';
   @property({ type: String }) endpoint = '';
+  @property({ type: String }) stage = '';
+  @property({ type: String }) mode = '';
+  @property({ type: Object }) queueContext: QueueContext = { priorityLane: '', trustScore: 0, waitMinutes: 0, headSha: '', dependsOn: [] };
+  @property({ type: Object }) triageContext: TriageContext = { caseId: '', decisionType: '', candidateGroup: '', expiresAt: '', escalationStage: '' };
+  @property({ type: Object }) batch: BatchData | null = null;
 
   @state() private _data: ReviewDetailData | null = null;
   @state() private _loading = false;
@@ -45,10 +79,12 @@ export class ReviewDetail extends LitElement {
   static override styles = [
     hostStyles, sectionTitleStyles, narrativeStyles, emptyStyles,
     trustBarStyles, dimensionGridStyles, reviewCardStyles, badgeStyles,
+    workItemAlertStyles,
     css`
       .meta { display: grid; grid-template-columns: auto 1fr; gap: 4px 12px; margin-bottom: 16px; font-size: 13px; }
       .meta dt { font-weight: 600; color: var(--pages-neutral-8, #404040); }
       .meta dd { margin: 0; }
+      .sub-header { font-size: 12px; color: var(--pages-neutral-7, #525252); margin-bottom: 16px; }
       .actions { display: flex; gap: 8px; margin: 12px 0; }
       .actions button {
         padding: 6px 14px; border-radius: 4px; font-size: 13px; font-weight: 500;
@@ -61,6 +97,11 @@ export class ReviewDetail extends LitElement {
         border-color: var(--pages-primary-9, #1d4ed8);
       }
       .actions button.primary:hover { background: var(--pages-primary-10, #1e40af); }
+      .actions button.danger {
+        background: var(--pages-danger-9, #dc2626); color: white;
+        border-color: var(--pages-danger-9, #dc2626);
+      }
+      .actions button.danger:hover { background: var(--pages-danger-10, #b91c1c); }
       .action-result { font-size: 12px; padding: 6px 10px; margin: 4px 0 8px; background: var(--pages-neutral-2, #f5f5f5); border-radius: 3px; }
       .error { color: var(--pages-danger-9, #dc2626); padding: 16px; }
       .check-list { list-style: none; padding: 0; margin: 6px 0 0 0; }
@@ -68,6 +109,10 @@ export class ReviewDetail extends LitElement {
       .check-icon { width: 16px; text-align: center; font-size: 14px; }
       .check-name { flex: 1; }
       .check-status { font-size: 11px; font-weight: 600; }
+      .dep-list { list-style: none; padding: 0; margin: 0; }
+      .dep-list li { padding: 3px 0; font-size: 13px; color: var(--pages-neutral-8, #404040); }
+      .badge.routine { background: var(--pages-neutral-3, #e5e5e5); color: var(--pages-neutral-9, #171717); }
+      .badge.elevated { background: var(--pages-warning-3, #fef3c7); color: var(--pages-warning-9, #92400e); }
     `,
   ];
 
@@ -188,7 +233,8 @@ export class ReviewDetail extends LitElement {
   }
 
   override render() {
-    if (!this.caseId) return html`<div class="empty">Select a review to see details</div>`;
+    if (this.mode === 'batch' && this.batch) return this._renderBatch(this.batch);
+    if (!this.caseId) return html`<div class="empty">Select a PR case to see details</div>`;
     if (this._loading && !this._data) return html`<div class="empty">Loading...</div>`;
     if (this._error) return html`<div class="error">${this._error}</div>`;
     if (!this._data) return html`<div class="empty">No data</div>`;
@@ -197,14 +243,31 @@ export class ReviewDetail extends LitElement {
     const c = this._contributor;
     const completedCaps = d.capabilities.filter(cap => cap.status === 'COMPLETED');
     const pendingCaps = d.capabilities.filter(cap => cap.status !== 'COMPLETED');
+    const isQueued = this.stage === 'QUEUED' || this.stage === 'BATCHED';
+    const hasWorkItem = this.triageContext.decisionType !== '';
+
+    const workItem: WorkItemData | null = hasWorkItem ? {
+      workItemId: '',
+      decisionType: this.triageContext.decisionType,
+      candidateGroup: this.triageContext.candidateGroup,
+      expiresAt: this.triageContext.expiresAt,
+      escalationStage: this.triageContext.escalationStage,
+      status: 'PENDING',
+    } : null;
 
     return html`
       <div class="header">PR #${d.pr.prNumber} — ${d.pr.repo}</div>
-      <dl class="meta">
-        <dt>Author</dt><dd>${d.pr.contributor}</dd>
-        <dt>Lines Changed</dt><dd>${d.pr.linesChanged}</dd>
-        <dt>Case ID</dt><dd style="font-size:11px">${d.caseId}</dd>
-      </dl>
+      ${isQueued ? html`
+        <div class="sub-header">by ${d.pr.contributor} · waiting ${this.queueContext.waitMinutes} min · ${(this.queueContext.headSha || d.pr.headSha).substring(0, 7)}</div>
+      ` : html`
+        <dl class="meta">
+          <dt>Author</dt><dd>${d.pr.contributor}</dd>
+          <dt>Lines Changed</dt><dd>${d.pr.linesChanged}</dd>
+          <dt>Case ID</dt><dd style="font-size:11px">${d.caseId}</dd>
+        </dl>
+      `}
+
+      ${renderWorkItemAlert(workItem)}
 
       ${c ? html`
         <div class="section-title">Contributor Trust</div>
@@ -262,11 +325,14 @@ export class ReviewDetail extends LitElement {
 
       <devtown-findings-panel .findings=${d.findings}></devtown-findings-panel>
 
-      <div class="actions">
-        <button @click=${() => this._doAction('approve')}>Approve</button>
-        <button @click=${() => this._doAction('request-changes')}>Request Changes</button>
-        <button class="primary" @click=${() => this._doAction('enqueue')}>Add to Merge Queue</button>
-      </div>
+      ${isQueued && this.queueContext.dependsOn.length > 0 ? html`
+        <div class="section-title">Dependencies</div>
+        <ul class="dep-list">
+          ${this.queueContext.dependsOn.map(dep => html`<li>Blocked by PR #${dep}</li>`)}
+        </ul>
+      ` : nothing}
+
+      ${this._renderActions()}
       ${this._actionResult ? html`<div class="action-result">${this._actionResult}</div>` : nothing}
 
       <div class="section-title">Event Timeline</div>
@@ -275,6 +341,69 @@ export class ReviewDetail extends LitElement {
         .data=${d.timeline}
         layout="vertical"
       ></blocks-timeline>
+    `;
+  }
+
+  private _renderActions() {
+    if (this.stage === 'QUEUED' || this.stage === 'BATCHED') {
+      return html`
+        <div class="actions">
+          <button class="danger" @click=${() => this._doAction('dequeue')}>Dequeue</button>
+          <button class="primary" @click=${() => this._doAction('signal-ci-pass')}>Signal CI Pass</button>
+        </div>
+      `;
+    }
+    return html`
+      <div class="actions">
+        <button @click=${() => this._doAction('approve')}>Approve</button>
+        <button @click=${() => this._doAction('request-changes')}>Request Changes</button>
+        <button class="primary" @click=${() => this._doAction('enqueue')}>Add to Merge Queue</button>
+      </div>
+    `;
+  }
+
+  private _batchElapsed(startedAt?: string): string {
+    if (!startedAt) return '—';
+    const mins = Math.round((Date.now() - new Date(startedAt).getTime()) / 60000);
+    if (mins < 60) return `${mins} min`;
+    return `${Math.floor(mins / 60)}h ${mins % 60}m`;
+  }
+
+  private _buildBatchNarrative(batch: BatchData): string {
+    const prs = batch.prNumbers ?? [];
+    const prList = prs.map(n => `#${n}`).join(', ');
+    const ci = batch.ciStatus ?? 'UNKNOWN';
+
+    if (ci === 'RUNNING') {
+      return `Testing ${prs.length} PRs (${prList}) together against main. If CI passes, all merge as one atomic operation. If it fails, bisection will identify the faulty PR.`;
+    }
+    if (ci === 'BISECTING') {
+      const suspect = batch.suspectedPr ? ` PR #${batch.suspectedPr} is the current suspect.` : '';
+      return `CI failed for this batch of ${prs.length} PRs (${prList}). Bisection is running to isolate which PR caused the failure.${suspect} The faulty PR will be ejected and the rest retried.`;
+    }
+    if (ci === 'PASSED') {
+      return `All ${prs.length} PRs (${prList}) passed CI together and are ready to merge.`;
+    }
+    return `Batch contains ${prs.length} PRs (${prList}). CI status: ${ci}.`;
+  }
+
+  private _renderBatch(batch: BatchData) {
+    const riskClass = batch.riskLevel.toLowerCase().includes('elevated') ? 'elevated' : 'routine';
+    const prs = batch.prNumbers ?? [];
+    const ci = batch.ciStatus ?? '—';
+
+    return html`
+      <div class="header">Merge Batch — ${prs.length} PRs</div>
+      <div class="sub-header">${ci === 'BISECTING' ? 'Bisecting — CI failure detected' : ci === 'RUNNING' ? 'CI running' : ci} · ${this._batchElapsed(batch.startedAt)} elapsed</div>
+      <div class="narrative">${this._buildBatchNarrative(batch)}</div>
+      <div class="section-title">PRs in Batch</div>
+      <ul class="dep-list">
+        ${prs.map(n => html`<li style="${batch.suspectedPr === n ? 'color:var(--pages-danger-9,#dc2626);font-weight:600' : ''}">PR #${n}${batch.suspectedPr === n ? ' — suspected cause' : ''}</li>`)}
+      </ul>
+      <dl class="meta" style="margin-top:12px">
+        <dt>Risk</dt><dd><span class="badge ${riskClass}">${batch.riskLevel}</span></dd>
+        <dt>CI Status</dt><dd>${ci}</dd>
+      </dl>
     `;
   }
 }

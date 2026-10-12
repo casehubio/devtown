@@ -3,3 +3,5 @@ export type { DimensionEntry } from './dimension-grid.js';
 export type { StatusCardData, StatusTier } from './status-card.js';
 export type { ReviewOutcome } from './review-card.js';
 export type { BadgeVariant } from './badge.js';
+export type { WorkItemData } from './work-item-alert.js';
+export type { VitalEntry } from './vitals.js';

@@ -35,6 +35,33 @@ createServer((req, res) => {
     return;
   }
 
+  if (path.startsWith('/api/sessions/') && path !== '/api/sessions') {
+    const parts = path.split('/');
+    const sessionId = parts[3];
+    const sub = parts[4];
+    const session = (fixtures['/api/sessions'] ?? []).find(s => s.id === sessionId);
+    if (sub === 'output') {
+      res.writeHead(200, { 'Content-Type': 'text/plain', 'Access-Control-Allow-Origin': '*' });
+      res.end(session
+        ? `[${session.createdAt}] Session ${session.name} started\n[${session.createdAt}] Working directory: ${session.workingDir}\n[${session.lastActive}] Status: ${session.status}\n[${session.lastActive}] Role: ${session.roleName ?? 'none'}\n${session.caseId ? `[${session.lastActive}] Active case: ${session.caseId}\n` : ''}[${session.lastActive}] Ready for commands.\n`
+        : 'Session not found\n');
+      return;
+    }
+    if (sub === 'git-status') {
+      res.writeHead(200, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
+      res.end(JSON.stringify({ gitRepo: true, githubRepo: session?.workingDir?.split('/').slice(-2).join('/') ?? 'unknown/repo', branch: 'main', pr: null }));
+      return;
+    }
+    if (sub === 'service-health') {
+      res.writeHead(200, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
+      res.end(JSON.stringify([{ port: 8080, up: session?.status === 'ACTIVE', responseMs: session?.status === 'ACTIVE' ? 12 : 0 }]));
+      return;
+    }
+    res.writeHead(200, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
+    res.end(JSON.stringify(session ?? {}));
+    return;
+  }
+
   if (path.startsWith('/api/devtown/reviews/') && !path.endsWith('/reviewers') && !path.endsWith('/contributors') && !path.includes('/reviewers/') && !path.includes('/contributors/')) {
     const id = path.split('/').pop();
     const detail = reviewDetails[id] || template;

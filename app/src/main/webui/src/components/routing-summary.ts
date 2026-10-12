@@ -71,11 +71,40 @@ export class RoutingSummaryComponent extends LitElement {
         </button>
         ${this._showFeatures ? html`
           <div class="feature-vector">
-            <pre style="margin:0;white-space:pre-wrap;font-size:11px">${this.routing.featureVector}</pre>
+            ${this._parseFeatureVector(this.routing.featureVector).map(([k, v]) => html`
+              <div class="fv-row">
+                <span class="fv-key">${k}</span>
+                <span>${v}</span>
+              </div>
+            `)}
           </div>
         ` : nothing}
       ` : nothing}
     `;
+  }
+
+  private _parseFeatureVector(fv: string): Array<[string, string]> {
+    const inner = fv.replace(/^\{/, '').replace(/\}$/, '').trim();
+    if (!inner) return [];
+    const pairs: Array<[string, string]> = [];
+    let depth = 0;
+    let current = '';
+    for (const ch of inner) {
+      if (ch === '[') depth++;
+      else if (ch === ']') depth--;
+      if (ch === ',' && depth === 0) {
+        const eq = current.indexOf('=');
+        if (eq > 0) pairs.push([current.substring(0, eq).trim(), current.substring(eq + 1).trim()]);
+        current = '';
+      } else {
+        current += ch;
+      }
+    }
+    if (current.trim()) {
+      const eq = current.indexOf('=');
+      if (eq > 0) pairs.push([current.substring(0, eq).trim(), current.substring(eq + 1).trim()]);
+    }
+    return pairs;
   }
 
   private _toggleFeatures = () => {

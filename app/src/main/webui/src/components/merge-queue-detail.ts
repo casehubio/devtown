@@ -1,5 +1,6 @@
 import { LitElement, html, css, nothing } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
+import { reviewTimelineStrategy } from './review-timeline-strategy.js';
 import { renderTrustBar } from './shared/trust-bar.js';
 import { renderDimensionGrid } from './shared/dimension-grid.js';
 import { renderBadge } from './shared/badge.js';
@@ -7,6 +8,9 @@ import { renderReviewCard } from './shared/review-card.js';
 import type { DimensionEntry } from './shared/types.js';
 import type { ReviewOutcome } from './shared/review-card.js';
 import { hostStyles, sectionTitleStyles, narrativeStyles, emptyStyles, trustBarStyles, dimensionGridStyles, badgeStyles, reviewCardStyles } from './shared/shared-styles.js';
+import './routing-summary.js';
+import './findings-panel.js';
+import '@casehubio/blocks-ui-blocks-timeline';
 
 interface QueuedPrData {
   number: number;
@@ -56,6 +60,12 @@ export class MergeQueueDetail extends LitElement {
   @state() private _actionResult = '';
   @state() private _prevAuthor = '';
   @state() private _reviewOutcomes: ReviewOutcome[] = [];
+  @state() private _reviewData: {
+    capabilities: Array<{ name: string; status: string; outcome: string | null; completedAt: string | null }>;
+    routing: { decisions: Array<{ capability: string; reason: string; confidence: number; bindingName: string }>; featureVector: string | null } | null;
+    findings: Record<string, Array<{ severity: string; category: string; filePath: string; message: string; confidence: number; startLine: number | null; endLine: number | null }>>;
+    timeline: Array<{ timestamp: string; category: string; eventType: string; actor: string; summary: string; metadata: unknown }>;
+  } | null = null;
 
   static override styles = [
     hostStyles, sectionTitleStyles, narrativeStyles, emptyStyles,
@@ -115,6 +125,7 @@ export class MergeQueueDetail extends LitElement {
         this._prevAuthor = '';
         this._contributor = null;
         this._reviewOutcomes = [];
+        this._reviewData = null;
       }
     }
   }
@@ -129,11 +140,18 @@ export class MergeQueueDetail extends LitElement {
 
   private async _fetchReviewDetail(caseId: string): Promise<void> {
     this._reviewOutcomes = [];
+    this._reviewData = null;
     try {
       const base = this.endpoint.replace(/\/governance$/, '').replace(/\/reviews$/, '');
       const res = await fetch(`${base}/reviews/${caseId}`);
       if (!res.ok) return;
       const data = await res.json();
+      this._reviewData = {
+        capabilities: data.capabilities ?? [],
+        routing: data.routing ?? null,
+        findings: data.findings ?? {},
+        timeline: data.timeline ?? [],
+      };
       const capabilities: Array<{ name: string; status: string; outcome: string | null; completedAt: string | null }> = data.capabilities ?? [];
       this._reviewOutcomes = capabilities
         .filter(c => c.status === 'COMPLETED')
@@ -148,6 +166,7 @@ export class MergeQueueDetail extends LitElement {
         } satisfies ReviewOutcome));
     } catch {
       this._reviewOutcomes = [];
+      this._reviewData = null;
     }
   }
 
@@ -280,15 +299,14 @@ export class MergeQueueDetail extends LitElement {
         <div class="narrative">${this._buildRecentPattern(c.recentOutcomes)}</div>
       ` : nothing}
 
-      ${this._reviewOutcomes.length > 0 ? html`
-        <div class="section-title">Review Activity</div>
-        ${this._reviewOutcomes.map(o => renderReviewCard(o))}
+      ${this._reviewData?.routing ? html`
+        <devtown-routing-summary .routing=${this._reviewData.routing}></devtown-routing-summary>
       ` : nothing}
 
-      ${review && review.capabilities.length > 0 ? html`
-        <div class="section-title">Review Checks</div>
+      ${this._reviewData && this._reviewData.capabilities.filter(cap => cap.status !== 'COMPLETED').length > 0 ? html`
+        <div class="section-title">Checks In Progress</div>
         <ul class="check-list">
-          ${review.capabilities.map(cap => html`
+          ${this._reviewData.capabilities.filter(cap => cap.status !== 'COMPLETED').map(cap => html`
             <li class="check-item">
               <span class="check-icon">${this._checkIcon(cap.status)}</span>
               <span class="check-name">${cap.name}</span>
@@ -296,6 +314,15 @@ export class MergeQueueDetail extends LitElement {
             </li>
           `)}
         </ul>
+      ` : nothing}
+
+      ${this._reviewOutcomes.length > 0 ? html`
+        <div class="section-title">Completed Reviews</div>
+        ${this._reviewOutcomes.map(o => renderReviewCard(o))}
+      ` : nothing}
+
+      ${this._reviewData && Object.keys(this._reviewData.findings).length > 0 ? html`
+        <devtown-findings-panel .findings=${this._reviewData.findings}></devtown-findings-panel>
       ` : nothing}
 
       ${pr.dependsOn && pr.dependsOn.length > 0 ? html`
@@ -310,6 +337,15 @@ export class MergeQueueDetail extends LitElement {
         <button class="primary" @click=${() => this._doAction('signal-ci-pass')}>Signal CI Pass</button>
       </div>
       ${this._actionResult ? html`<div class="action-result">${this._actionResult}</div>` : nothing}
+
+      ${this._reviewData && this._reviewData.timeline.length > 0 ? html`
+        <div class="section-title">Event Timeline</div>
+        <blocks-timeline
+          .strategy=${reviewTimelineStrategy}
+          .data=${this._reviewData.timeline}
+          layout="vertical"
+        ></blocks-timeline>
+      ` : nothing}
     `;
   }
 

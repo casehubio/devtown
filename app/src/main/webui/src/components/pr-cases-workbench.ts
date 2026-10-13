@@ -391,24 +391,33 @@ export class PrCasesWorkbench extends LitElement {
         const parts = t.prRef.split('#');
         const repo = parts[0] ?? '';
         const prNum = parseInt(parts[1] ?? '0', 10);
-        byCase.set(t.caseId, {
-          caseId: t.caseId,
-          prNumber: prNum,
-          repo,
-          author: '',
-          stage: 'HUMAN_GATE',
-          status: 'WAITING',
-          linesChanged: 0,
-          priorityLane: '',
-          trustScore: 0,
-          waitMinutes: 0,
-          headSha: '',
-          dependsOn: [],
-          decisionType: t.decisionType,
-          candidateGroup: t.candidateGroup,
-          expiresAt: t.expiresAt,
-          escalationStage: t.escalationStage,
-        });
+        const existing = [...byCase.values()].find(r => r.prNumber === prNum && r.repo === repo);
+        if (existing) {
+          existing.stage = 'HUMAN_GATE';
+          existing.decisionType = t.decisionType;
+          existing.candidateGroup = t.candidateGroup;
+          existing.expiresAt = t.expiresAt;
+          existing.escalationStage = t.escalationStage;
+        } else {
+          byCase.set(t.caseId, {
+            caseId: t.caseId,
+            prNumber: prNum,
+            repo,
+            author: '',
+            stage: 'HUMAN_GATE',
+            status: 'WAITING',
+            linesChanged: 0,
+            priorityLane: '',
+            trustScore: 0,
+            waitMinutes: 0,
+            headSha: '',
+            dependsOn: [],
+            decisionType: t.decisionType,
+            candidateGroup: t.candidateGroup,
+            expiresAt: t.expiresAt,
+            escalationStage: t.escalationStage,
+          });
+        }
       }
     }
 

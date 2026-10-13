@@ -267,10 +267,10 @@ export class PrDetail extends LitElement {
         </dl>
       `}
 
-      ${renderWorkItemAlert(workItem)}
-
       ${this._renderActions()}
       ${this._actionResult ? html`<div class="action-result">${this._actionResult}</div>` : nothing}
+
+      ${renderWorkItemAlert(workItem)}
 
       ${c ? html`
         <div class="section-title">Contributor Trust</div>

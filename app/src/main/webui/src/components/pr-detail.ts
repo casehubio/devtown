@@ -269,6 +269,9 @@ export class PrDetail extends LitElement {
 
       ${renderWorkItemAlert(workItem)}
 
+      ${this._renderActions()}
+      ${this._actionResult ? html`<div class="action-result">${this._actionResult}</div>` : nothing}
+
       ${c ? html`
         <div class="section-title">Contributor Trust</div>
         <div style="margin-bottom:6px">
@@ -331,9 +334,6 @@ export class PrDetail extends LitElement {
           ${this.queueContext.dependsOn.map(dep => html`<li>Blocked by PR #${dep}</li>`)}
         </ul>
       ` : nothing}
-
-      ${this._renderActions()}
-      ${this._actionResult ? html`<div class="action-result">${this._actionResult}</div>` : nothing}
 
       <div class="section-title">Event Timeline</div>
       <blocks-timeline

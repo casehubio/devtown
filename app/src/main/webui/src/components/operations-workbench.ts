@@ -4,7 +4,7 @@ import { columnId, ColumnType } from '@casehubio/pages-data/dist/dataset/types.j
 import type { TypedDataSet } from '@casehubio/pages-data/dist/dataset/types.js';
 import { fromRows } from '@casehubio/pages-data/dist/dataset/conversion.js';
 import type { TableColumnConfig } from '@casehubio/pages-table';
-import { emitPagesEvent } from '@casehubio/blocks-ui-core';
+import { emitPagesEvent } from '@casehubio/pages-data';
 import '@casehubio/pages-table';
 
 // ── Types ──────────────────────────────────────────────

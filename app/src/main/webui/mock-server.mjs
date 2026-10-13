@@ -64,7 +64,7 @@ createServer((req, res) => {
 
   if (path.startsWith('/api/devtown/reviews/') && !path.endsWith('/reviewers') && !path.endsWith('/contributors') && !path.includes('/reviewers/') && !path.includes('/contributors/')) {
     const id = path.split('/').pop();
-    const detail = reviewDetails[id] || template;
+    const detail = reviewDetails[id] || { ...template, caseId: id, pr: { repo: 'unknown', prNumber: 0, contributor: 'unknown', linesChanged: 0, headSha: '0000000' } };
     res.writeHead(200, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
     res.end(JSON.stringify(detail));
     return;

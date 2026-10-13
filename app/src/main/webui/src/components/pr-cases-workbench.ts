@@ -4,11 +4,12 @@ import { columnId, ColumnType } from '@casehubio/pages-data/dist/dataset/types.j
 import type { TypedDataSet } from '@casehubio/pages-data/dist/dataset/types.js';
 import { fromRows } from '@casehubio/pages-data/dist/dataset/conversion.js';
 import type { TableColumnConfig } from '@casehubio/pages-table';
-import { emitPagesEvent, onPagesEvent } from '@casehubio/blocks-ui-core';
+import { emitPagesEvent, onPagesEvent } from '@casehubio/pages-data';
 import { renderVitals } from './shared/vitals.js';
 import type { VitalEntry } from './shared/vitals.js';
 import '@casehubio/pages-table';
-import '@casehubio/blocks-ui-split-workbench';
+import { PagesSplitWorkbench } from '@casehubio/pages-ui-components/split-workbench';
+if (!customElements.get('pages-split-workbench')) customElements.define('pages-split-workbench', PagesSplitWorkbench);
 import './pr-detail.js';
 
 interface ReviewEntry {
@@ -211,7 +212,7 @@ export class PrCasesWorkbench extends LitElement {
 
   static override styles = css`
     :host { display: block; height: 100%; font-family: var(--pages-font-family, system-ui); }
-    blocks-split-workbench { height: 100%; }
+    pages-split-workbench { height: 100%; }
     .list-panel { height: 100%; overflow: auto; padding: 0 12px; }
     .detail-panel { height: 100%; }
     .filter-chips {
@@ -522,7 +523,7 @@ export class PrCasesWorkbench extends LitElement {
     const selectedRow = this._unified.find(r => r.caseId === this._selectedCaseId) ?? null;
 
     return html`
-      <blocks-split-workbench selection-topic="review" title="PR Cases">
+      <pages-split-workbench selection-topic="review" title="PR Cases">
         <div slot="list" class="list-panel">
           <div class="filter-chips">
             ${this._renderChip('all', 'All', counts.all)}
@@ -584,7 +585,7 @@ export class PrCasesWorkbench extends LitElement {
               ></devtown-pr-detail>`
           }
         </div>
-      </blocks-split-workbench>
+      </pages-split-workbench>
     `;
   }
 

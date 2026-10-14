@@ -14,8 +14,8 @@ import io.casehub.devtown.domain.ReviewDomain;
 import io.casehub.ledger.api.model.AttestationVerdict;
 import io.casehub.ledger.api.model.LedgerEntryType;
 import io.casehub.ledger.api.spi.LedgerEntryRepository;
-import io.casehub.ledger.model.WorkerDecisionEntry;
 import io.casehub.ledger.core.trust.TrustGateService;
+import io.casehub.ledger.model.WorkerDecisionEntry;
 import io.casehub.ledger.runtime.service.TrustScoreJob;
 import io.casehub.platform.api.identity.ActorType;
 import io.quarkus.narayana.jta.QuarkusTransaction;
@@ -25,7 +25,6 @@ import io.quarkus.test.security.TestSecurity;
 import jakarta.inject.Inject;
 import org.junit.jupiter.api.Test;
 
-import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
@@ -51,6 +50,25 @@ class TrustFeedbackClosedLoopTest {
     @Inject TrustGateService trustGateService;
     @Inject AgentRoutingStrategy routingStrategy;
     @Inject TrustScoreJob trustScoreJob;
+
+
+    @Inject
+    @io.casehub.ledger.jpa.LedgerPersistenceUnit
+    jakarta.persistence.EntityManager em;
+
+    @org.junit.jupiter.api.BeforeEach
+    void cleanDatabase() {
+        QuarkusTransaction.requiringNew().run(() -> {
+            em.createNativeQuery("SET REFERENTIAL_INTEGRITY FALSE").executeUpdate();
+            em.createNativeQuery("TRUNCATE TABLE ledger_attestation").executeUpdate();
+            em.createNativeQuery("TRUNCATE TABLE worker_decision_entry").executeUpdate();
+            em.createNativeQuery("TRUNCATE TABLE merge_decision_ledger_entry").executeUpdate();
+            em.createNativeQuery("TRUNCATE TABLE ledger_entry").executeUpdate();
+            em.createNativeQuery("TRUNCATE TABLE actor_trust_score").executeUpdate();
+            em.createNativeQuery("TRUNCATE TABLE trust_score_snapshot").executeUpdate();
+            em.createNativeQuery("SET REFERENTIAL_INTEGRITY TRUE").executeUpdate();
+        });
+    }
 
     @Test
     void closedLoop_soundBuildsTrust_incidentDegradesTrust_routingShifts() {

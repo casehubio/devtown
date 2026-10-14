@@ -12,7 +12,7 @@ class TrustEndpointTest {
     @Test
     void scoreProxyReturnsJsonForUnknownActor() {
         RestAssured.given()
-                .when().get("/api/governance/trust/unknown-agent")
+                .when().get("/api/devtown/trust/unknown-agent")
                 .then()
                 .statusCode(200)
                 .body("actorId", equalTo("unknown-agent"))
@@ -24,7 +24,7 @@ class TrustEndpointTest {
     @Test
     void routingHistoryReturnsEmptyListForUnknownActor() {
         RestAssured.given()
-                .when().get("/api/governance/trust/unknown-agent/routing-history")
+                .when().get("/api/devtown/trust/unknown-agent/routing-history")
                 .then()
                 .statusCode(200)
                 .body("$", hasSize(0));
@@ -33,7 +33,7 @@ class TrustEndpointTest {
     @Test
     void routingDetailReturns404ForNonexistentEntry() {
         RestAssured.given()
-                .when().get("/api/governance/trust/unknown-agent/routing-history/00000000-0000-0000-0000-000000000001")
+                .when().get("/api/devtown/trust/unknown-agent/routing-history/00000000-0000-0000-0000-000000000001")
                 .then()
                 .statusCode(404);
     }

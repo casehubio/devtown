@@ -253,7 +253,8 @@ class GovernanceQueryResolverTest {
                 101, "casehubio/devtown", "sha1", "alice", 0.85, "HIGH",
                 enqueued, 30, java.util.Set.of());
         var batchSummary = new GovernanceQueryService.ActiveBatchEntry(
-                batchCaseId, "batch-1", 1, "low");
+                batchCaseId, "batch-1", 1, "low",
+                "PENDING", List.of(101), enqueued, null);
         var status = new GovernanceQueryService.MergeQueueStatus(
                 1, 1, List.of(queuedPr), List.of(batchSummary));
         when(governanceQuery.mergeQueue()).thenReturn(status);

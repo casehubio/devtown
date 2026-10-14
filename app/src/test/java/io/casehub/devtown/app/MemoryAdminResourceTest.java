@@ -57,7 +57,7 @@ class MemoryAdminResourceTest {
             .contentType("application/json")
             .body("{\"login\": \"alice\"}")
         .when()
-            .post("/api/admin/memory/erase/contributor")
+            .post("/api/devtown/compliance/memory/erase-contributor")
         .then()
             .statusCode(204);
 
@@ -73,7 +73,7 @@ class MemoryAdminResourceTest {
             .contentType("application/json")
             .body("{}")
         .when()
-            .post("/api/admin/memory/erase/contributor")
+            .post("/api/devtown/compliance/memory/erase-contributor")
         .then()
             .statusCode(400);
     }
@@ -84,7 +84,7 @@ class MemoryAdminResourceTest {
             .contentType("application/json")
             .body("{\"login\": \"  \"}")
         .when()
-            .post("/api/admin/memory/erase/contributor")
+            .post("/api/devtown/compliance/memory/erase-contributor")
         .then()
             .statusCode(400);
     }
@@ -95,7 +95,7 @@ class MemoryAdminResourceTest {
             .contentType("application/json")
             .body("{\"login\": \"nonexistent\"}")
         .when()
-            .post("/api/admin/memory/erase/contributor")
+            .post("/api/devtown/compliance/memory/erase-contributor")
         .then()
             .statusCode(204);
     }
@@ -128,7 +128,7 @@ class MemoryAdminResourceTest {
                 .contentType("application/json")
                 .body("{\"login\": \"bob\"}")
             .when()
-                .post("/api/admin/memory/erase/contributor")
+                .post("/api/devtown/compliance/memory/erase-contributor")
             .then()
                 .statusCode(204);
 

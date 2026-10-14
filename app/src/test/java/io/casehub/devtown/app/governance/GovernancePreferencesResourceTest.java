@@ -13,7 +13,7 @@ class GovernancePreferencesResourceTest {
   void returnsDefaultPreferences() {
     given()
         .when()
-        .get("/api/governance/preferences")
+        .get("/api/devtown/governance/preferences")
         .then()
         .statusCode(200)
         .body("refresh.operational", is("10second"))

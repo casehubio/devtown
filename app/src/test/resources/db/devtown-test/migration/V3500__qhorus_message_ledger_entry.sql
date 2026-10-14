@@ -1,4 +1,5 @@
--- V3000: test-only — message_ledger_entry subclass table from qhorus V2000
+-- V3500: test-only — message_ledger_entry subclass table from qhorus V2000
+-- Renumbered from V3000 to avoid collision with V3000__devtown_initial_schema.sql (main)
 -- Duplicated here to avoid V2000 collision when db/qhorus/migration and
 -- db/engine-ledger/migration are combined into one Flyway instance.
 -- The LedgerEntry JOINED inheritance query LEFT JOINs to this table even

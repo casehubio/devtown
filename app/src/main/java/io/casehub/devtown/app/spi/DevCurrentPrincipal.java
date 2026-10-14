@@ -1,10 +1,14 @@
 package io.casehub.devtown.app.spi;
 
 import io.casehub.platform.api.identity.CurrentPrincipal;
+import jakarta.annotation.Priority;
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.inject.Alternative;
 import java.util.Set;
 
 @ApplicationScoped
+@Alternative
+@Priority(1)
 public class DevCurrentPrincipal implements CurrentPrincipal {
 
     @Override

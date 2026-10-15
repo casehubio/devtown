@@ -13,6 +13,8 @@ import io.casehub.platform.api.mcp.PathParam;
 import io.casehub.platform.api.mcp.PlatformMutation;
 import io.casehub.platform.api.mcp.PlatformQuery;
 import io.casehub.platform.api.mcp.RestPath;
+import io.casehub.devtown.domain.DevtownRoles;
+import jakarta.annotation.security.RolesAllowed;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.BadRequestException;
@@ -32,6 +34,7 @@ public class DevtownComplianceApi {
 
     @PlatformQuery("Get code review compliance evidence for a case")
     @RestPath("/code-review/{caseId}")
+    @RolesAllowed({DevtownRoles.ENGINEER, DevtownRoles.AUDITOR, DevtownRoles.ADMIN})
     public CodeReviewComplianceEvidence getEvidence(@PathParam UUID caseId) {
         Optional<CodeReviewComplianceEvidence> evidence =
                 complianceService.findEvidence(caseId, principal.tenancyId());
@@ -40,12 +43,14 @@ public class DevtownComplianceApi {
 
     @PlatformMutation("Request GDPR erasure for an actor")
     @RestPath("/erasure/{actorId}")
+    @RolesAllowed({DevtownRoles.DATA_CONTROLLER, DevtownRoles.ADMIN})
     public ErasureReceipt erase(@PathParam String actorId, String reason) {
         return erasureService.erase(actorId, principal.tenancyId(), reason);
     }
 
     @PlatformMutation("Erase contributor memory (GDPR)")
     @RestPath("/memory/erase-contributor")
+    @RolesAllowed(DevtownRoles.ADMIN)
     public void eraseContributor(String login) {
         if (login == null || login.isBlank()) {
             throw new BadRequestException("login is required");

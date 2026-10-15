@@ -13,6 +13,8 @@ import io.casehub.platform.api.mcp.PathParam;
 import io.casehub.platform.api.mcp.PlatformMutation;
 import io.casehub.platform.api.mcp.PlatformQuery;
 import io.casehub.platform.api.mcp.RestPath;
+import io.casehub.devtown.domain.DevtownRoles;
+import jakarta.annotation.security.RolesAllowed;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.DefaultValue;
@@ -72,12 +74,14 @@ public class DevtownReviewApi {
 
     @PlatformMutation("Submit a PR for review")
     @RestPath("/submit")
+    @RolesAllowed({DevtownRoles.ENGINEER, DevtownRoles.SERVICE, DevtownRoles.ADMIN})
     public PrReviewOutcome submitReview(PrPayload pr) {
         return prReviewService.startReview(pr);
     }
 
     @PlatformMutation("Record incident feedback")
     @RestPath("/feedback")
+    @RolesAllowed(DevtownRoles.ADMIN)
     public IncidentFeedbackResult recordFeedback(IncidentFeedback feedback) {
         return feedbackService.recordFeedback(feedback);
     }

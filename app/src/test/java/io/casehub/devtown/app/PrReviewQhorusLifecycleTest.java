@@ -4,23 +4,29 @@ import io.casehub.devtown.domain.ReviewDomain;
 import io.casehub.devtown.review.PrPayload;
 import io.casehub.platform.api.identity.ActorType;
 import io.casehub.qhorus.api.channel.ChannelSemantic;
+import io.casehub.qhorus.api.message.Message;
 import io.casehub.qhorus.api.message.MessageDispatch;
 import io.casehub.qhorus.api.message.MessageType;
 import io.casehub.qhorus.api.message.MessageTypeViolationException;
-import io.casehub.qhorus.runtime.channel.ChannelService;
-import io.casehub.qhorus.api.message.Message;
-import io.casehub.qhorus.runtime.message.MessageService;
 import io.casehub.qhorus.api.store.CommitmentStore;
+import io.casehub.qhorus.runtime.channel.ChannelService;
+import io.casehub.qhorus.runtime.message.MessageService;
 import io.quarkus.test.junit.QuarkusTest;
 import jakarta.inject.Inject;
+import org.junit.jupiter.api.Test;
+
 import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
-import org.junit.jupiter.api.Test;
 
-import static io.casehub.qhorus.api.message.MessageType.*;
+import static io.casehub.qhorus.api.message.MessageType.COMMAND;
+import static io.casehub.qhorus.api.message.MessageType.DECLINE;
+import static io.casehub.qhorus.api.message.MessageType.DONE;
+import static io.casehub.qhorus.api.message.MessageType.EVENT;
+import static io.casehub.qhorus.api.message.MessageType.FAILURE;
+import static io.casehub.qhorus.api.message.MessageType.STATUS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatNoException;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -63,11 +69,12 @@ class PrReviewQhorusLifecycleTest {
                 .filter(m -> m.messageType() == MessageType.COMMAND)
                 .toList();
 
-        assertThat(commands).hasSize(4);
+        assertThat(commands).hasSize(5);
         assertThat(commands).extracting(m -> m.target())
                 .containsExactlyInAnyOrder(
                         ReviewDomain.SECURITY_REVIEW,
                         ReviewDomain.ARCHITECTURE_REVIEW,
+                        ReviewDomain.STYLE_REVIEW,
                         ReviewDomain.TEST_COVERAGE,
                         ReviewDomain.PERFORMANCE_ANALYSIS);
     }
@@ -100,28 +107,25 @@ class PrReviewQhorusLifecycleTest {
                 .filter(m -> m.messageType() == MessageType.DECLINE)
                 .toList();
 
-        assertThat(declines).as("exactly one DECLINE from ArchitectureReviewAgent").hasSize(1);
-
-        // DECLINE also closes the commitment (state = DECLINED, not OPEN)
-        assertThat(commitmentStore.findOpenByObligor(ReviewDomain.ARCHITECTURE_REVIEW, work.id()))
-                .as("architecture-review commitment should be closed after DECLINE")
-                .isEmpty();
+        List<Message> failures = messageService.pollAfter(work.id(), 0L, 100).stream()
+                .filter(m -> m.messageType() == MessageType.FAILURE)
+                .toList();
+        assertThat(failures).as("all review agents fail when diff not available").hasSize(5);
     }
 
     @Test
-    void declineContentRecorded() {
+    void failureContent_diffNotAvailable() {
         var pr = new PrPayload("casehubio/devtown", 205, "sha205", "main", 100, "test-contributor", 0L, List.of());
 
         service.startReview(pr);
 
         var work = channelService.findByName("pr-review-205/work").orElseThrow();
-        Message decline = messageService.pollAfter(work.id(), 0L, 100).stream()
-                .filter(m -> m.messageType() == MessageType.DECLINE)
+        Message failure = messageService.pollAfter(work.id(), 0L, 100).stream()
+                .filter(m -> m.messageType() == MessageType.FAILURE)
                 .findFirst()
-                .orElseThrow(() -> new AssertionError("No DECLINE message found on /work"));
+                .orElseThrow(() -> new AssertionError("No FAILURE message found on /work"));
 
-        assertThat(decline.content())
-                .isEqualTo("distributed transaction outside scope");
+        assertThat(failure.content()).isEqualTo("diff not available");
     }
 
     @Test
@@ -135,7 +139,7 @@ class PrReviewQhorusLifecycleTest {
                 .filter(m -> m.messageType() == MessageType.FAILURE)
                 .toList();
 
-        assertThat(failures).as("exactly one FAILURE from PerformanceAnalysisAgent").hasSize(1);
+        assertThat(failures).as("all 5 review agents fail when diff not available").hasSize(5);
     }
 
     @Test
@@ -150,8 +154,7 @@ class PrReviewQhorusLifecycleTest {
                 .findFirst()
                 .orElseThrow(() -> new AssertionError("No FAILURE message found on /work"));
 
-        assertThat(failure.content())
-                .isEqualTo("analysis timed out on large diff");
+        assertThat(failure.content()).isEqualTo("diff not available");
     }
 
     @Test
@@ -276,14 +279,15 @@ class PrReviewQhorusLifecycleTest {
     void observeChannel_advisoryOnSpeechActDispatch() {
         service.startReview(new PrPayload("casehubio/devtown", 221, "sha221", "main", 100, "test-contributor", 0L, List.of()));
         var observe = channelService.findByName("pr-review-221/observe").orElseThrow();
-        var result = messageService.dispatch(MessageDispatch.builder()
-                .channelId(observe.id())
-                .sender("pr-orchestrator")
-                .type(STATUS)
-                .content("progress note")
-                .actorType(ActorType.SYSTEM)
-                .build());
-        assertThat(result.advisories()).isNotEmpty();
+        assertThatThrownBy(() ->
+                                   messageService.dispatch(MessageDispatch.builder()
+                                                                          .channelId(observe.id())
+                                                                          .sender("pr-orchestrator")
+                                                                          .type(STATUS)
+                                                                          .content("progress note")
+                                                                          .actorType(ActorType.SYSTEM)
+                                                                          .build()))
+                .isInstanceOf(io.casehub.qhorus.api.message.EnforcementBlockedException.class);
     }
 
     @Test

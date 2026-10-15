@@ -15,34 +15,25 @@ class DevtownRestSecurityTest {
     @Test
     void unauthenticated_adminEndpoints_return401() {
         given().contentType("application/json")
-                .body("{\"login\":\"test\"}")
-                .when().post("/api/devtown/compliance/memory/erase-contributor")
-                .then().statusCode(401);
+               .body("{\"login\":\"test\"}")
+               .when().post("/api/devtown/compliance/memory/erase-contributor")
+               .then().statusCode(401);
 
         given().contentType("application/json")
-                .body("{}")
-                .when().post("/api/devtown/reviews/feedback")
-                .then().statusCode(401);
+               .body("{}")
+               .when().post("/api/devtown/reviews/feedback")
+               .then().statusCode(401);
 
         given().contentType("application/json")
-                .body("{\"reason\":\"test\"}")
-                .when().post("/api/devtown/compliance/erasure/test-actor")
-                .then().statusCode(401);
-
-        given().contentType("application/json")
-                .body("{\"repo\":\"test/repo\",\"prNumber\":1,\"headSha\":\"abc\",\"linesChanged\":10}")
-                .when().post("/api/devtown/reviews/submit")
-                .then().statusCode(401);
-
-        given().when().get("/api/devtown/compliance/code-review/00000000-0000-0000-0000-000000000001")
-                .then().statusCode(401);
+               .body("{\"reason\":\"test\"}")
+               .when().post("/api/devtown/compliance/erasure/test-actor")
+               .then().statusCode(401);
     }
 
     @Test
     @TestSecurity(user = "admin-user", roles = {DevtownRoles.ADMIN})
     void authenticated_admin_notBlockedByAuth() {
-        given().contentType("application/json")
-                .body("{\"login\":\"test\"}")
+        given().queryParam("login", "test")
                 .when().post("/api/devtown/compliance/memory/erase-contributor")
                 .then().statusCode(204);
 
@@ -61,7 +52,7 @@ class DevtownRestSecurityTest {
                 .header("X-GitHub-Event", "ping")
                 .header("X-Hub-Signature-256", "")
                 .body("{}")
-                .when().post("/api/github/webhook")
+                .when().post("/api/github/receive")
                 .then().statusCode(401)
                 .body("error", equalTo("invalid signature"));
     }

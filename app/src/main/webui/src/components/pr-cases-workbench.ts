@@ -116,21 +116,38 @@ const COL_CANDIDATE = columnId('candidateGroup');
 const COL_EXPIRES = columnId('expiresAt');
 const COL_ESCALATION = columnId('escalationStage');
 
-const ALL_COLUMN_DEFS = [
-  { id: COL_PR, name: 'PR', type: ColumnType.NUMBER, getValue: (r: UnifiedPrRow) => r.prNumber },
-  { id: COL_REPO, name: 'Repo', type: ColumnType.TEXT, getValue: (r: UnifiedPrRow) => r.repo },
-  { id: COL_AUTHOR, name: 'Author', type: ColumnType.TEXT, getValue: (r: UnifiedPrRow) => r.author },
-  { id: COL_STAGE, name: 'Stage', type: ColumnType.TEXT, getValue: (r: UnifiedPrRow) => r.stage },
-  { id: COL_STATUS, name: 'Status', type: ColumnType.TEXT, getValue: (r: UnifiedPrRow) => r.status },
-  { id: COL_LINES, name: 'Lines', type: ColumnType.NUMBER, getValue: (r: UnifiedPrRow) => r.linesChanged },
-  { id: COL_LANE, name: 'Lane', type: ColumnType.TEXT, getValue: (r: UnifiedPrRow) => r.priorityLane },
-  { id: COL_TRUST, name: 'Trust', type: ColumnType.NUMBER, getValue: (r: UnifiedPrRow) => r.trustScore },
-  { id: COL_WAIT, name: 'Wait (min)', type: ColumnType.NUMBER, getValue: (r: UnifiedPrRow) => r.waitMinutes },
-  { id: COL_DECISION_TYPE, name: 'Decision', type: ColumnType.TEXT, getValue: (r: UnifiedPrRow) => r.decisionType },
-  { id: COL_CANDIDATE, name: 'Candidate Group', type: ColumnType.TEXT, getValue: (r: UnifiedPrRow) => r.candidateGroup },
-  { id: COL_EXPIRES, name: 'Expires', type: ColumnType.TEXT, getValue: (r: UnifiedPrRow) => r.expiresAt },
-  { id: COL_ESCALATION, name: 'Escalation', type: ColumnType.TEXT, getValue: (r: UnifiedPrRow) => r.escalationStage },
-];
+function formatEnum(v: string): string {
+  if (!v) return '';
+  return v.replace(/[_-]/g, ' ').toLowerCase().replace(/\b\w/g, c => c.toUpperCase());
+}
+
+function shortRepo(v: string): string {
+  const parts = v.split('/');
+  return parts.length > 1 ? parts[parts.length - 1] : v;
+}
+
+const DEF_PR = { id: COL_PR, name: 'PR', type: ColumnType.NUMBER, getValue: (r: UnifiedPrRow) => r.prNumber };
+const DEF_REPO = { id: COL_REPO, name: 'Repo', type: ColumnType.TEXT, getValue: (r: UnifiedPrRow) => shortRepo(r.repo) };
+const DEF_AUTHOR = { id: COL_AUTHOR, name: 'Author', type: ColumnType.TEXT, getValue: (r: UnifiedPrRow) => r.author };
+const DEF_STAGE = { id: COL_STAGE, name: 'Stage', type: ColumnType.TEXT, getValue: (r: UnifiedPrRow) => formatEnum(r.stage) };
+const DEF_STATUS = { id: COL_STATUS, name: 'Status', type: ColumnType.TEXT, getValue: (r: UnifiedPrRow) => formatEnum(r.status) };
+const DEF_LINES = { id: COL_LINES, name: 'Lines', type: ColumnType.NUMBER, getValue: (r: UnifiedPrRow) => r.linesChanged };
+const DEF_LANE = { id: COL_LANE, name: 'Lane', type: ColumnType.TEXT, getValue: (r: UnifiedPrRow) => formatEnum(r.priorityLane) };
+const DEF_TRUST = { id: COL_TRUST, name: 'Trust', type: ColumnType.NUMBER, getValue: (r: UnifiedPrRow) => r.trustScore };
+const DEF_WAIT = { id: COL_WAIT, name: 'Wait', type: ColumnType.NUMBER, getValue: (r: UnifiedPrRow) => r.waitMinutes };
+const DEF_DECISION = { id: COL_DECISION_TYPE, name: 'Decision', type: ColumnType.TEXT, getValue: (r: UnifiedPrRow) => formatEnum(r.decisionType.replace(/^human-decision:/, '').replace(/^human-oversight:/, '')) };
+const DEF_CANDIDATE = { id: COL_CANDIDATE, name: 'Group', type: ColumnType.TEXT, getValue: (r: UnifiedPrRow) => r.candidateGroup };
+const DEF_EXPIRES = { id: COL_EXPIRES, name: 'Expires', type: ColumnType.TEXT, getValue: (r: UnifiedPrRow) => r.expiresAt ? new Date(r.expiresAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '' };
+const DEF_ESCALATION = { id: COL_ESCALATION, name: 'Escalation', type: ColumnType.TEXT, getValue: (r: UnifiedPrRow) => formatEnum(r.escalationStage) };
+
+const ALL_COLUMN_DEFS = [DEF_PR, DEF_REPO, DEF_AUTHOR, DEF_STAGE, DEF_STATUS, DEF_LINES, DEF_LANE, DEF_TRUST, DEF_WAIT, DEF_DECISION, DEF_CANDIDATE, DEF_EXPIRES, DEF_ESCALATION];
+
+const FILTER_DEFS: Record<FilterKey, typeof ALL_COLUMN_DEFS> = {
+  all: [DEF_PR, DEF_REPO, DEF_AUTHOR, DEF_STAGE, DEF_STATUS],
+  review: [DEF_PR, DEF_REPO, DEF_AUTHOR, DEF_STATUS, DEF_LINES],
+  decision: [DEF_PR, DEF_REPO, DEF_AUTHOR, DEF_DECISION, DEF_CANDIDATE, DEF_EXPIRES, DEF_ESCALATION],
+  queued: [DEF_PR, DEF_REPO, DEF_AUTHOR, DEF_LANE, DEF_TRUST, DEF_WAIT],
+};
 
 const FILTER_COLUMNS: Record<FilterKey, readonly TableColumnConfig[]> = {
   all: [
@@ -265,6 +282,14 @@ export class PrCasesWorkbench extends LitElement {
       onPagesEvent(document, 'review:deselected', () => {
         this._selectedCaseId = '';
         this._selectedBatch = null;
+      }),
+      onPagesEvent(document, 'review:selected', (detail: Record<string, unknown>) => {
+        const caseId = detail?.caseId as string;
+        if (caseId) {
+          this._selectionKind = 'pr';
+          this._selectedCaseId = caseId;
+          this._selectedBatch = null;
+        }
       }),
     );
   }
@@ -436,7 +461,7 @@ export class PrCasesWorkbench extends LitElement {
 
   private _rebuildTable(): void {
     const rows = this._filteredRows();
-    this._listData = fromRows([...rows], ALL_COLUMN_DEFS);
+    this._listData = fromRows([...rows], FILTER_DEFS[this._filter]);
   }
 
   private _filterCounts(): Record<FilterKey, number> {
@@ -461,7 +486,7 @@ export class PrCasesWorkbench extends LitElement {
         return [
           { label: 'Active', value: h.activeCases },
           { label: 'Fleet', value: h.fleetSize },
-          { label: 'Commits', value: h.openCommitments },
+          { label: 'Obligations', value: h.openCommitments },
           { label: 'Work Items', value: h.pendingWorkItems },
         ];
       case 'decision': {

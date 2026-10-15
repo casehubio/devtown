@@ -78,7 +78,7 @@ export class ReviewerWorkbench extends LitElement {
     this._loading = true;
     this._error = null;
     try {
-      const res = await fetch(`${this.endpoint}/reviewers`);
+      const res = await fetch(`${this.endpoint}/reviewers?limit=100`);
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const json = await res.json();
       this._entries = json.items ?? json;

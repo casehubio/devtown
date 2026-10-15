@@ -10,16 +10,16 @@ export const systemView = page("System",
     columns([50, 50],
       [gridTable({
         lookup: lookup("system-health", groupBy(null,
-          col("activeCases"), col("fleetSize"),
-          col("openCommitments"), col("pendingWorkItems")
+          col("activeCases", "Active Cases"), col("fleetSize", "Fleet Size"),
+          col("openCommitments", "Open Commitments"), col("pendingWorkItems", "Pending Work Items")
         )),
         rowHeaders: true,
         compact: true,
       })],
       [gridTable({
         lookup: lookup("merge-queue-metrics", groupBy(null,
-          col("queueDepth"), col("oldestWaitMinutes"),
-          col("avgWaitMinutes"), col("failureRate")
+          col("queueDepth", "Queue Depth"), col("oldestWaitMinutes", "Oldest Wait (min)"),
+          col("avgWaitMinutes", "Avg Wait (min)"), col("failureRate", "Failure Rate")
         )),
         rowHeaders: true,
         compact: true,
@@ -30,8 +30,8 @@ export const systemView = page("System",
     title("Problems", "h3"),
     dataTable({
       lookup: lookup("problems", groupBy("category",
-        col("category"), col("severity"), col("description"),
-        col("caseId"), col("actorId"), col("since")
+        col("category", "Category"), col("severity", "Severity"), col("description", "Description"),
+        col("caseId", "Case ID"), col("actorId", "Actor"), col("since", "Since")
       )),
       sortable: true,
       filter: { enabled: true },
@@ -41,13 +41,13 @@ export const systemView = page("System",
     title("SLA Calibration", "h3"),
     dataTable({
       lookup: lookup("sla-comparison", groupBy(null,
-        col("capability"),
-        col("configuredSeconds"),
-        col("estimatedMedianSeconds"),
-        col("estimatedMinSeconds"),
-        col("estimatedMaxSeconds"),
-        col("sampleCount"),
-        col("deviationPercent"),
+        col("capability", "Capability"),
+        col("configuredSeconds", "Configured (s)"),
+        col("estimatedMedianSeconds", "Median (s)"),
+        col("estimatedMinSeconds", "Min (s)"),
+        col("estimatedMaxSeconds", "Max (s)"),
+        col("sampleCount", "Samples"),
+        col("deviationPercent", "Deviation %"),
       )),
       sortable: true,
     }),

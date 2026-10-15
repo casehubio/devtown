@@ -80,7 +80,7 @@ export class ContributorWorkbench extends LitElement {
     this._loading = true;
     this._error = null;
     try {
-      const res = await fetch(`${this.endpoint}/contributors`);
+      const res = await fetch(`${this.endpoint}/contributors?limit=100`);
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const json = await res.json();
       const items: ContributorEntry[] = json.items ?? json;

@@ -110,7 +110,7 @@ export class ContributorDetail extends LitElement {
       }
       return { text: `In fast-track but only ${margin} points above the ${ftPct}% threshold. A few rejected PRs could demote to standard review.`, level: 'watch' };
     }
-    if (lane.includes('enhanced')) {
+    if (lane.includes('triage')) {
       const gap = Math.round((std - score) * 100);
       if (gap > 15) {
         return { text: `${gap} points below the standard threshold (${stdPct}%). Needs a sustained run of clean merges to move up.`, level: 'risk' };
@@ -124,9 +124,9 @@ export class ContributorDetail extends LitElement {
       return { text: `${toFt} points below fast-track (${ftPct}%). Close to promotion — a few more clean merges could earn fast-track status.`, level: 'watch' };
     }
     if (aboveStd <= 10) {
-      return { text: `Only ${aboveStd} points above the enhanced-review threshold (${stdPct}%). At risk of demotion if quality drops.`, level: 'watch' };
+      return { text: `Only ${aboveStd} points above the triage threshold (${stdPct}%). At risk of demotion if quality drops.`, level: 'watch' };
     }
-    return { text: `Solidly in standard lane — ${scorePct}% trust, ${toFt} points from fast-track, ${aboveStd} points above enhanced-review.`, level: 'stable' };
+    return { text: `Solidly in standard lane — ${scorePct}% trust, ${toFt} points from fast-track, ${aboveStd} points above triage.`, level: 'stable' };
   }
 
   private _buildTrend(outcomes: Array<{ outcome: string }>): string {
@@ -151,7 +151,7 @@ export class ContributorDetail extends LitElement {
     const proximity = this._buildProximity(d);
 
     return html`
-      <div class="header">${d.actorId} ${renderBadge(ic.lane, ic.lane === 'FAST_TRACK' ? 'fast-track' : ic.lane === 'ENHANCED_REVIEW' ? 'enhanced' : 'standard')}</div>
+      <div class="header">${d.actorId} ${renderBadge(ic.lane, ic.lane === 'FAST_TRACK' ? 'fast-track' : ic.lane === 'TRIAGE' ? 'triage' : 'standard')}</div>
 
       <div class="narrative">${this._buildSummary(d)}</div>
 

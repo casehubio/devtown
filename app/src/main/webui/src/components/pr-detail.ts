@@ -275,7 +275,7 @@ export class PrDetail extends LitElement {
       ${c ? html`
         <div class="section-title">Contributor Trust</div>
         <div style="margin-bottom:6px">
-          ${renderBadge(c.intakeClassification.lane, c.intakeClassification.lane === 'FAST_TRACK' ? 'fast-track' : c.intakeClassification.lane === 'ENHANCED_REVIEW' ? 'enhanced' : 'standard')}
+          ${renderBadge(c.intakeClassification.lane, c.intakeClassification.lane === 'FAST_TRACK' ? 'fast-track' : c.intakeClassification.lane === 'TRIAGE' ? 'triage' : 'standard')}
         </div>
         <div class="narrative">${this._buildTrustNarrative(d.pr.contributor, c)}</div>
         ${renderTrustBar({

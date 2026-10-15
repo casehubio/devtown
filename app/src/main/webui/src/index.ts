@@ -4,9 +4,9 @@ import "@casehubio/blocks-ui-session-workbench";
 import "./components/reviewer-workbench";
 import "./components/contributor-workbench";
 import "./components/pr-cases-workbench";
+import "./components/system-workbench";
 import { createDatasets } from "./datasets";
 import { reviewersView } from "./views/reviewers";
-import { systemView } from "./views/system";
 import { definitionsView } from "./views/definitions";
 
 const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
@@ -15,6 +15,7 @@ registerPanel("session-workbench", "blocks-session-workbench");
 registerPanel("reviewer-workbench", "devtown-reviewer-workbench");
 registerPanel("contributor-workbench", "devtown-contributor-workbench");
 registerPanel("pr-cases-workbench", "devtown-pr-cases-workbench");
+registerPanel("system-workbench", "devtown-system-workbench");
 
 async function start() {
   const prefs = await fetch("/api/devtown/governance/preferences")
@@ -36,7 +37,7 @@ async function start() {
       ["Reviewers", reviewersView],
       ["Contributors", hostPanel("contributor-workbench", { endpoint: "/api/devtown/reviews" })],
       ["Workers", hostPanel("session-workbench", { endpoint: "/api/sessions" })],
-      ["System", systemView],
+      ["System", hostPanel("system-workbench", { endpoint: "/api/devtown/governance" })],
       ["Definitions", definitionsView],
     ),
     { settings: { mode: prefersDark ? "dark" : "light" }, datasets: createDatasets(prefs) },

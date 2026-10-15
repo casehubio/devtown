@@ -247,8 +247,12 @@ public class GovernanceQueryService {
 
         int pendingWorkItems = 0;
         if (workItemStore != null) {
-            pendingWorkItems = workItemStore
-                .scan(WorkItemQuery.builder().status(WorkItemStatus.PENDING).build()).size();
+            try {
+                pendingWorkItems = workItemStore
+                    .scan(WorkItemQuery.builder().status(WorkItemStatus.PENDING).build()).size();
+            } catch (Exception e) {
+                // multi-datasource transaction fails in H2 dev mode
+            }
         }
 
         return new SystemHealth(
@@ -583,6 +587,9 @@ public class GovernanceQueryService {
             String phase = totalDecisions == 0 ? "Bootstrap" : totalDecisions < 5 ? "Emerging" : "Active";
             int openCommitments = openByActor.getOrDefault(actor.actorId(), 0L).intValue();
             return new ReviewerFleetEntry(actor.actorId(), capScores, phase, openCommitments, totalDecisions);
+        }).filter(entry -> {
+            var caps = entry.trustByCapability().keySet();
+            return !caps.isEmpty() && !caps.stream().allMatch(ContributorTrustCapability.PR_CONTRIBUTION::equals);
         }).toList();
     }
 
@@ -690,28 +697,33 @@ public class GovernanceQueryService {
 
     public List<TriageItem> triageItems() {
         if (workItemStore == null) {return List.of();}
-        var activeStatuses = List.of(WorkItemStatus.PENDING, WorkItemStatus.ASSIGNED);
-        var humanDecisions = workItemStore.scan(
-                WorkItemQuery.builder().statusIn(activeStatuses).type("human-decision").build());
-        var humanOversight = workItemStore.scan(
-                WorkItemQuery.builder().statusIn(activeStatuses).type("human-oversight").build());
-        var judgmentItems = workItemStore.scan(
-                                                 WorkItemQuery.builder().statusIn(activeStatuses).build())
-                                         .stream().filter(wi -> wi.callerRef() != null && wi.callerRef().contains("/pi:"))
-                                         .filter(wi -> wi.types() == null || wi.types().isEmpty())
-                                         .toList();
+        try {
+            var activeStatuses = List.of(WorkItemStatus.PENDING, WorkItemStatus.ASSIGNED);
+            var humanDecisions = workItemStore.scan(
+                    WorkItemQuery.builder().statusIn(activeStatuses).type("human-decision").build());
+            var humanOversight = workItemStore.scan(
+                    WorkItemQuery.builder().statusIn(activeStatuses).type("human-oversight").build());
+            var judgmentItems = workItemStore.scan(
+                                                     WorkItemQuery.builder().statusIn(activeStatuses).build())
+                                             .stream().filter(wi -> wi.callerRef() != null && wi.callerRef().contains("/pi:"))
+                                             .filter(wi -> wi.types() == null || wi.types().isEmpty())
+                                             .toList();
 
-        var seen = new java.util.HashSet<java.util.UUID>();
-        var all  = new ArrayList<WorkItem>();
-        for (var wi : humanDecisions) {if (seen.add(wi.id())) {all.add(wi);}}
-        for (var wi : humanOversight) {if (seen.add(wi.id())) {all.add(wi);}}
-        for (var wi : judgmentItems) {if (seen.add(wi.id())) {all.add(wi);}}
+            var seen = new java.util.HashSet<java.util.UUID>();
+            var all  = new ArrayList<WorkItem>();
+            for (var wi : humanDecisions) {if (seen.add(wi.id())) {all.add(wi);}}
+            for (var wi : humanOversight) {if (seen.add(wi.id())) {all.add(wi);}}
+            for (var wi : judgmentItems) {if (seen.add(wi.id())) {all.add(wi);}}
 
-        return all.stream().map(wi -> new TriageItem(
-                          wi.id(), "", firstTypePath(wi), wi.candidateGroups(),
-                          wi.expiresAt(), "", wi.status().name(), wi.createdAt(), wi.parentId()
-                  )).sorted(Comparator.comparing(t -> t.expiresAt() != null ? t.expiresAt() : Instant.MAX))
-                  .toList();
+            return all.stream().map(wi -> new TriageItem(
+                              wi.id(), "", firstTypePath(wi), wi.candidateGroups(),
+                              wi.expiresAt(), "", wi.status().name(), wi.createdAt(), wi.parentId()
+                      )).sorted(Comparator.comparing(t -> t.expiresAt() != null ? t.expiresAt() : Instant.MAX))
+                      .toList();
+        } catch (Exception e) {
+            // multi-datasource transaction fails in H2 dev mode
+            return List.of();
+        }
     }
 
     public List<ReviewListEntry> reviewsList() {

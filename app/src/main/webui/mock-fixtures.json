@@ -21,11 +21,11 @@
   "/api/devtown/governance/merge-queue": {
     "queuedCount": 5, "activeBatchCount": 2,
     "queuedPrs": [
-      {"number": 142, "repository": "casehubio/engine", "headSha": "abc1234", "author": "alice", "trustScore": 0.88, "priorityLane": "FAST_TRACK", "enqueuedAt": "2026-10-09T07:30:00Z", "waitMinutes": 105, "dependsOn": []},
-      {"number": 218, "repository": "casehubio/devtown", "headSha": "def5678", "author": "bob", "trustScore": 0.72, "priorityLane": "STANDARD", "enqueuedAt": "2026-10-09T08:00:00Z", "waitMinutes": 75, "dependsOn": [142]},
-      {"number": 97, "repository": "casehubio/ledger", "headSha": "fed9876", "author": "carol", "trustScore": 0.45, "priorityLane": "ENHANCED_REVIEW", "enqueuedAt": "2026-10-09T06:00:00Z", "waitMinutes": 195, "dependsOn": []},
-      {"number": 55, "repository": "casehubio/qhorus", "headSha": "cba4321", "author": "dave", "trustScore": 0.91, "priorityLane": "FAST_TRACK", "enqueuedAt": "2026-10-09T08:45:00Z", "waitMinutes": 30, "dependsOn": []},
-      {"number": 301, "repository": "casehubio/platform", "headSha": "111aaa2", "author": "eve", "trustScore": 0.63, "priorityLane": "STANDARD", "enqueuedAt": "2026-10-09T07:15:00Z", "waitMinutes": 120, "dependsOn": [97]}
+      {"number": 142, "repository": "casehubio/engine", "headSha": "abc1234", "author": "alice", "trustScore": 0.88, "priorityLane": "HIGH", "enqueuedAt": "2026-10-09T07:30:00Z", "waitMinutes": 105, "dependsOn": []},
+      {"number": 218, "repository": "casehubio/devtown", "headSha": "def5678", "author": "bob", "trustScore": 0.72, "priorityLane": "NORMAL", "enqueuedAt": "2026-10-09T08:00:00Z", "waitMinutes": 75, "dependsOn": [142]},
+      {"number": 97, "repository": "casehubio/ledger", "headSha": "fed9876", "author": "carol", "trustScore": 0.45, "priorityLane": "NORMAL", "enqueuedAt": "2026-10-09T06:00:00Z", "waitMinutes": 195, "dependsOn": []},
+      {"number": 55, "repository": "casehubio/qhorus", "headSha": "cba4321", "author": "dave", "trustScore": 0.91, "priorityLane": "CRITICAL", "enqueuedAt": "2026-10-09T08:45:00Z", "waitMinutes": 30, "dependsOn": []},
+      {"number": 301, "repository": "casehubio/platform", "headSha": "111aaa2", "author": "eve", "trustScore": 0.63, "priorityLane": "NORMAL", "enqueuedAt": "2026-10-09T07:15:00Z", "waitMinutes": 120, "dependsOn": [97]}
     ],
     "activeBatches": [
       {"caseId": "b2c3d4e5-0002-0002-0002-000000000001", "batchId": "batch-2026-1009-001", "prCount": 3, "riskLevel": "ROUTINE", "ciStatus": "RUNNING", "prNumbers": [55, 142, 301], "startedAt": "2026-10-09T08:50:00Z"},
@@ -34,7 +34,7 @@
   },
   "/api/devtown/governance/merge-queue/metrics": {
     "queueDepth": 5, "activeBatches": 2, "oldestWaitMinutes": 195, "avgWaitMinutes": 105,
-    "avgTrustScore": 0.72, "countsByLane": {"FAST_TRACK": 2, "STANDARD": 2, "ENHANCED_REVIEW": 1},
+    "avgTrustScore": 0.72, "countsByLane": {"NORMAL": 3, "HIGH": 1, "CRITICAL": 1},
     "throughput24h": 7, "failureRate": 0.14, "batchSizeDistribution": {"2": 3, "3": 2, "4": 1}
   },
   "/api/devtown/reviews/reviewers": {"items": [
@@ -48,7 +48,7 @@
   "/api/devtown/reviews/contributors": {"items": [
     {"actorId": "alice", "trustScore": 0.88, "intakeLane": "FAST_TRACK", "observationCount": 34, "mergeRate": 0.94, "firstAttemptQuality": 0.82},
     {"actorId": "bob", "trustScore": 0.72, "intakeLane": "STANDARD", "observationCount": 18, "mergeRate": 0.78, "firstAttemptQuality": 0.65},
-    {"actorId": "carol", "trustScore": 0.45, "intakeLane": "ENHANCED_REVIEW", "observationCount": 8, "mergeRate": 0.50, "firstAttemptQuality": 0.38},
+    {"actorId": "carol", "trustScore": 0.45, "intakeLane": "TRIAGE", "observationCount": 8, "mergeRate": 0.50, "firstAttemptQuality": 0.38},
     {"actorId": "dave", "trustScore": 0.91, "intakeLane": "FAST_TRACK", "observationCount": 52, "mergeRate": 0.96, "firstAttemptQuality": 0.90},
     {"actorId": "eve", "trustScore": 0.63, "intakeLane": "STANDARD", "observationCount": 11, "mergeRate": 0.73, "firstAttemptQuality": 0.55}
   ]},
@@ -174,7 +174,7 @@
     "actorId": "carol", "globalScore": 0.45,
     "capabilityScores": {"pr-contribution": 0.45},
     "dimensionScores": {"merge-rate": 0.50, "first-attempt-quality": 0.38},
-    "intakeClassification": {"lane": "ENHANCED_REVIEW", "trustScore": 0.45, "observationCount": 8, "classificationReason": "Low trust score — enhanced review required", "fastTrackThreshold": 0.80, "standardThreshold": 0.50},
+    "intakeClassification": {"lane": "TRIAGE", "trustScore": 0.45, "observationCount": 8, "classificationReason": "Low trust score — triage review required", "fastTrackThreshold": 0.80, "standardThreshold": 0.50},
     "recentOutcomes": [
       {"caseId": "a1b2c3d4-0001-0001-0001-000000000003", "capability": "pr-contribution", "outcome": "CLOSED", "timestamp": "2026-10-07T15:00:00Z"}
     ],

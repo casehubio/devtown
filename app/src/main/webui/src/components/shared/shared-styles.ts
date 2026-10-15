@@ -133,7 +133,10 @@ export const badgeStyles = css`
   }
   .badge.fast-track { background: var(--pages-success-3, #dcfce7); color: var(--pages-success-9, #166534); }
   .badge.standard { background: var(--pages-primary-3, #dbeafe); color: var(--pages-primary-9, #1d4ed8); }
-  .badge.enhanced { background: var(--pages-warning-3, #fef3c7); color: var(--pages-warning-9, #92400e); }
+  .badge.triage { background: var(--pages-warning-3, #fef3c7); color: var(--pages-warning-9, #92400e); }
+  .badge.normal { background: var(--pages-neutral-3, #e5e5e5); color: var(--pages-neutral-7, #525252); }
+  .badge.high { background: var(--pages-primary-3, #dbeafe); color: var(--pages-primary-9, #1d4ed8); }
+  .badge.critical { background: var(--pages-error-3, #fee2e2); color: var(--pages-error-9, #991b1b); }
   .badge.active { background: var(--pages-success-3, #dcfce7); color: var(--pages-success-9, #166534); }
   .badge.emerging { background: var(--pages-primary-3, #dbeafe); color: var(--pages-primary-9, #1d4ed8); }
   .badge.bootstrap { background: var(--pages-neutral-3, #e5e5e5); color: var(--pages-neutral-7, #525252); }

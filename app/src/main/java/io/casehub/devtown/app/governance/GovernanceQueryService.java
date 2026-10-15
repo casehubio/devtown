@@ -9,6 +9,7 @@ import io.casehub.devtown.app.mcp.PrReviewCaseTracker;
 import io.casehub.devtown.app.mcp.TrackedEvent;
 import io.casehub.devtown.domain.ContributorIntakePolicy;
 import io.casehub.devtown.domain.ContributorTrustCapability;
+import io.casehub.platform.api.identity.ActorType;
 import io.casehub.devtown.domain.ContributorTrustDimension;
 import io.casehub.devtown.domain.sla.SlaPreferenceKeys;
 import io.casehub.devtown.domain.trust.ContributorIntakePreferenceKeys;
@@ -571,7 +572,9 @@ public class GovernanceQueryService {
         var openByActor = commitmentStore.findAllOpen().stream()
             .collect(Collectors.groupingBy(Commitment::obligor, Collectors.counting()));
 
-        return trustExport.actors().stream().map(actor -> {
+        return trustExport.actors().stream()
+            .filter(actor -> actor.actorType() == ActorType.AGENT)
+            .map(actor -> {
             var capScores = trustGateService.allCapabilityScores(actor.actorId());
             int totalDecisions = capScores.keySet().stream()
                 .mapToInt(cap -> trustGateService.decisionCount(actor.actorId(), cap))

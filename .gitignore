@@ -48,3 +48,5 @@ proj
 .worktrees
 .worktrees/
 .claude/
+
+.flattened-pom.xml

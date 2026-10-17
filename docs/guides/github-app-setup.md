@@ -31,7 +31,7 @@ devtown authenticates with GitHub via a GitHub App, which provides:
 2. Fill in:
    - **App name:** `devtown` (or `devtown-<org>` if name is taken)
    - **Homepage URL:** `https://github.com/casehubio/devtown`
-   - **Webhook URL:** `https://<your-domain>/api/github/webhook`
+   - **Webhook URL:** `https://<your-domain>/api/github/receive`
    - **Webhook secret:** generate a secure random string
 
 3. Set permissions:

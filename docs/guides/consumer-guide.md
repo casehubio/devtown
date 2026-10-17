@@ -231,7 +231,7 @@ All governance endpoints are under `/api/governance` and currently `@PermitAll`:
 
 | Method | Path | Purpose |
 |--------|------|---------|
-| `POST` | `/api/github/webhook` | GitHub webhook handler -- routes `pull_request`, `check_suite`, `check_run` events to case lifecycle (`revisePr`, `closePr`, `signalCiStatus`, `signalCheckRun`) |
+| `POST` | `/api/github/receive` | GitHub webhook handler -- routes `pull_request`, `check_suite`, `check_run` events to case lifecycle (`revisePr`, `closePr`, `signalCiStatus`, `signalCheckRun`) |
 
 ---
 
@@ -477,12 +477,13 @@ The `github` module provides GitHub-specific adapters:
 
 | Class | Implements | Purpose |
 |-------|-----------|---------|
-| `GitHubWebhookResource` | -- | `POST /api/github/webhook` -- routes `pull_request`, `check_suite`, `check_run` events; HMAC signature verification via `GitHubSignatureVerifier` |
+| `GitHubWebhookResource` | -- | `POST /api/github/receive` -- routes `pull_request`, `check_suite`, `check_run` events; HMAC signature verification via `GitHubSignatureVerifier` |
 | `GitHubCiStatusClient` | `CiStatusClient` | Checks CI status via GitHub Checks API |
 | `GitHubMergeClient` | `MergeClient` | Merges PRs via GitHub merge API |
 | `GitHubRevertClient` | `RevertClient` | Reverts merges via PR-based revert for coordinated rollback |
 | `GitHubBatchBranchClient` | `BatchBranchClient` | Git operations for merge queue batch branch management |
 | `GitHubPayloadMapper` | -- | Maps GitHub webhook payloads to domain `PrPayload` |
+| `PublicEndpointResolver` | -- | SPI for resolving devtown's public URL (default: config property `devtown.public-url`) |
 
 REST client interfaces: `GitHubPullRequestApi`, `GitHubMergeApi`, `GitHubChecksApi`, `GitHubGitApi`.
 

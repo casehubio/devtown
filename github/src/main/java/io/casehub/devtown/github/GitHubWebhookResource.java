@@ -221,6 +221,10 @@ public class GitHubWebhookResource {
     private Response handleCheckRun(String body) throws Exception {
         var event = MAPPER.readValue(body, GitHubCheckRunEvent.class);
 
+        if (event.check_run().name() != null && event.check_run().name().startsWith("devtown/")) {
+            return ok(Map.of("status", "ignored", "reason", "self-created"));
+        }
+
         if (!"completed".equals(event.action())) {
             return ok(Map.of("status", "ignored", "action", event.action()));
         }

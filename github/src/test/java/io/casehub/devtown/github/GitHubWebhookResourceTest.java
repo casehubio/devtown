@@ -293,6 +293,32 @@ class GitHubWebhookResourceTest {
     }
 
     @Test
+    void checkRun_devtownPrefix_filteredAsSelfCreated() {
+        String body     = checkRunEvent("completed", "devtown/security-review", "success");
+        var    response = resource.receive(body, "check_run", sign(body), "delivery-1");
+        assertThat(response.getStatus()).isEqualTo(200);
+        assertThat(responseBody(response)).containsEntry("status", "ignored");
+        assertThat(responseBody(response)).containsEntry("reason", "self-created");
+        assertThat(service.lastCheckRunName).isNull();
+    }
+
+    @Test
+    void checkRun_devtownPrefix_nonCompletedAction_stillFiltered() {
+        String body     = checkRunEvent("created", "devtown/code-analysis", null);
+        var    response = resource.receive(body, "check_run", sign(body), "delivery-1");
+        assertThat(responseBody(response)).containsEntry("status", "ignored");
+        // Could be filtered by action OR prefix — either is acceptable
+    }
+
+    @Test
+    void checkRun_nonDevtownPrefix_notFiltered() {
+        String body = checkRunEvent("completed", "ci/lint", "success");
+        resource.receive(body, "check_run", sign(body), "delivery-1");
+        assertThat(service.lastCheckRunName).isEqualTo("ci/lint");
+    }
+
+
+    @Test
     void labeled_mergeReady_callsAdmit() {
         String body = labeledEvent("merge-ready", false);
         var response = resource.receive(body, "pull_request", sign(body), "delivery-1");

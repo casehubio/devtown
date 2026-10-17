@@ -14,4 +14,17 @@ public final class OutputMappingKeys {
         Matcher m = TOP_LEVEL_KEY.matcher(outputMapping);
         return m.find() ? m.group(1) : null;
     }
+
+    public static String contextKeyForCapability(String capability) {
+        return switch (capability) {
+            case "security-review" -> "securityReview";
+            case "architecture-review" -> "architectureReview";
+            case "style-review" -> "styleCheck";
+            case "test-coverage" -> "testCoverage";
+            case "performance-analysis" -> "performanceAnalysis";
+            case "human-decision:pr-approval" -> "humanApproval";
+            default -> null;
+        };
+    }
+
 }

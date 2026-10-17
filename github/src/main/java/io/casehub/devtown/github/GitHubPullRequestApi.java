@@ -57,4 +57,32 @@ public interface GitHubPullRequestApi {
             @QueryParam("page") int page) {
         throw new UnsupportedOperationException("listPullRequestFiles");
     }
+
+    @POST
+    @Path("/{owner}/{repo}/pulls/{pull_number}/reviews")
+    default Map<String, Object> createReview(@PathParam("owner") String owner,
+                                     @PathParam("repo") String repo,
+                                     @PathParam("pull_number") int pullNumber,
+                                     Map<String, Object> body) {
+        throw new UnsupportedOperationException("createReview");
+    }
+
+    @POST
+    @Path("/{owner}/{repo}/pulls/{pull_number}/requested_reviewers")
+    default Map<String, Object> requestReviewers(@PathParam("owner") String owner,
+                                         @PathParam("repo") String repo,
+                                         @PathParam("pull_number") int pullNumber,
+                                         Map<String, Object> body) {
+        throw new UnsupportedOperationException("requestReviewers");
+    }
+
+    @POST
+    @Path("/{owner}/{repo}/issues/{issue_number}/comments")
+    default Map<String, Object> createIssueComment(@PathParam("owner") String owner,
+                                           @PathParam("repo") String repo,
+                                           @PathParam("issue_number") int issueNumber,
+                                           Map<String, Object> body) {
+        throw new UnsupportedOperationException("createIssueComment");
+    }
+
 }

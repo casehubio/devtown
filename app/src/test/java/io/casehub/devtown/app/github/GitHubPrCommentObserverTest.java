@@ -108,6 +108,49 @@ class GitHubPrCommentObserverTest {
     }
 
     @Test
+    @SuppressWarnings("unchecked")
+    void malformedSeveritySkipsFindingWithoutDroppingOthers() {
+        UUID caseId = UUID.randomUUID();
+        var pr = new PrPayload("owner/repo", 42, "abc123", "main", 100, "contributor", 1L, List.of("src/Foo.java", "src/Bar.java"));
+
+        var contextData = new LinkedHashMap<String, Object>();
+        contextData.put("pr", Map.of("repo", "owner/repo", "id", "42", "headSha", "abc123", "baseRef", "main", "linesChanged", 100));
+
+        var validFinding = new LinkedHashMap<String, Object>();
+        validFinding.put("severity", "HIGH");
+        validFinding.put("category", "auth");
+        validFinding.put("filePath", "src/Foo.java");
+        validFinding.put("message", "Token not rotated");
+        validFinding.put("confidence", 0.87);
+        validFinding.put("startLine", 10);
+
+        var malformedFinding = new LinkedHashMap<String, Object>();
+        malformedFinding.put("severity", "BOGUS_SEVERITY");
+        malformedFinding.put("category", "misc");
+        malformedFinding.put("filePath", "src/Bar.java");
+        malformedFinding.put("message", "Something wrong");
+        malformedFinding.put("confidence", 0.5);
+        malformedFinding.put("startLine", 20);
+
+        contextData.put("securityReview", Map.of("outcome", "REJECTED", "findings", List.of(validFinding, malformedFinding)));
+
+        var instance = mock(CaseInstance.class);
+        when(instance.getCaseContext()).thenReturn(new MapCaseContext(contextData));
+        when(caseRepo.findByUuid(caseId)).thenReturn(Optional.of(instance));
+
+        var event = new ReviewCompletedEvent(caseId, "tenant1", "security-review",
+            "agent-1", ReviewOutcome.COMPLETED, "REJECTED", pr);
+        observer.onReviewCompleted(event);
+
+        verify(prApi).createReview(eq("owner"), eq("repo"), eq(42), argThat(body -> {
+            var comments = (List<Map<String, Object>>) body.get("comments");
+            assertThat(comments).hasSize(1);
+            assertThat(comments.get(0).get("path")).isEqualTo("src/Foo.java");
+            return true;
+        }));
+    }
+
+    @Test
     void skipsWhenCaseNotFound() {
         UUID caseId = UUID.randomUUID();
         var pr = new PrPayload("owner/repo", 42, "abc123", "main", 100, "contributor", 1L, List.of());

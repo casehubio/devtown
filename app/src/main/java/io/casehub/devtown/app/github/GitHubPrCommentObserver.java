@@ -90,6 +90,14 @@ public class GitHubPrCommentObserver {
             .filter(Map.class::isInstance)
             .map(item -> {
                 var m = (Map<String, Object>) item;
+                ReviewFinding.Severity severity;
+                try {
+                    severity = ReviewFinding.Severity.valueOf((String) m.get("severity"));
+                } catch (IllegalArgumentException e) {
+                    LOG.warnf("Skipping finding with unrecognised severity '%s': %s",
+                        m.get("severity"), m.get("message"));
+                    return null;
+                }
                 ReviewFinding.LineRange range = null;
                 if (m.get("startLine") != null) {
                     range = new ReviewFinding.LineRange(
@@ -98,13 +106,14 @@ public class GitHubPrCommentObserver {
                             : ((Number) m.get("startLine")).intValue());
                 }
                 return new ReviewFinding(
-                    ReviewFinding.Severity.valueOf((String) m.get("severity")),
+                    severity,
                     (String) m.get("category"),
                     (String) m.get("filePath"),
                     range,
                     (String) m.get("message"),
                     m.get("confidence") != null ? ((Number) m.get("confidence")).doubleValue() : 0.0);
             })
+            .filter(java.util.Objects::nonNull)
             .toList();
     }
 

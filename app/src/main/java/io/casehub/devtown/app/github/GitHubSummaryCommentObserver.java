@@ -13,6 +13,10 @@ import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.jboss.logging.Logger;
 
+import io.casehub.devtown.domain.ReviewFinding;
+
+import java.util.EnumMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
@@ -63,9 +67,12 @@ public class GitHubSummaryCommentObserver {
         }
     }
 
+    private static final Set<String> TERMINAL_CASE_STATUSES = Set.of(
+        "COMPLETED", "CANCELLED", "FAULTED", "OBSOLETE");
+
     @Transactional(Transactional.TxType.NOT_SUPPORTED)
     void onCaseLifecycle(@ObservesAsync CaseLifecycleEvent event) {
-        if (!"COMPLETED".equals(event.caseStatus()) && !"CANCELLED".equals(event.caseStatus())) return;
+        if (!TERMINAL_CASE_STATUSES.contains(event.caseStatus())) return;
 
         if (!enabled) {
             LOG.infof("[dev-mode] Would post completion summary for caseId=%s status=%s",
@@ -74,9 +81,13 @@ public class GitHubSummaryCommentObserver {
         }
 
         try {
-            String status = "COMPLETED".equals(event.caseStatus())
-                ? "All reviews completed successfully."
-                : "Review cancelled.";
+            String status = switch (event.caseStatus()) {
+                case "COMPLETED" -> buildCompletionSummary(event.caseId());
+                case "CANCELLED" -> "Review cancelled.";
+                case "FAULTED"   -> "Review faulted — system error during processing.";
+                case "OBSOLETE"  -> "Review obsolete — PR context changed.";
+                default          -> "Review " + event.caseStatus().toLowerCase() + ".";
+            };
             postComment(event.caseId(),
                 "### devtown review " + event.caseStatus().toLowerCase() + "\n\n" + status);
         } catch (Exception e) {
@@ -85,6 +96,50 @@ public class GitHubSummaryCommentObserver {
             dispatchSummaryPosted.remove(event.caseId());
             dispatchedCapabilities.remove(event.caseId());
         }
+    }
+
+    private static final List<String> REVIEW_CONTEXT_KEYS = List.of(
+        "securityReview", "architectureReview", "styleCheck",
+        "testCoverage", "performanceAnalysis", "codeAnalysis");
+
+    @SuppressWarnings("unchecked")
+    private String buildCompletionSummary(UUID caseId) {
+        var instance = caseInstanceRepository.findByUuid(caseId).orElse(null);
+        if (instance == null || instance.getCaseContext() == null) {
+            return "All reviews completed successfully.";
+        }
+
+        var ctx = instance.getCaseContext();
+        var counts = new EnumMap<ReviewFinding.Severity, Integer>(ReviewFinding.Severity.class);
+
+        for (String contextKey : REVIEW_CONTEXT_KEYS) {
+            Object findingsObj = ctx.getPath(contextKey + ".findings");
+            if (!(findingsObj instanceof List<?> list)) continue;
+
+            for (Object item : list) {
+                if (!(item instanceof Map<?, ?> m)) continue;
+                String sev = (String) ((Map<String, Object>) m).get("severity");
+                if (sev == null) continue;
+                try {
+                    var severity = ReviewFinding.Severity.valueOf(sev);
+                    counts.merge(severity, 1, Integer::sum);
+                } catch (IllegalArgumentException ignored) {
+                }
+            }
+        }
+
+        if (counts.isEmpty()) {
+            return "All reviews completed successfully.";
+        }
+
+        var sb = new StringBuilder("All reviews completed.\n\n**Findings summary:**\n");
+        for (var severity : ReviewFinding.Severity.values()) {
+            int count = counts.getOrDefault(severity, 0);
+            if (count > 0) {
+                sb.append("- ").append(severity.name()).append(": ").append(count).append("\n");
+            }
+        }
+        return sb.toString();
     }
 
     private String buildDispatchSummary(UUID caseId) {

@@ -95,12 +95,6 @@ class LlmReviewerAgentTest {
     }
 
     @Test
-    void priorityIsOne() {
-        var agent = createTestAgent("{}");
-        assertEquals(1, agent.priority());
-    }
-
-    @Test
     void returnsFailedWhenDiffIsNull() {
         var agent   = createTestAgent("{}");
         var context = new ReviewContext(samplePr(), null);

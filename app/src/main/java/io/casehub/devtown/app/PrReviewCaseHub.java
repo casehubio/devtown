@@ -134,19 +134,17 @@ public class PrReviewCaseHub extends PrReviewTemplateCaseHub {
         try {
             ReviewContext context = buildContext(input);
 
-            var sortedAgents = codeAnalysisAgents.stream()
-                                                 .sorted(java.util.Comparator.comparingInt(CodeAnalysisAgent::priority).reversed())
-                                                 .toList();
+            var agents = codeAnalysisAgents.stream().toList();
 
             LOG.infof("adaptCodeAnalysis: found %d CodeAnalysisAgent(s): %s",
-                sortedAgents.size(),
-                sortedAgents.stream().map(a -> a.getClass().getSimpleName()).toList());
+                agents.size(),
+                agents.stream().map(a -> a.getClass().getSimpleName()).toList());
 
-            if (sortedAgents.isEmpty()) {
+            if (agents.isEmpty()) {
                 return WorkerResult.failed("no CodeAnalysisAgent registered");
             }
 
-            for (CodeAnalysisAgent agent : sortedAgents) {
+            for (CodeAnalysisAgent agent : agents) {
                 try {
                     CodeAnalysisResult result = agent.analyse(context);
                     return WorkerResult.of(Map.of(

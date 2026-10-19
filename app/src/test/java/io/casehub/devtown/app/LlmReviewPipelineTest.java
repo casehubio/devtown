@@ -40,7 +40,7 @@ class LlmReviewPipelineTest {
 
         ReviewerAgent securityAgent = new ReviewerAgent() {
             @Override public String capability() { return ReviewDomain.SECURITY_REVIEW; }
-            @Override public int priority() { return 1; }
+            
             @Override public ReviewerOutcome handle(ReviewContext ctx) {
                 return new ReviewerOutcome.Completed(List.of(
                     new ReviewFinding(ReviewFinding.Severity.HIGH, "injection",
@@ -51,7 +51,7 @@ class LlmReviewPipelineTest {
 
         ReviewerAgent styleAgent = new ReviewerAgent() {
             @Override public String capability() { return ReviewDomain.STYLE_REVIEW; }
-            @Override public int priority() { return 1; }
+            
             @Override public ReviewerOutcome handle(ReviewContext ctx) {
                 return new ReviewerOutcome.Completed(List.of(
                     new ReviewFinding(ReviewFinding.Severity.LOW, "naming",

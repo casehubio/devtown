@@ -1,0 +1,11 @@
+- input-match:
+    contains: "auth/"
+  response: |
+    {"complete": true, "securitySensitive": true, "architectureCrossing": false,
+     "scope": "small", "flaggedFiles": ["src/auth/TokenService.java"],
+     "crossingPoints": []}
+- input-match:
+    default: true
+  response: |
+    {"complete": true, "securitySensitive": false, "architectureCrossing": false,
+     "scope": "small", "flaggedFiles": [], "crossingPoints": []}

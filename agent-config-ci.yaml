@@ -1,0 +1,9 @@
+aliases:
+  reasoning-heavy:
+    backendKey: simulation
+  standard-review:
+    backendKey: simulation
+  cheap-fast:
+    backendKey: simulation
+defaults:
+  backend: simulation

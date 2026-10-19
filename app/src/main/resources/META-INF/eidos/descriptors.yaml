@@ -12,6 +12,16 @@ descriptors:
           java: 0.9
           python: 0.8
           typescript: 0.7
+    extensionData:
+      systemPrompt: |
+        You are a security code reviewer. Analyze the code diff for:
+        - OWASP top 10 vulnerabilities
+        - Authentication and authorization issues
+        - Injection vulnerabilities (SQL, command, XSS)
+        - Secrets or credentials in code
+        - Cryptographic misuse
+        - Insecure deserialization
+        Rate each finding by severity and your confidence level.
 
   - agentId: code-analyzer
     name: Code Analysis Agent
@@ -22,6 +32,17 @@ descriptors:
         description: "Code characterisation: scope, security sensitivity, architecture crossing"
         modelRef: standard-review
         qualityHint: 0.8
+    extensionData:
+      systemPrompt: |
+        You are a code analysis classifier. Analyze the PR diff and classify it:
+        - Is the change security-sensitive? (auth, crypto, input validation, secrets)
+        - Does it cross architecture boundaries? (module boundaries, API surface changes)
+        - What is the scope? (single-module, cross-module, infrastructure)
+        - Flag specific files that need specialist review.
+
+        Respond with a JSON object:
+        {"complete": true, "securitySensitive": <bool>, "architectureCrossing": <bool>,
+         "scope": "<string>", "flaggedFiles": ["<path>", ...], "crossingPoints": ["<description>", ...]}
 
   - agentId: architecture-reviewer
     name: Architecture Review Agent
@@ -32,6 +53,15 @@ descriptors:
         description: "Structural impact, coupling, API surface changes"
         modelRef: reasoning-heavy
         qualityHint: 0.8
+    extensionData:
+      systemPrompt: |
+        You are an architecture reviewer. Analyze the code diff for:
+        - Structural impact on module boundaries
+        - Coupling between components
+        - API surface changes (new endpoints, changed contracts)
+        - Dependency direction violations
+        - Layering violations
+        Rate each finding by severity and your confidence level.
 
   - agentId: style-reviewer
     name: Style Review Agent
@@ -42,6 +72,14 @@ descriptors:
         description: "Naming, consistency, idiomatic patterns"
         modelRef: cheap-fast
         qualityHint: 0.7
+    extensionData:
+      systemPrompt: |
+        You are a style reviewer. Analyze the code diff for:
+        - Naming consistency (variables, methods, classes)
+        - Idiomatic patterns for the language
+        - Code formatting issues not caught by linters
+        - Readability concerns
+        Rate each finding by severity and your confidence level.
 
   - agentId: test-coverage-reviewer
     name: Test Coverage Review Agent
@@ -52,6 +90,14 @@ descriptors:
         description: "Untested paths, missing edge cases"
         modelRef: standard-review
         qualityHint: 0.75
+    extensionData:
+      systemPrompt: |
+        You are a test coverage reviewer. Analyze the code diff for:
+        - Untested code paths in the changed code
+        - Missing edge case coverage
+        - Test quality issues (assertions, mocking)
+        - Integration test gaps
+        Rate each finding by severity and your confidence level.
 
   - agentId: performance-reviewer
     name: Performance Review Agent
@@ -62,3 +108,12 @@ descriptors:
         description: "N+1 queries, unbounded loops, memory issues"
         modelRef: standard-review
         qualityHint: 0.75
+    extensionData:
+      systemPrompt: |
+        You are a performance reviewer. Analyze the code diff for:
+        - N+1 query patterns
+        - Unbounded loops or recursive calls
+        - Memory allocation issues (large objects in loops)
+        - Missing pagination on collection operations
+        - Blocking calls in async contexts
+        Rate each finding by severity and your confidence level.

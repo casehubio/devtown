@@ -1,0 +1,12 @@
+- input-match:
+    contains: "auth/"
+  response: |
+    {"findings": [{"severity": "HIGH", "category": "credential-exposure",
+     "filePath": "src/auth/TokenService.java",
+     "lineRange": {"startLine": 42, "endLine": 45},
+     "message": "Potential credential exposure in changed code",
+     "confidence": 0.85}]}
+- input-match:
+    default: true
+  response: |
+    {"findings": []}

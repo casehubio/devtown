@@ -1,0 +1,12 @@
+- input-match:
+    contains: "do_something"
+  response: |
+    {"findings": [{"severity": "LOW", "category": "naming-convention",
+     "filePath": "src/service/UserService.java",
+     "lineRange": {"startLine": 10, "endLine": 12},
+     "message": "Method uses snake_case — Java convention is camelCase",
+     "confidence": 0.95}]}
+- input-match:
+    default: true
+  response: |
+    {"findings": []}

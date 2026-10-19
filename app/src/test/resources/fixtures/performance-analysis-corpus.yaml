@@ -1,0 +1,12 @@
+- input-match:
+    contains: "db.query"
+  response: |
+    {"findings": [{"severity": "HIGH", "category": "n-plus-one",
+     "filePath": "src/service/DataService.java",
+     "lineRange": {"startLine": 50, "endLine": 53},
+     "message": "Query inside loop — potential N+1 pattern",
+     "confidence": 0.88}]}
+- input-match:
+    default: true
+  response: |
+    {"findings": []}

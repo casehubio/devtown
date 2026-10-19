@@ -38,6 +38,28 @@ public abstract class LlmAgentBase {
             .orElse(null);
     }
 
+    protected String resolveSystemPrompt() {
+        AgentRegistry registry = agentRegistry();
+        if (registry == null) {
+            return null;
+        }
+        return registry.findById(agentId(), "default")
+                       .map(desc -> {
+                           java.util.Map<String, Object> ext = desc.extensionData();
+                           if (ext == null) return null;
+                           Object raw = ext.get("systemPrompt");
+                           if (raw == null) return null;
+                           if (!(raw instanceof String s)) {
+                               throw new IllegalStateException(
+                                   "extensionData.systemPrompt must be a String, was: "
+                                   + raw.getClass().getSimpleName());
+                           }
+                           return s;
+                       })
+                       .orElse(null);
+    }
+
+
     protected <T> InvocationResult<T> invokeWithRetry(
             AgentSessionConfig config, int maxRetries, Class<T> responseType) {
         InvocationResult<T> result = null;

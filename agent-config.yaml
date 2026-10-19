@@ -1,16 +1,22 @@
 providers:
-  - vendor: google-vertex
-    credential: env:GOOGLE_APPLICATION_CREDENTIALS
   - vendor: anthropic
     credential: env:ANTHROPIC_API_KEY
+  - vendor: google-vertex
+    credential: env:GOOGLE_APPLICATION_CREDENTIALS
 aliases:
   reasoning-heavy:
-    tier: FLAGSHIP
-    capabilities: [reasoning]
+    chain:
+      - tier: FLAGSHIP
+        capabilities: [reasoning]
+      - backendKey: simulation
   standard-review:
-    tier: STANDARD
+    chain:
+      - tier: STANDARD
+      - backendKey: simulation
   cheap-fast:
-    tier: FAST
-    max-cost: LOW
+    chain:
+      - tier: FAST
+        maxCost: LOW
+      - backendKey: simulation
 defaults:
   backend: gemini

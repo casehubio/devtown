@@ -1,0 +1,12 @@
+- input-match:
+    contains: "PaymentService"
+  response: |
+    {"findings": [{"severity": "MEDIUM", "category": "missing-test",
+     "filePath": "src/payment/PaymentService.java",
+     "lineRange": {"startLine": 1, "endLine": 20},
+     "message": "No corresponding test file for PaymentService",
+     "confidence": 0.80}]}
+- input-match:
+    default: true
+  response: |
+    {"findings": []}

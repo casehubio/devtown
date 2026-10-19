@@ -1,56 +1,47 @@
 package io.casehub.devtown.review;
 
-import io.casehub.devtown.domain.ReviewDomain;
-import io.casehub.devtown.domain.ReviewFinding;
 import org.junit.jupiter.api.Test;
+
 import java.util.List;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 class ReviewerAgentRegistryTest {
 
     @Test
-    void highestPriorityWinsPerCapability() {
-        ReviewerAgent stub = new ReviewerAgent() {
-            @Override public String capability() { return ReviewDomain.SECURITY_REVIEW; }
-            @Override public ReviewerOutcome handle(ReviewContext ctx) {
-                return new ReviewerOutcome.Completed(List.of());
-            }
-        };
-
-        ReviewerAgent llm = new ReviewerAgent() {
-            @Override public String capability() { return ReviewDomain.SECURITY_REVIEW; }
-            @Override public ReviewerOutcome handle(ReviewContext ctx) {
-                return new ReviewerOutcome.Completed(List.of(
-                    new ReviewFinding(ReviewFinding.Severity.HIGH, "injection",
-                        "src/A.java", null, "found issue", 0.9)));
-            }
-            @Override public int priority() { return 1; }
-        };
-
-        var registry = ReviewerAgentRegistry.of(List.of(stub, llm));
-        var resolved = registry.forCapability(ReviewDomain.SECURITY_REVIEW);
-        assertTrue(resolved.isPresent());
-        assertEquals(1, resolved.get().priority());
+    void forCapability_returnsAgent() {
+        var agent = stubAgent("security-review");
+        var registry = ReviewerAgentRegistry.of(List.of(agent));
+        assertTrue(registry.forCapability("security-review").isPresent());
+        assertSame(agent, registry.forCapability("security-review").get());
     }
 
     @Test
-    void missingCapabilityReturnsEmpty() {
-        var registry = ReviewerAgentRegistry.of(List.of());
+    void forCapability_returnsEmpty_forUnknown() {
+        var registry = ReviewerAgentRegistry.of(List.of(stubAgent("security-review")));
         assertTrue(registry.forCapability("nonexistent").isEmpty());
     }
 
     @Test
-    void stubWinsWhenNoLlmAgent() {
-        ReviewerAgent stub = new ReviewerAgent() {
-            @Override public String capability() { return ReviewDomain.STYLE_REVIEW; }
+    void all_returnsAllAgents() {
+        var registry = ReviewerAgentRegistry.of(List.of(
+            stubAgent("security-review"), stubAgent("style-review")));
+        assertEquals(2, registry.all().size());
+    }
+
+    @Test
+    void duplicateCapability_throws() {
+        assertThrows(IllegalStateException.class, () ->
+            ReviewerAgentRegistry.of(List.of(
+                stubAgent("security-review"), stubAgent("security-review"))));
+    }
+
+    private static ReviewerAgent stubAgent(String capability) {
+        return new ReviewerAgent() {
+            @Override public String capability() { return capability; }
             @Override public ReviewerOutcome handle(ReviewContext ctx) {
-                return new ReviewerOutcome.Completed(List.of());
+                return new ReviewerOutcome.Declined("stub");
             }
         };
-
-        var registry = ReviewerAgentRegistry.of(List.of(stub));
-        var resolved = registry.forCapability(ReviewDomain.STYLE_REVIEW);
-        assertTrue(resolved.isPresent());
-        assertEquals(0, resolved.get().priority());
     }
 }

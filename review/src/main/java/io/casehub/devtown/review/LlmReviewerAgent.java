@@ -27,9 +27,6 @@ public abstract class LlmReviewerAgent extends LlmAgentBase implements ReviewerA
         If no findings, respond with: {"findings": []}""";
 
     @Override
-    public int priority() { return 1; }
-
-    @Override
     public ReviewerOutcome handle(ReviewContext context) {
         PrDiff diff = context.diff();
         if (diff == null) {

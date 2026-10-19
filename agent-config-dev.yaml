@@ -1,0 +1,18 @@
+aliases:
+  reasoning-heavy:
+    chain:
+      - tier: FLAGSHIP
+        capabilities: [reasoning]
+      - backendKey: ollama
+      - backendKey: simulation
+  standard-review:
+    chain:
+      - tier: STANDARD
+      - backendKey: ollama
+      - backendKey: simulation
+  cheap-fast:
+    chain:
+      - backendKey: ollama
+      - backendKey: simulation
+defaults:
+  backend: ollama

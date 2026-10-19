@@ -1,0 +1,12 @@
+- input-match:
+    contains: "pom.xml"
+  response: |
+    {"findings": [{"severity": "MEDIUM", "category": "module-boundary",
+     "filePath": "payment-module/pom.xml",
+     "lineRange": null,
+     "message": "New module detected — verify dependency direction",
+     "confidence": 0.75}]}
+- input-match:
+    default: true
+  response: |
+    {"findings": []}

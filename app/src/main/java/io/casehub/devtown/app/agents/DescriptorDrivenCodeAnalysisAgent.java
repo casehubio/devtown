@@ -1,22 +1,23 @@
 package io.casehub.devtown.app.agents;
 
+import io.casehub.blocks.agent.StructuredAgentInvoker.InvocationResult;
+import io.casehub.devtown.domain.ReviewDomain;
 import io.casehub.devtown.review.CodeAnalysisAgent;
 import io.casehub.devtown.review.CodeAnalysisResult;
 import io.casehub.devtown.review.LlmAgentBase;
 import io.casehub.devtown.review.PrDiff;
 import io.casehub.devtown.review.ReviewContext;
-import io.casehub.blocks.agent.StructuredAgentInvoker.InvocationResult;
-import io.casehub.devtown.domain.ReviewDomain;
 import io.casehub.eidos.api.AgentRegistry;
 import io.casehub.platform.agent.AgentProvider;
 import io.casehub.platform.agent.AgentSessionConfig;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
+import java.util.List;
 import java.util.stream.Collectors;
 
 @ApplicationScoped
-public class LlmCodeAnalysisAgent extends LlmAgentBase implements CodeAnalysisAgent {
+public class DescriptorDrivenCodeAnalysisAgent extends LlmAgentBase implements CodeAnalysisAgent {
 
     @Inject AgentProvider agentProvider;
     @Inject AgentRegistry agentRegistry;
@@ -25,9 +26,6 @@ public class LlmCodeAnalysisAgent extends LlmAgentBase implements CodeAnalysisAg
     @Override protected AgentRegistry agentRegistry() { return agentRegistry; }
     @Override public String capability() { return ReviewDomain.CODE_ANALYSIS; }
     @Override protected String agentId() { return "code-analyzer"; }
-
-    @Override
-    public int priority() { return 1; }
 
     @Override
     public CodeAnalysisResult analyse(ReviewContext context) {
@@ -39,7 +37,8 @@ public class LlmCodeAnalysisAgent extends LlmAgentBase implements CodeAnalysisAg
             .map(PrDiff.FileDiff::path)
             .collect(Collectors.joining("\n  - ", "  - ", ""));
 
-        var config = AgentSessionConfig.of(systemPromptBody(), buildUserPrompt(context, fileList), INVOCATION_TIMEOUT);
+        var config = AgentSessionConfig.of(
+            systemPromptBody(), buildUserPrompt(context, fileList), INVOCATION_TIMEOUT);
         if (modelRef != null) {
             config = config.withModel(modelRef);
         }
@@ -53,25 +52,22 @@ public class LlmCodeAnalysisAgent extends LlmAgentBase implements CodeAnalysisAg
     }
 
     private static CodeAnalysisResult conservativeDefault() {
-        return new CodeAnalysisResult(true, true, true, "unknown", java.util.List.of(), java.util.List.of());
+        return new CodeAnalysisResult(true, true, true, "unknown", List.of(), List.of());
     }
 
     @Override
     protected String systemPromptBody() {
-        return """
-            You are a code analysis classifier. Analyze the PR diff and classify it:
-            - Is the change security-sensitive? (auth, crypto, input validation, secrets)
-            - Does it cross architecture boundaries? (module boundaries, API surface changes)
-            - What is the scope? (single-module, cross-module, infrastructure)
-            - Flag specific files that need specialist review.
-
-            Respond with a JSON object:
-            {"complete": true, "securitySensitive": <bool>, "architectureCrossing": <bool>,
-             "scope": "<string>", "flaggedFiles": ["<path>", ...], "crossingPoints": ["<description>", ...]}""";
+        String prompt = resolveSystemPrompt();
+        if (prompt == null) {
+            throw new IllegalStateException(
+                "No systemPrompt in descriptor extensionData for code-analyzer");
+        }
+        return prompt;
     }
 
     private String buildUserPrompt(ReviewContext context, String fileList) {
         return "PR #" + context.pr().prNumber() + " in " + context.pr().repo()
-            + " (" + context.pr().linesChanged() + " lines changed)\n\nChanged files:\n" + fileList;
+            + " (" + context.pr().linesChanged() + " lines changed)\n\nChanged files:\n"
+            + fileList;
     }
 }

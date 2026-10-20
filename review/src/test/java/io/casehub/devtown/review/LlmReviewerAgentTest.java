@@ -110,7 +110,7 @@ class LlmReviewerAgentTest {
             public Multi<AgentEvent> invoke(AgentSessionConfig config) {
                 return Multi.createFrom().items(
                         new AgentEvent.TextDelta(jsonResponse),
-                        new AgentEvent.InvocationComplete(0, 0, 0, 0, 0, null, 100L, 80L, null, 1, false));
+                        new AgentEvent.InvocationComplete(0, 0, 0, 0, 0, null, 100L, 80L, null, 1, false, null, null));
             }
 
             @Override

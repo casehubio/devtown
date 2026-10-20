@@ -165,19 +165,19 @@
             <dependency>
             <groupId>io.casehub</groupId>
             <artifactId>casehub-neocortex-memory-api</artifactId>
-            <version>0.3</version>
+            <version>${casehub.version}</version>
         </dependency>
 
         <dependency>
             <groupId>io.casehub</groupId>
             <artifactId>casehub-neocortex-memory</artifactId>
-            <version>0.3</version>
+            <version>${casehub.version}</version>
         </dependency>
 
         <dependency>
             <groupId>io.casehub</groupId>
             <artifactId>casehub-neocortex-caps-api</artifactId>
-            <version>0.3</version>
+            <version>${casehub.version}</version>
         </dependency>
 <dependency>
       <groupId>io.casehub</groupId>
@@ -207,7 +207,7 @@
     <dependency>
       <groupId>io.casehub</groupId>
       <artifactId>casehub-platform-subscriptions-inmem</artifactId>
-      <version>0.3</version>
+      <version>${casehub.version}</version>
       <scope>test</scope>
     </dependency>
     <dependency>
@@ -228,7 +228,7 @@
     <dependency>
       <groupId>io.casehub</groupId>
       <artifactId>casehub-neocortex-memory-inmem</artifactId>
-      <version>0.3</version>
+      <version>${casehub.version}</version>
       <scope>test</scope>
     </dependency>
     <dependency>
@@ -267,12 +267,12 @@
     <dependency>
       <groupId>io.casehub</groupId>
       <artifactId>casehub-pages-npm</artifactId>
-      <version>0.3</version>
+      <version>${casehub.version}</version>
     </dependency>
     <dependency>
       <groupId>io.casehub</groupId>
       <artifactId>casehub-blocks-ui-npm</artifactId>
-      <version>0.3</version>
+      <version>${version.blocks-ui}</version>
     </dependency>
   </dependencies>
 
@@ -293,13 +293,13 @@
                 <artifactItem>
                   <groupId>io.casehub</groupId>
                   <artifactId>casehub-pages-npm</artifactId>
-                  <version>0.3</version>
+                  <version>${casehub.version}</version>
                   <outputDirectory>${project.basedir}/src/main/webui/.casehub-packages</outputDirectory>
                 </artifactItem>
                 <artifactItem>
                   <groupId>io.casehub</groupId>
                   <artifactId>casehub-blocks-ui-npm</artifactId>
-                  <version>0.3</version>
+                  <version>${version.blocks-ui}</version>
                   <outputDirectory>${project.basedir}/src/main/webui/.casehub-packages</outputDirectory>
                 </artifactItem>
               </artifactItems>

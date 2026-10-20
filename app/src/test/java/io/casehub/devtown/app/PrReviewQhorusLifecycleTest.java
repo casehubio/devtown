@@ -2,6 +2,10 @@ package io.casehub.devtown.app;
 
 import io.casehub.devtown.domain.ReviewDomain;
 import io.casehub.devtown.review.PrPayload;
+import io.casehub.devtown.review.ReviewerAgent;
+import io.casehub.devtown.review.ReviewerAgentRegistry;
+import io.casehub.devtown.review.ReviewerOutcome;
+import io.quarkus.test.junit.QuarkusMock;
 import io.casehub.platform.api.identity.ActorType;
 import io.casehub.qhorus.api.channel.ChannelSemantic;
 import io.casehub.qhorus.api.message.Message;
@@ -14,6 +18,7 @@ import io.casehub.qhorus.runtime.message.MessageService;
 import io.quarkus.test.junit.QuarkusTest;
 import jakarta.inject.Inject;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.BeforeEach;
 
 import java.util.Arrays;
 import java.util.List;
@@ -42,6 +47,22 @@ class PrReviewQhorusLifecycleTest {
     @Inject ChannelService  channelService;
     @Inject MessageService  messageService;
     @Inject CommitmentStore commitmentStore;
+
+    @BeforeEach
+    void installReviewers() {
+        // Lifecycle tests exercise messaging independently of the external agent catalog.
+        List<ReviewerAgent> reviewers = List.of(
+                ReviewDomain.SECURITY_REVIEW, ReviewDomain.ARCHITECTURE_REVIEW,
+                ReviewDomain.STYLE_REVIEW, ReviewDomain.TEST_COVERAGE,
+                ReviewDomain.PERFORMANCE_ANALYSIS).stream().map(capability -> {
+                    var agent = org.mockito.Mockito.mock(ReviewerAgent.class);
+                    org.mockito.Mockito.when(agent.capability()).thenReturn(capability);
+                    org.mockito.Mockito.when(agent.handle(org.mockito.ArgumentMatchers.any()))
+                            .thenReturn(new ReviewerOutcome.Failed("diff not available"));
+                    return agent;
+                }).toList();
+        QuarkusMock.installMockForType(ReviewerAgentRegistry.of(reviewers), ReviewerAgentRegistry.class);
+    }
 
     // Each test uses a distinct PR number to prevent cross-test contamination:
     // InMemoryMessageStore accumulates across test methods in the same @QuarkusTest session.

@@ -36,6 +36,11 @@
 
   <dependencyManagement>
     <dependencies>
+      <dependency>
+        <groupId>io.casehub</groupId>
+        <artifactId>casehub-pages-npm</artifactId>
+        <version>${casehub.version}</version>
+      </dependency>
       <!-- devtown inter-module -->
       <dependency>
         <groupId>io.casehub</groupId>

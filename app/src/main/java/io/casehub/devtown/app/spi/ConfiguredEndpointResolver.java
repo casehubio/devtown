@@ -12,14 +12,11 @@ import java.util.Optional;
 @DefaultBean
 public class ConfiguredEndpointResolver implements PublicEndpointResolver {
 
-    @ConfigProperty(name = "devtown.public-url", defaultValue = "")
-    String publicUrl;
+    @ConfigProperty(name = "devtown.public-url")
+    Optional<String> publicUrl;
 
     @Override
     public Optional<URI> resolve() {
-        if (publicUrl == null || publicUrl.isBlank()) {
-            return Optional.empty();
-        }
-        return Optional.of(URI.create(publicUrl));
+        return publicUrl.filter(url -> !url.isBlank()).map(URI::create);
     }
 }

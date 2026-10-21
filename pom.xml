@@ -108,6 +108,13 @@
         <version>1.6.0</version>
       </dependency>
 
+      <!-- langchain4j convergence: eidos 1.14.1 vs agent-router-core/gemini 1.19.0 -->
+      <dependency>
+        <groupId>dev.langchain4j</groupId>
+        <artifactId>langchain4j-core</artifactId>
+        <version>1.19.0</version>
+      </dependency>
+
       <!-- Quarkus Quinoa -->
       <dependency>
         <groupId>io.quarkiverse.quinoa</groupId>

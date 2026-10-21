@@ -57,6 +57,16 @@
       <version>${project.version}</version>
       <scope>runtime</scope>
     </dependency>
+    <!-- Override transitive 0.3 → 0.4-SNAPSHOT to align with agent-router:0.4-SNAPSHOT.
+         Without this, RouterBeans references EmbeddingModelBackend (added post-0.3)
+         which doesn't exist in the 0.3 core jar, breaking Quarkus augmentation.
+         TODO: fix in platform — agent-router should declare matching core version. -->
+    <dependency>
+      <groupId>io.casehub</groupId>
+      <artifactId>casehub-platform-agent-router-core</artifactId>
+      <version>${project.version}</version>
+      <scope>runtime</scope>
+    </dependency>
     <dependency>
       <groupId>io.casehub</groupId>
       <artifactId>casehub-platform-agent-session-core</artifactId>
@@ -162,23 +172,18 @@
       <artifactId>quarkus-quinoa</artifactId>
     </dependency>
 
-            <dependency>
-            <groupId>io.casehub</groupId>
-            <artifactId>casehub-neocortex-memory-api</artifactId>
-            <version>${casehub.version}</version>
-        </dependency>
-
         <dependency>
-            <groupId>io.casehub</groupId>
-            <artifactId>casehub-neocortex-memory</artifactId>
-            <version>${casehub.version}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>io.casehub</groupId>
-            <artifactId>casehub-neocortex-caps-api</artifactId>
-            <version>${casehub.version}</version>
-        </dependency>
+      <groupId>io.casehub</groupId>
+      <artifactId>casehub-neocortex-memory-api</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>io.casehub</groupId>
+      <artifactId>casehub-neocortex-memory</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>io.casehub</groupId>
+      <artifactId>casehub-neocortex-caps-api</artifactId>
+    </dependency>
 <dependency>
       <groupId>io.casehub</groupId>
       <artifactId>casehub-platform-api</artifactId>
@@ -207,7 +212,6 @@
     <dependency>
       <groupId>io.casehub</groupId>
       <artifactId>casehub-platform-subscriptions-inmem</artifactId>
-      <version>${casehub.version}</version>
       <scope>test</scope>
     </dependency>
     <dependency>
@@ -228,7 +232,6 @@
     <dependency>
       <groupId>io.casehub</groupId>
       <artifactId>casehub-neocortex-memory-inmem</artifactId>
-      <version>${casehub.version}</version>
       <scope>test</scope>
     </dependency>
     <dependency>

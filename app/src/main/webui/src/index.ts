@@ -1,6 +1,6 @@
 import { loadSite, registerPanel } from "@casehubio/pages-runtime";
 import { page, tabs, hostPanel } from "@casehubio/pages-ui";
-import "@casehubio/blocks-ui-session-workbench";
+import "@casehubio/mosaic-session-workbench";
 import "./components/reviewer-workbench";
 import "./components/contributor-workbench";
 import "./components/pr-cases-workbench";

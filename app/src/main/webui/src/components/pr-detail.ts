@@ -12,7 +12,7 @@ import type { ReviewOutcome } from './shared/review-card.js';
 import { hostStyles, sectionTitleStyles, narrativeStyles, emptyStyles, trustBarStyles, dimensionGridStyles, reviewCardStyles, badgeStyles, workItemAlertStyles } from './shared/shared-styles.js';
 import './routing-summary.js';
 import './findings-panel.js';
-import '@casehubio/blocks-ui-blocks-timeline';
+import '@casehubio/mosaic-blocks-timeline';
 
 interface ContributorProfile {
   actorId: string;

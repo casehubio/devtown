@@ -29,7 +29,7 @@
   </modules>
 
   <properties>
-    <version.mosaic>0.3-SNAPSHOT</version.mosaic>
+    <version.mosaic>0.4-SNAPSHOT</version.mosaic>
     <quarkus-mcp-server.version>1.11.1</quarkus-mcp-server.version>
     <quarkus-quinoa.version>2.8.3</quarkus-quinoa.version>
   </properties>

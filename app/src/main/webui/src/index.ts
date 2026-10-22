@@ -13,7 +13,7 @@ import { definitionsView } from "./views/definitions";
 
 const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
 
-registerPanel("session-workbench", "blocks-session-workbench");
+registerPanel("session-workbench", "agency-session-workbench");
 registerPanel("reviewer-workbench", "devtown-reviewer-workbench");
 registerPanel("contributor-workbench", "devtown-contributor-workbench");
 registerPanel("pr-cases-workbench", "devtown-pr-cases-workbench");

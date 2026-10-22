@@ -305,7 +305,7 @@ Model resolution: `modelRef: "reasoning-heavy"` → manifest alias → tier/vend
 
 ### LlmAgentBase — shared infrastructure (review/)
 
-Uses `StructuredAgentInvoker` from `casehub-blocks-core` (transitive dependency via `casehub-blocks`, already present in `review/` and `app/`). Provides retry, timeout, and model resolution for all LLM-based agents — both findings-based reviewers and the code-analysis classifier.
+Uses `StructuredAgentInvoker` from `casehub-agency-core` (transitive dependency via `casehub-agency`, already present in `review/` and `app/`). Provides retry, timeout, and model resolution for all LLM-based agents — both findings-based reviewers and the code-analysis classifier.
 
 ```java
 public abstract class LlmAgentBase {
@@ -460,7 +460,7 @@ Both `LlmReviewerAgent` (batched findings) and `LlmCodeAnalysisAgent` (single cl
 
 #### Timeout (inherited from LlmAgentBase)
 
-`AgentSessionConfig.withTimeout(INVOCATION_TIMEOUT)` sets a 3-minute timeout per LLM invocation. Enforcement depends on the `AgentProvider` implementation — `casehub-blocks` providers honour the config timeout via reactive stream subscription timeouts. `StructuredAgentInvoker.invoke()` catches the resulting `TimeoutException` and returns `AgentError`.
+`AgentSessionConfig.withTimeout(INVOCATION_TIMEOUT)` sets a 3-minute timeout per LLM invocation. Enforcement depends on the `AgentProvider` implementation — `casehub-agency` providers honour the config timeout via reactive stream subscription timeouts. `StructuredAgentInvoker.invoke()` catches the resulting `TimeoutException` and returns `AgentError`.
 
 #### File path validation
 
@@ -906,7 +906,7 @@ Start with curated fixtures (unit tests). Use capture mode on staging (`casehub.
 - `docs/protocols/casehub/alternative-extension-patterns.md` — @DefaultBean displacement semantics (Pattern C: per-type, not per-bean)
 - casehub-platform consumer-guide.md §Agent infrastructure — AgentProvider, manifest, model resolution
 - casehub-eidos consumer-guide.md — AgentDescriptor, AgentCapability, modelRef
-- casehub-blocks `StructuredAgentInvoker` — invoke-collect-parse utility (blocks#287)
+- casehub-agency `StructuredAgentInvoker` — invoke-collect-parse utility (blocks#287)
 - casehub-platform simulation framework — feat/294-simulation-service spec
 - `docs/protocols/casehub/failure-cascade-pattern.md` — 4-tier failure cascade
 - `ARC42STORIES.MD §9.4` — @DefaultBean displacement pattern (1:1 port pattern, not applicable to multi-instance)

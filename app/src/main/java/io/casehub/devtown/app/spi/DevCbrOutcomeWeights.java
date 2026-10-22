@@ -1,7 +1,7 @@
 package io.casehub.devtown.app.spi;
 
-import io.casehub.blocks.routing.agent.CbrOutcomeWeights;
-import io.casehub.blocks.routing.agent.DefaultCbrOutcomeWeights;
+import io.casehub.agency.routing.agent.CbrOutcomeWeights;
+import io.casehub.agency.routing.agent.DefaultCbrOutcomeWeights;
 import jakarta.enterprise.context.ApplicationScoped;
 import java.util.Map;
 

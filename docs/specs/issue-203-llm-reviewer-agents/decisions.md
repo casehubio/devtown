@@ -68,9 +68,9 @@
 **Alternatives:**
 - Tool-use structured output — more reliable schema adherence but requires MCP server setup
 - Markdown with regex extraction — most natural for LLM but brittle and hard to validate
-**Rationale:** Proven pattern across casehub-blocks (LlmContentSummariser, LlmDecomposition). Simple, reliable, no extra dependencies beyond Jackson (already present).
+**Rationale:** Proven pattern across casehub-agency (LlmContentSummariser, LlmDecomposition). Simple, reliable, no extra dependencies beyond Jackson (already present).
 **Trade-offs:** LLM may occasionally produce invalid JSON — need graceful error handling (return Failed outcome).
-**Sources:** casehub-blocks LlmContentSummariser, LlmDecomposition (both use this pattern)
+**Sources:** casehub-agency LlmContentSummariser, LlmDecomposition (both use this pattern)
 **Exploration:** quick
 **Status:** captured
 

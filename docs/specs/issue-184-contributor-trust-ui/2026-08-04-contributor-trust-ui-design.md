@@ -138,7 +138,7 @@ Added to the metrics refresh group alongside `reviewers` and `sla-comparison`.
 
 ### Tab registration (index.ts)
 
-- Import `@casehubio/blocks-ui-contributor-workbench`
+- Import `@casehubio/agency-ui-contributor-workbench`
 - Register panel: `registerPanel("contributor-workbench", "blocks-contributor-workbench")`
 - Add tab: `["Contributors", contributorsView]` — positioned after "Reviewers" (position 5)
 

@@ -1,6 +1,6 @@
 package io.casehub.devtown.review;
 
-import io.casehub.blocks.agent.StructuredAgentInvoker.InvocationResult;
+import io.casehub.agency.agent.StructuredAgentInvoker.InvocationResult;
 import io.casehub.devtown.domain.ReviewFinding;
 import io.casehub.platform.agent.AgentSessionConfig;
 import org.jboss.logging.Logger;

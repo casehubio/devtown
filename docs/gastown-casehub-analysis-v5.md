@@ -10,7 +10,7 @@
 
 Seven foundation layers, a merge queue, a governance UI, and 16 MCP tools have shipped in `casehub-devtown`. The closed feedback loop — where trust scores derived from cryptographically attested commitment outcomes drive future routing without human intervention — is live and strengthened by TrustGatedAttestationPolicy, which modulates attestation confidence based on the attesting agent's own trust score. CaseHub surpasses Gastown on model quality, compliance, trust, governance, merge queue architecture, and AI-native operations. Gastown leads on operational maturity, recovery automation, and concurrency control.
 
-The central architectural difference remains **layering**. CaseHub is a domain-agnostic coordination foundation with domain applications on top. Gastown is a software engineering coordination application with no separable foundation. This is now proven at scale: eight reusable blocks (casehub-blocks) extracted from cross-domain patterns are shared across 6+ application repos. Trust routing, oversight gates, debate infrastructure, and accountability listeners are all shared without domain-specific modification.
+The central architectural difference remains **layering**. CaseHub is a domain-agnostic coordination foundation with domain applications on top. Gastown is a software engineering coordination application with no separable foundation. This is now proven at scale: eight reusable blocks (casehub-agency) extracted from cross-domain patterns are shared across 6+ application repos. Trust routing, oversight gates, debate infrastructure, and accountability listeners are all shared without domain-specific modification.
 
 The second difference is **orchestration breadth**. Gastown drives agents through formula steps — workflow. CaseHub declares goals and discovers paths — Adaptive Case Management. For AI agent coordination where outputs determine next steps, ACM is the correct paradigm.
 
@@ -72,7 +72,7 @@ The fifth difference is **trust pipeline depth**. TrustGatedAttestationPolicy (e
 | HITL end-to-end (happy path + escalation) | devtown#33, #30 | WorkItem COMPLETED signals case; SLA escalation signals case |
 | Observability + operational MCP tools | devtown#17 | 16 MCP tools (11 read + 5 write) + W3C PROV-DM export + event-sourced PrReviewCaseTracker |
 
-### casehub-blocks — Foundation Consolidation
+### casehub-agency — Foundation Consolidation
 
 Eight reusable blocks extracted from cross-domain patterns, shared across 6+ application repos:
 
@@ -193,7 +193,7 @@ Unchanged from v4.
 | Extension model | Plugin system (stateful, patrol-driven) | SPI-based (compile-time verified) | **CaseHub** — misconfigured SPI fails at build time, not under load |
 | Ecosystem | Go stdlib ~27 deps (closed) | Full Quarkiverse (Kafka, Redis, gRPC, Elasticsearch, etc.) | **CaseHub** — open ecosystem vs closed dependency set |
 | Multi-domain | Single application | 6 application repos on shared foundation | **CaseHub** — proven, not theoretical; Gastown can only ever be one application |
-| Cross-domain reuse | Not applicable (single app) | 8 reusable blocks (casehub-blocks) shared across 6+ repos | **CaseHub** — trust routing, oversight, debate, accountability extracted into shared blocks (blocks#12, #16, #17, #18, #21, #22, #23, #30) |
+| Cross-domain reuse | Not applicable (single app) | 8 reusable blocks (casehub-agency) shared across 6+ repos | **CaseHub** — trust routing, oversight, debate, accountability extracted into shared blocks (blocks#12, #16, #17, #18, #21, #22, #23, #30) |
 
 ---
 
@@ -291,7 +291,7 @@ Security review fires because code analysis found cryptographic code — not bec
 
 Six application repos (devtown, aml, clinical, life, drafthouse, quarkmind) share the same foundation. Each adds domain logic without modifying the foundation. The strategic moat is demonstrated, not theoretical. Gastown can only ever be one application.
 
-The casehub-blocks consolidation (8 blocks across blocks#12-#30) proves this at a finer grain: trust routing configuration, oversight gate infrastructure, debate channels, AI routing strategies, accountability listeners, and OTel metrics are all shared across domains without modification. When devtown needed conversation protocols, they were extracted to a block. When aml needed the same oversight gates, they were already there. The pattern is: build it in one domain, extract it to a block, share it across all domains.
+The casehub-agency consolidation (8 blocks across blocks#12-#30) proves this at a finer grain: trust routing configuration, oversight gate infrastructure, debate channels, AI routing strategies, accountability listeners, and OTel metrics are all shared across domains without modification. When devtown needed conversation protocols, they were extracted to a block. When aml needed the same oversight gates, they were already there. The pattern is: build it in one domain, extract it to a block, share it across all domains.
 
 ### 5.8 AI-Native Operational Tooling
 

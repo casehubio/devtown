@@ -23,7 +23,7 @@ public class TrustScoringTestProfile implements QuarkusTestProfile {
                 // the same qhorus H2 database. Without this, writes go to the in-memory stub
                 // but reads come from JPA, producing a split-brain with zero events visible.
                 Map.entry("quarkus.arc.exclude-types",
-                          "io.casehub.blocks.**,io.casehub.eidos.**,"
+                          "io.casehub.agency.**,io.casehub.eidos.**,"
                           + "io.casehub.testing.TestCaseInstanceRepository,"
                           + "io.casehub.work.runtime.service.JpaWorkloadProvider,"
                           + "io.casehub.engine.actorstate.ActorStateResource,"

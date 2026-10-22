@@ -17,7 +17,7 @@ public class LedgerEnabledTestProfile implements QuarkusTestProfile {
                           "classpath:db/ledger/migration,classpath:db/engine-ledger/migration,classpath:db/devtown/migration,classpath:db/devtown-test/migration"),
                 Map.entry("quarkus.hibernate-orm.qhorus.schema-management.strategy", "update"),
                 Map.entry("quarkus.arc.exclude-types",
-                          "io.casehub.blocks.**,io.casehub.eidos.**,"
+                          "io.casehub.agency.**,io.casehub.eidos.**,"
                           + "io.casehub.testing.TestCaseInstanceRepository,"
                           + "io.casehub.work.runtime.service.JpaWorkloadProvider,"
                           + "io.casehub.engine.actorstate.ActorStateResource,"

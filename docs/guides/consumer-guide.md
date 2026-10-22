@@ -543,7 +543,7 @@ casehub-devtown
   -> casehub-work-engine-adapter (ActionRiskClassifier oversight gate)
   -> casehub-platform-config     (PreferenceProvider for routing/trust/risk preferences)
   -> casehub-neocortex           (CaseMemoryStore for CBR and contributor history)
-  -> casehub-blocks              (TrustRoutingRequirement for compliance)
+  -> casehub-agency              (TrustRoutingRequirement for compliance)
 ```
 
 ---

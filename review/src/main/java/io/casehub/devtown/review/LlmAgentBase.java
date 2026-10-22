@@ -1,7 +1,7 @@
 package io.casehub.devtown.review;
 
-import io.casehub.blocks.agent.StructuredAgentInvoker;
-import io.casehub.blocks.agent.StructuredAgentInvoker.InvocationResult;
+import io.casehub.agency.agent.StructuredAgentInvoker;
+import io.casehub.agency.agent.StructuredAgentInvoker.InvocationResult;
 import io.casehub.eidos.api.AgentCapability;
 import io.casehub.eidos.api.AgentRegistry;
 import io.casehub.platform.agent.AgentProvider;

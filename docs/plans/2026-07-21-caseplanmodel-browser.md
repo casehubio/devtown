@@ -25,7 +25,7 @@
 - blocks-ui tests use vitest
 - devtown frontend: esbuild, `@casehubio/pages-runtime` 0.2.0, `@casehubio/pages-ui` 0.2.0
 - IntelliJ MCP mandatory for all .java/.ts edits — `project_path` = `/Users/mdproctor/claude/casehub/worktrees/17/engine` for engine, `/Users/mdproctor/claude/casehub/worktrees/17/devtown` for devtown
-- Commits reference issues: engine commits `Refs casehubio/devtown#119`, blocks-ui commits `Refs casehubio/blocks-ui#90`, devtown commits `Refs #119`
+- Commits reference issues: engine commits `Refs casehubio/devtown#119`, blocks-ui commits `Refs casehubio/agency-ui#90`, devtown commits `Refs #119`
 
 ---
 
@@ -884,7 +884,7 @@ Components use reader for field extraction instead of assuming
 EntityInstance shape. DEFAULT_READER preserves backward compat.
 offsetPaginationReader exported for engine PagedResponse shape.
 
-Refs casehubio/blocks-ui#90"
+Refs casehubio/agency-ui#90"
 ```
 
 ---
@@ -945,14 +945,14 @@ Refs #119"
 ### Task 5: devtown frontend — Definitions tab and live case state
 
 **Files:**
-- Modify: `devtown/app/src/main/webui/package.json` — add `@casehubio/blocks-ui-case-explorer` dependency
+- Modify: `devtown/app/src/main/webui/package.json` — add `@casehubio/agency-ui-case-explorer` dependency
 - Create: `devtown/app/src/main/webui/src/views/definitions.ts` — definitions tab view
 - Modify: `devtown/app/src/main/webui/src/datasets.ts` — add plan-items, goal-status, case-context datasets
 - Modify: `devtown/app/src/main/webui/src/views/reviews.ts` — add plan items, context, goal progress sections
 - Modify: `devtown/app/src/main/webui/src/index.ts` — register Definitions tab
 
 **Interfaces:**
-- Consumes: `hostPanel()` from `@casehubio/pages-ui`; `caseDefinitionType`, `offsetPaginationReader` from `@casehubio/blocks-ui-case-explorer`; `dataset()`, `table()`, `metric()`, `lookup()`, `groupBy()`, `col()` from `@casehubio/pages-ui`; engine-rest endpoints (from Task 4)
+- Consumes: `hostPanel()` from `@casehubio/pages-ui`; `caseDefinitionType`, `offsetPaginationReader` from `@casehubio/agency-ui-case-explorer`; `dataset()`, `table()`, `metric()`, `lookup()`, `groupBy()`, `col()` from `@casehubio/pages-ui`; engine-rest endpoints (from Task 4)
 - Produces: "Definitions" tab in the devtown UI; live case state sections in Reviews detail
 
 These are TypeScript files — use `Read`/`Edit`/`Write` tools.
@@ -962,7 +962,7 @@ These are TypeScript files — use `Read`/`Edit`/`Write` tools.
 Edit `devtown/app/src/main/webui/package.json` dependencies:
 
 ```json
-"@casehubio/blocks-ui-case-explorer": "0.3.0"
+"@casehubio/agency-ui-case-explorer": "0.3.0"
 ```
 
 Run: `cd /Users/mdproctor/claude/casehub/worktrees/17/devtown/app/src/main/webui && npm install`

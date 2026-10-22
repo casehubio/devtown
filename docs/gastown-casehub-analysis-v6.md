@@ -71,7 +71,7 @@ Gas City (April 2026) replaces Gas Town as the comparison target. Built by Julia
 
 Gas City closes several gaps Gas Town had against CaseHub — trust is now multi-dimensional and evidence-anchored (Wasteland), the MEOW stack provides real work lifecycle tracking, Dolt-based audit gives a SOC2 narrative, and the pack model supports multi-domain use. Operationally, Gas City has proven scale at hundreds of concurrent agents with patrol-based self-healing and crash loop protection.
 
-CaseHub has also advanced substantially since v5. casehub-eidos provides structured 4-layer agent identity with capability health probing, behavioral signal accumulation, and system prompt generation. casehub-neocortex delivers full CBR (Case-Based Reasoning) with typed feature similarity, trend detection, plan adaptation, and CRAG. casehub-blocks ships a composable orchestration pattern library (supervisor, sequence, loop, parallel, voting, debate, conditional, HTN). casehub-ops provides infrastructure desired-state provisioning and continuous compliance across 6 frameworks. casehub-workers supports 6 dispatch types. The application tier has grown to 8 repos. casehub-openclaw provides bidirectional CaseHub-to-OpenClaw accountability. The platform now has ACL, 5 external event ingestion modules, a unified ChatPlatform SPI (Slack + Discord), and a pages push protocol with typed wire format.
+CaseHub has also advanced substantially since v5. casehub-eidos provides structured 4-layer agent identity with capability health probing, behavioral signal accumulation, and system prompt generation. casehub-neocortex delivers full CBR (Case-Based Reasoning) with typed feature similarity, trend detection, plan adaptation, and CRAG. casehub-agency ships a composable orchestration pattern library (supervisor, sequence, loop, parallel, voting, debate, conditional, HTN). casehub-ops provides infrastructure desired-state provisioning and continuous compliance across 6 frameworks. casehub-workers supports 6 dispatch types. The application tier has grown to 8 repos. casehub-openclaw provides bidirectional CaseHub-to-OpenClaw accountability. The platform now has ACL, 5 external event ingestion modules, a unified ChatPlatform SPI (Slack + Discord), and a pages push protocol with typed wire format.
 
 The v5 pattern — "every area where Gastown leads is operational; every area where CaseHub leads is structural" — still holds but needs refinement. Gas City's operational advantages are now deeper (patrol-based NDI, Factory Worker API, 7 runtime providers). But CaseHub's structural distance has widened in areas Gas City is not pursuing: agent identity, CBR, 4-layer routing, composable orchestration patterns, continuous compliance, and on-device neural inference. Gas City's trust system is richer than Gas Town's but still human-curated stamps that don't drive routing; CaseHub's is Bayesian-computed and routing-integrated. Gas City's compliance story is Dolt-based (admin-trusted); CaseHub's is Merkle-based (independently verifiable).
 
@@ -127,7 +127,7 @@ Unchanged from v5. TrustGatedAttestationPolicy (engine#668, devtown#97).
 
 Unchanged from v5. GDPR, ActionRiskClassifier, compliance report, post-merge trust feedback, HITL, observability + MCP tools.
 
-### 3.6 casehub-blocks — Foundation Consolidation
+### 3.6 casehub-agency — Foundation Consolidation
 
 Expanded since v5. Eight reusable blocks plus a composable orchestration pattern library:
 
@@ -299,7 +299,7 @@ Unchanged entries from v5 retained. New entries:
 | Merge queue | CasePlanModel batch-then-bisect + 3 bisection strategies + adaptive sizing | Shipped (devtown#11) |
 | CBR-enhanced routing | CbrAgentRoutingStrategy with typed FeatureValue similarity | Active in devtown |
 | Agent identity integration | casehub-eidos descriptors + CapabilityHealth probing at dispatch | Available via engine integration |
-| Orchestration patterns | casehub-blocks: supervisor, sequence, loop, parallel, voting, debate, conditional, HTN | Available |
+| Orchestration patterns | casehub-agency: supervisor, sequence, loop, parallel, voting, debate, conditional, HTN | Available |
 | 4-layer routing | Trust → semantic → LLM → CBR routing chain | Available via engine + blocks |
 | OpenClaw accountability | CaseHub MCP tools for OpenClaw agents (casehub_commit, casehub_done, etc.) | Available via openclaw |
 | GDPR Art.17 erasure | LedgerErasureService with tamper-evident receipt | Shipped (devtown#74) |
@@ -354,7 +354,7 @@ New in v6. CaseHub's CBR pipeline learns from analogous past cases: typed featur
 
 ### 6.5 Composable Orchestration Patterns
 
-New in v6. casehub-blocks provides sealed types for routing, decomposition, activation, aggregation, and termination decisions, with pattern builders (supervisor, sequence, loop, parallel, voting, debate, conditional, HTN) and a fluent DSL. ExecutionPlan DAG type with dependency edges. Hybrid decomposition (static-first, LLM fallback). Gas City's formulas v2 add control flow but are template-based, not pattern-based. CaseHub's blocks compose coordination primitives; Gas City's packs compose workflow steps.
+New in v6. casehub-agency provides sealed types for routing, decomposition, activation, aggregation, and termination decisions, with pattern builders (supervisor, sequence, loop, parallel, voting, debate, conditional, HTN) and a fluent DSL. ExecutionPlan DAG type with dependency edges. Hybrid decomposition (static-first, LLM fallback). Gas City's formulas v2 add control flow but are template-based, not pattern-based. CaseHub's blocks compose coordination primitives; Gas City's packs compose workflow steps.
 
 ### 6.6 Action Oversight Gates
 

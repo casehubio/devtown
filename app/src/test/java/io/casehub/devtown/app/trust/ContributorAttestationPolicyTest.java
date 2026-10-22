@@ -1,6 +1,6 @@
 package io.casehub.devtown.app.trust;
 
-import io.casehub.blocks.attestation.AttestationIntent;
+import io.casehub.agency.attestation.AttestationIntent;
 import io.casehub.devtown.domain.ContributorTrustCapability;
 import io.casehub.devtown.domain.ContributorTrustDimension;
 import io.casehub.devtown.review.PrLifecycleEvent;

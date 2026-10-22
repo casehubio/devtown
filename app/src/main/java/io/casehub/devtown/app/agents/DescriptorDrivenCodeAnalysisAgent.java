@@ -1,6 +1,6 @@
 package io.casehub.devtown.app.agents;
 
-import io.casehub.blocks.agent.StructuredAgentInvoker.InvocationResult;
+import io.casehub.agency.agent.StructuredAgentInvoker.InvocationResult;
 import io.casehub.devtown.domain.ReviewDomain;
 import io.casehub.devtown.review.CodeAnalysisAgent;
 import io.casehub.devtown.review.CodeAnalysisResult;

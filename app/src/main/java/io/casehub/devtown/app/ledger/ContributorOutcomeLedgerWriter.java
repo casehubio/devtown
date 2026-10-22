@@ -1,7 +1,7 @@
 package io.casehub.devtown.app.ledger;
 
-import io.casehub.blocks.attestation.AttestationIntent;
-import io.casehub.blocks.attestation.AttestationIntentWriter;
+import io.casehub.agency.attestation.AttestationIntent;
+import io.casehub.agency.attestation.AttestationIntentWriter;
 import io.casehub.devtown.app.trust.ContributorAttestationPolicy;
 import io.casehub.devtown.review.PrLifecycleEvent;
 import io.casehub.ledger.api.model.LedgerEntryType;

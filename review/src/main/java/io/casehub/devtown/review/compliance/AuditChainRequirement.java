@@ -1,6 +1,6 @@
 package io.casehub.devtown.review.compliance;
 
-import io.casehub.blocks.routing.RequirementStatus;
+import io.casehub.agency.routing.RequirementStatus;
 
 import java.util.List;
 

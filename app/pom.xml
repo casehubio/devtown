@@ -57,6 +57,12 @@
       <version>${project.version}</version>
       <scope>runtime</scope>
     </dependency>
+    <dependency>
+      <groupId>io.casehub</groupId>
+      <artifactId>casehub-platform-agent-config</artifactId>
+      <version>${project.version}</version>
+      <scope>runtime</scope>
+    </dependency>
     <!-- Override transitive 0.3 → 0.4-SNAPSHOT to align with agent-router:0.4-SNAPSHOT.
          Without this, RouterBeans references EmbeddingModelBackend (added post-0.3)
          which doesn't exist in the 0.3 core jar, breaking Quarkus augmentation.
@@ -76,6 +82,12 @@
     <dependency>
       <groupId>io.casehub</groupId>
       <artifactId>casehub-platform-agent-gemini</artifactId>
+      <version>${project.version}</version>
+      <scope>runtime</scope>
+    </dependency>
+    <dependency>
+      <groupId>io.casehub</groupId>
+      <artifactId>casehub-platform-agent-simulation-core</artifactId>
       <version>${project.version}</version>
       <scope>runtime</scope>
     </dependency>

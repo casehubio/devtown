@@ -336,11 +336,11 @@ export class PrDetail extends LitElement {
       ` : nothing}
 
       <div class="section-title">Event Timeline</div>
-      <blocks-timeline
+      <agency-timeline
         .strategy=${reviewTimelineStrategy}
         .data=${d.timeline}
         layout="vertical"
-      ></blocks-timeline>
+      ></agency-timeline>
     `;
   }
 

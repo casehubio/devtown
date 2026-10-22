@@ -218,7 +218,7 @@ Full backward compatibility — omitting `reader` uses `DEFAULT_READER` which as
 
 ```typescript
 import { page, hostPanel } from "@casehubio/pages-ui";
-import { caseDefinitionType, offsetPaginationReader } from "@casehubio/blocks-ui-case-explorer";
+import { caseDefinitionType, offsetPaginationReader } from "@casehubio/agency-ui-case-explorer";
 
 const definitionReader = {
   id: (d) => `${d.namespace}/${d.name}/${d.version}`,
@@ -245,7 +245,7 @@ export const definitionsView = page("Definitions",
 
 **File: `app/src/main/webui/src/index.ts`** — add `["Definitions", definitionsView]` to tabs.
 
-**File: `app/src/main/webui/package.json`** — add `@casehubio/blocks-ui-case-explorer` dependency.
+**File: `app/src/main/webui/package.json`** — add `@casehubio/agency-ui-case-explorer` dependency.
 
 ### Frontend: Definition detail renderer
 
@@ -343,7 +343,7 @@ Phase 2 — blocks-ui EntityReader (parallel with Phase 1)
   5. Tests
 
 Phase 3 — devtown frontend (depends on Phase 1 + 2)
-  1. Add @casehubio/blocks-ui-case-explorer dependency
+  1. Add @casehubio/agency-ui-case-explorer dependency
   2. views/definitions.ts with hostPanel + reader config + custom detailRenderer
   3. datasets.ts — add plan-items, goal-status, case-context datasets
   4. views/reviews.ts — add Plan Items, Case Context, Goal Progress sections

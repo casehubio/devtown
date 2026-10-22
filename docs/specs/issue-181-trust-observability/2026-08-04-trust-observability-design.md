@@ -206,7 +206,7 @@ class ReviewerWorkbench extends LitElement {
 
 ```typescript
 // index.ts
-import "@casehubio/blocks-ui-trust-workbench";
+import "@casehubio/agency-ui-trust-workbench";
 import "./components/reviewer-workbench";
 registerPanel("reviewer-workbench", "devtown-reviewer-workbench");
 ```

@@ -31,7 +31,7 @@ The shared computation (`ExperienceAnalyser`) goes in **engine-api** where `Retr
 
 The strategy enhancement stays in **engine-ledger** where `TrustWeightedAgentStrategy` already lives. The CBR bonus is data-driven, not a new strategy — when no experiences are available, the behavior is identical to the existing trust-weighted routing. No new class or CDI priority conflict.
 
-`casehub-blocks` has an existing `CbrAgentRoutingStrategy` with an identical `analyseExperiences()` computation. That strategy serves a different contract (CBR-first routing with trust pre-filtering, named strategy activation). blocks#55 tracks refactoring it to use the shared `ExperienceAnalyser` once it lands. Not part of this implementation.
+`casehub-agency` has an existing `CbrAgentRoutingStrategy` with an identical `analyseExperiences()` computation. That strategy serves a different contract (CBR-first routing with trust pre-filtering, named strategy activation). blocks#55 tracks refactoring it to use the shared `ExperienceAnalyser` once it lands. Not part of this implementation.
 
 ### Data flow
 
@@ -285,7 +285,7 @@ Preference scope: `casehubio.devtown.trust-routing.<capability>.cbr-weight` — 
 
 ## Component 4: Deferred — blocks#55
 
-Refactor `CbrAgentRoutingStrategy.analyseExperiences()` to delegate to the shared `ExperienceAnalyser`. No behavioral change. Blocked on engine-api shipping the utility. Tracked at https://github.com/casehubio/blocks/issues/55.
+Refactor `CbrAgentRoutingStrategy.analyseExperiences()` to delegate to the shared `ExperienceAnalyser`. No behavioral change. Blocked on engine-api shipping the utility. Tracked at https://github.com/casehubio/agency/issues/55.
 
 ## Testing strategy
 

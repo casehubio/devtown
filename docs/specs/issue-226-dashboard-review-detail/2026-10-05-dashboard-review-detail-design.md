@@ -179,7 +179,7 @@ devtown-review-workbench (orchestrator)
 
 The detail pane is a single scrolling column with sections — not nested splits or tabs. Four sections (routing, findings, timeline, actions) stack vertically in the detail slot.
 
-**Sub-component communication:** Via the pages event bus (`emitPagesEvent`/`onPagesEvent` from `@casehubio/blocks-ui-core`). `blocks-split-workbench` uses `selection-topic="review"` events. Sub-components within the detail pane receive data as properties from `devtown-review-detail` (parent-managed state), not via the event bus — they are presentation components, not independent data fetchers.
+**Sub-component communication:** Via the pages event bus (`emitPagesEvent`/`onPagesEvent` from `@casehubio/agency-ui-core`). `blocks-split-workbench` uses `selection-topic="review"` events. Sub-components within the detail pane receive data as properties from `devtown-review-detail` (parent-managed state), not via the event bus — they are presentation components, not independent data fetchers.
 
 **devtown-review-list** — Extracted from current review-workbench. Emits `review:selected` / `review:deselected`.
 

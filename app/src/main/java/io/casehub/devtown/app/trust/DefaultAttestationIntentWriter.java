@@ -1,7 +1,7 @@
 package io.casehub.devtown.app.trust;
 
-import io.casehub.blocks.attestation.AttestationIntent;
-import io.casehub.blocks.attestation.AttestationIntentWriter;
+import io.casehub.agency.governance.attestation.AttestationIntent;
+import io.casehub.agency.governance.attestation.AttestationIntentWriter;
 import io.casehub.ledger.api.model.LedgerAttestation;
 import io.casehub.ledger.api.spi.LedgerEntryRepository;
 import jakarta.enterprise.context.ApplicationScoped;

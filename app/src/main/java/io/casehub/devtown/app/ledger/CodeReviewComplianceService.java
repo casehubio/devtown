@@ -1,8 +1,8 @@
 package io.casehub.devtown.app.ledger;
 
-import io.casehub.blocks.routing.RequirementStatus;
-import io.casehub.blocks.routing.RoutingDecisionRecord;
-import io.casehub.blocks.routing.TrustRoutingRequirement;
+import io.casehub.agency.governance.routing.RequirementStatus;
+import io.casehub.agency.governance.routing.RoutingDecisionRecord;
+import io.casehub.agency.governance.routing.TrustRoutingRequirement;
 import io.casehub.devtown.review.compliance.AuditChainRequirement;
 import io.casehub.devtown.review.compliance.CodeReviewComplianceEvidence;
 import io.casehub.devtown.review.compliance.GdprRequirement;

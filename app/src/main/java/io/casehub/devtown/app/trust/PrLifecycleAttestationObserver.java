@@ -1,6 +1,6 @@
 package io.casehub.devtown.app.trust;
 
-import io.casehub.blocks.attestation.AttestationIntent;
+import io.casehub.agency.governance.attestation.AttestationIntent;
 import io.casehub.devtown.app.ledger.ContributorOutcomeLedgerWriter;
 import io.casehub.devtown.review.PrLifecycleEvent;
 import jakarta.annotation.Priority;

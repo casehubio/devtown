@@ -416,7 +416,7 @@ Case definitions:
 | `CodeReviewComplianceEvidence` | Aggregate compliance record for a case |
 | `AuditChainRequirement` | Tamper-evident ledger chain integrity evidence |
 | `ReviewSlaRequirement` | SLA compliance -- whether deadlines were met |
-| `TrustRoutingRequirement` | Trust-weighted routing compliance -- from `casehub-blocks` |
+| `TrustRoutingRequirement` | Trust-weighted routing compliance -- from `casehub-agency` |
 | `GdprRequirement` | GDPR erasure state for involved actors |
 | `ErasureReceipt` | Proof of GDPR Art.17 erasure completion |
 | `InclusionProofRecord` | Merkle inclusion proof from ledger |

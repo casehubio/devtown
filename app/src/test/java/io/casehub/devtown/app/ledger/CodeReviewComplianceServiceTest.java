@@ -2,7 +2,7 @@ package io.casehub.devtown.app.ledger;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import io.casehub.blocks.routing.RequirementStatus;
+import io.casehub.agency.governance.routing.RequirementStatus;
 import io.casehub.devtown.review.compliance.CodeReviewComplianceEvidence;
 import io.casehub.ledger.api.model.LedgerEntryType;
 import io.casehub.ledger.model.CaseLedgerEntry;

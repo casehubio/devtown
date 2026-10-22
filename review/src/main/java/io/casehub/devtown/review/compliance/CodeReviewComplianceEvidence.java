@@ -1,6 +1,6 @@
 package io.casehub.devtown.review.compliance;
 
-import io.casehub.blocks.routing.TrustRoutingRequirement;
+import io.casehub.agency.governance.routing.TrustRoutingRequirement;
 
 import java.time.Instant;
 import java.util.UUID;

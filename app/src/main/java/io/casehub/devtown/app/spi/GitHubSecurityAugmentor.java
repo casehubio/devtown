@@ -3,6 +3,7 @@ package io.casehub.devtown.app.spi;
 import io.casehub.devtown.domain.DevtownRoles;
 import io.casehub.devtown.github.GitHubOrgApi;
 import io.casehub.platform.api.identity.SecurityIdentityAttributes;
+import io.quarkus.arc.profile.UnlessBuildProfile;
 import io.quarkus.security.identity.AuthenticationRequestContext;
 import io.quarkus.security.identity.SecurityIdentity;
 import io.quarkus.security.identity.SecurityIdentityAugmentor;
@@ -21,6 +22,7 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 @ApplicationScoped
+@UnlessBuildProfile("dev")
 public class GitHubSecurityAugmentor implements SecurityIdentityAugmentor {
 
     private static final Logger LOG = Logger.getLogger(GitHubSecurityAugmentor.class);

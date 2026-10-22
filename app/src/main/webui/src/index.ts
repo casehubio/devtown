@@ -29,7 +29,7 @@ interface UserInfo {
 function authFetch(input: RequestInfo | URL, init?: RequestInit): Promise<Response> {
   return fetch(input, init).then(r => {
     if (r.status === 401) {
-      window.location.href = "/";
+      window.location.href = "/api/userinfo";
     }
     return r;
   });

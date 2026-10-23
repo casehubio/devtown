@@ -1,5 +1,5 @@
 import { html, type TemplateResult } from 'lit';
-import type { TimelineStrategy, TimelineNode } from '@casehubio/mosaic-blocks-timeline';
+import type { TimelineStrategy, TimelineNode } from '@casehubio/mosaic-agency-timeline';
 
 interface TimelineEvent {
   timestamp: string;

@@ -1,0 +1,4 @@
+methods:
+  agent-provider.invoke:
+    strategy: sequential
+    exhaustion-policy: wrap

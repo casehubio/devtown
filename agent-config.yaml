@@ -3,20 +3,23 @@ providers:
     credential: env:ANTHROPIC_API_KEY
   - vendor: google-vertex
     credential: env:GOOGLE_APPLICATION_CREDENTIALS
+  - vendor: ollama
+
 aliases:
   reasoning-heavy:
     chain:
-      - tier: FLAGSHIP
-        capabilities: [reasoning]
-      - backendKey: simulation
+      - backend-key: claude
+      - backend-key: ollama
+      - backend-key: simulation
   standard-review:
     chain:
-      - tier: STANDARD
-      - backendKey: simulation
+      - backend-key: ollama
+      - backend-key: claude
+      - backend-key: simulation
   cheap-fast:
     chain:
-      - tier: FAST
-        maxCost: LOW
-      - backendKey: simulation
+      - backend-key: ollama
+      - backend-key: simulation
+
 defaults:
-  backend: gemini
+  backend: claude

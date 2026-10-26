@@ -40,7 +40,9 @@ public class AgentPipelineTestProfile implements QuarkusTestProfile {
                           + "io.casehub.engine.runtime.engine.recovery.WorkerRecoveryHealthCheck,"
                           + "io.casehub.work.runtime.preferences.WorkPreferenceRegistrar,"
                           + "io.casehub.devtown.app.spi.GitHubSecurityAugmentor,"
-                          + "io.casehub.devtown.app.spi.GitHubGroupMembershipProvider"),
+                          + "io.casehub.devtown.app.spi.GitHubGroupMembershipProvider,"
+                          + "io.casehub.devtown.github.GitHubPrDiffClient,"
+                          + "io.casehub.devtown.app.routing.DevtownTrustRoutingPolicyProvider"),
 
                 // Index eidos modules for CDI discovery
                 Map.entry("quarkus.index-dependency.eidos.group-id", "io.casehub"),

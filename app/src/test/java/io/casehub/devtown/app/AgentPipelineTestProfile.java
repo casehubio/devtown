@@ -40,8 +40,7 @@ public class AgentPipelineTestProfile implements QuarkusTestProfile {
                           + "io.casehub.engine.runtime.engine.recovery.WorkerRecoveryHealthCheck,"
                           + "io.casehub.work.runtime.preferences.WorkPreferenceRegistrar,"
                           + "io.casehub.devtown.app.spi.GitHubSecurityAugmentor,"
-                          + "io.casehub.devtown.app.spi.GitHubGroupMembershipProvider,"
-                          + "io.casehub.platform.agent.config.quarkus.AgentConfigBeans"),
+                          + "io.casehub.devtown.app.spi.GitHubGroupMembershipProvider"),
 
                 // Index eidos modules for CDI discovery
                 Map.entry("quarkus.index-dependency.eidos.group-id", "io.casehub"),
@@ -71,7 +70,7 @@ public class AgentPipelineTestProfile implements QuarkusTestProfile {
                 Map.entry("quarkus.index-dependency.agent-session-core.group-id", "io.casehub"),
                 Map.entry("quarkus.index-dependency.agent-session-core.artifact-id", "casehub-platform-agent-session-core"),
 
-                // Force simulation backend as default (no ManifestResult to override)
+                // Force simulation backend as default (TestManifestResultProducer overrides alias resolution)
                 Map.entry("casehub.platform.agent.default-backend", "simulation")
         );
     }

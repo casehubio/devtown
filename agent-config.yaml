@@ -8,16 +8,21 @@ providers:
 aliases:
   reasoning-heavy:
     chain:
-      - backend-key: claude
-      - backend-key: ollama
+      - tier: FLAGSHIP
+        capabilities: [reasoning]
+        prefer-vendor: anthropic
+      - tier: FLAGSHIP
+        capabilities: [reasoning]
       - backend-key: simulation
   standard-review:
     chain:
-      - backend-key: ollama
-      - backend-key: claude
+      - tier: STANDARD
+      - tier: FAST
       - backend-key: simulation
   cheap-fast:
     chain:
+      - tier: FAST
+        max-cost: LOW
       - backend-key: ollama
       - backend-key: simulation
 

@@ -75,6 +75,7 @@ export class PrDetail extends LitElement {
   @state() private _actionResult = '';
   @state() private _contributor: ContributorProfile | null = null;
   @state() private _prevContributor = '';
+  @state() private _conductorOrigin: { conductorDriven: boolean; streamCategory?: string } | null = null;
 
   static override styles = [
     hostStyles, sectionTitleStyles, narrativeStyles, emptyStyles,
@@ -104,6 +105,15 @@ export class PrDetail extends LitElement {
       .actions button.danger:hover { background: var(--pages-danger-10, #b91c1c); }
       .action-result { font-size: 12px; padding: 6px 10px; margin: 4px 0 8px; background: var(--pages-neutral-2, #f5f5f5); border-radius: 3px; }
       .error { color: var(--pages-danger-9, #dc2626); padding: 16px; }
+      .conductor-badge {
+        display: inline-flex; align-items: center; gap: 4px;
+        padding: 2px 8px; border-radius: 12px;
+        background: var(--pages-primary-2, #e8f0fe); color: var(--pages-primary-9, #1d4ed8);
+        font-size: 12px; font-weight: 500; text-decoration: none;
+        margin-left: 8px; vertical-align: middle;
+      }
+      .conductor-badge:hover { background: var(--pages-primary-3, #d2e3fc); }
+      .badge-icon { font-size: 14px; }
       .check-list { list-style: none; padding: 0; margin: 6px 0 0 0; }
       .check-item { display: flex; align-items: center; gap: 8px; padding: 4px 0; font-size: 12px; }
       .check-icon { width: 16px; text-align: center; font-size: 14px; }
@@ -134,6 +144,10 @@ export class PrDetail extends LitElement {
         this._prevContributor = this._data.pr.contributor;
         this._fetchContributor(this._data.pr.contributor);
       }
+      fetch(`/api/devtown/evolution/conductor-origin/${this.caseId}`)
+        .then(r => r.ok ? r.json() : null)
+        .then(data => { this._conductorOrigin = data; })
+        .catch(() => { /* badge simply won't render */ });
     } catch (err) {
       this._error = `Failed to load: ${err}`;
     } finally {
@@ -256,7 +270,12 @@ export class PrDetail extends LitElement {
     } : null;
 
     return html`
-      <div class="header">PR #${d.pr.prNumber} — ${d.pr.repo}</div>
+      <div class="header">PR #${d.pr.prNumber} — ${d.pr.repo}${this._conductorOrigin?.conductorDriven ? html`
+        <a href="/evolution" class="conductor-badge"
+           title="Created by evolution conductor${this._conductorOrigin.streamCategory ? ` (${this._conductorOrigin.streamCategory})` : ''}">
+          <span class="badge-icon">⚡</span> Conductor
+        </a>
+      ` : ''}</div>
       ${isQueued ? html`
         <div class="sub-header">by ${d.pr.contributor} · waiting ${this.queueContext.waitMinutes} min · ${(this.queueContext.headSha || d.pr.headSha).substring(0, 7)}</div>
       ` : html`

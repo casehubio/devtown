@@ -1,10 +1,11 @@
 package io.casehub.devtown.app.evolution;
 
 import io.casehub.engine.common.spi.CaseInstanceRepository;
+import io.quarkus.logging.Log;
+import io.quarkus.runtime.StartupEvent;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.event.Observes;
 import jakarta.inject.Inject;
-import io.quarkus.runtime.StartupEvent;
 
 @ApplicationScoped
 public class DevtownEvolutionBootstrap {
@@ -16,10 +17,14 @@ public class DevtownEvolutionBootstrap {
   @Inject CaseInstanceRepository caseInstanceRepository;
   @Inject DevtownEvolutionCaseHub caseHub;
 
-  void onStartup(@Observes StartupEvent event) {
-    var existing = caseInstanceRepository.findByNamespaceAndName(NAMESPACE, NAME, TENANCY_ID);
-    if (existing.isEmpty()) {
-      caseHub.startCase();
+    void onStartup(@Observes StartupEvent event) {
+        var existing = caseInstanceRepository.findByNamespaceAndName(NAMESPACE, NAME, TENANCY_ID);
+        if (existing.isEmpty()) {
+            try {
+                caseHub.startCase();
+            } catch (Exception e) {
+                Log.errorf(e, "Evolution case bootstrap failed — evolution features unavailable");
+            }
+        }
     }
-  }
 }

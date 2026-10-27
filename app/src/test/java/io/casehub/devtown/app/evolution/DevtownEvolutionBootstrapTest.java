@@ -1,16 +1,18 @@
 package io.casehub.devtown.app.evolution;
 
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-
 import io.casehub.engine.common.internal.model.CaseInstance;
 import io.casehub.engine.common.spi.CaseInstanceRepository;
 import io.quarkus.runtime.StartupEvent;
-import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
+
+import java.util.List;
+
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 class DevtownEvolutionBootstrapTest {
 
@@ -47,4 +49,14 @@ class DevtownEvolutionBootstrapTest {
 
     verify(caseHub, never()).startCase();
   }
+
+    @Test
+    void startup_survives_when_startCase_fails() {
+        when(repository.findByNamespaceAndName("devtown", "evolution", "default"))
+                .thenReturn(List.of());
+        when(caseHub.startCase()).thenThrow(new RuntimeException("engine unavailable"));
+
+        assertDoesNotThrow(() -> bootstrap.onStartup(Mockito.mock(StartupEvent.class)));
+    }
+
 }

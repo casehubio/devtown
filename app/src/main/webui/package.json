@@ -29,6 +29,8 @@
     "@casehubio/mosaic-core": "file:.casehub-packages/packages/mosaic-core",
     "@casehubio/mosaic-detail-pane": "file:.casehub-packages/packages/detail-pane",
     "@casehubio/mosaic-document-workbench": "file:.casehub-packages/packages/document-workbench",
+    "@casehubio/mosaic-evolution-config": "file:.casehub-packages/packages/evolution-config",
+    "@casehubio/mosaic-evolution-workbench": "file:.casehub-packages/packages/evolution-workbench",
     "@casehubio/mosaic-execution-monitor": "file:.casehub-packages/packages/execution-monitor",
     "@casehubio/mosaic-gdpr-erasure-action": "file:.casehub-packages/packages/gdpr-erasure-action",
     "@casehubio/mosaic-graph-stencil-case": "file:.casehub-packages/packages/graph-stencil-case",

@@ -205,6 +205,7 @@ const BATCH_TABLE_CONFIG: readonly TableColumnConfig[] = [
 @customElement('devtown-pr-cases-workbench')
 export class PrCasesWorkbench extends LitElement {
   @property({ type: String }) endpoint = '';
+  @property({ type: String, attribute: 'initial-case-id' }) initialCaseId = '';
 
   @state() private _filter: FilterKey = 'all';
   @state() private _selectedCaseId = '';
@@ -278,6 +279,10 @@ export class PrCasesWorkbench extends LitElement {
   override connectedCallback(): void {
     super.connectedCallback();
     this._fetchAll();
+    if (this.initialCaseId) {
+      this._selectedCaseId = this.initialCaseId;
+      this._selectionKind = 'pr';
+    }
     this._unsubs.push(
       onPagesEvent(document, 'review:deselected', () => {
         this._selectedCaseId = '';

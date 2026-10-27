@@ -3,7 +3,6 @@ package io.casehub.devtown.app.evolution;
 import io.casehub.api.view.EvolutionStateSnapshot;
 import io.casehub.api.view.EvolutionStateSnapshot.ImprovementStreamView;
 import jakarta.enterprise.context.ApplicationScoped;
-import java.util.List;
 
 @ApplicationScoped
 public class DevtownEvolutionEnricher {
@@ -14,10 +13,13 @@ public class DevtownEvolutionEnricher {
     return new DevtownEvolutionStateSnapshot(state, enrichedStreams);
   }
 
-  private DevtownImprovementStreamView enrichStream(ImprovementStreamView stream) {
-    String enrichedTarget = resolveTarget(stream.category(), stream.target());
-    return new DevtownImprovementStreamView(stream, enrichedTarget);
-  }
+    private DevtownImprovementStreamView enrichStream(ImprovementStreamView stream) {
+        String enrichedTarget = resolveTarget(stream.category(), stream.target());
+        String deepLink = stream.target() != null
+                          ? "/?caseId=" + stream.improvementCaseId()
+                          : null;
+        return new DevtownImprovementStreamView(stream, enrichedTarget, deepLink);
+    }
 
   private String resolveTarget(String category, String target) {
     if (target == null) {

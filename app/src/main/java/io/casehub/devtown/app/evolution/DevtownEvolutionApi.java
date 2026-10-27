@@ -107,4 +107,15 @@ public class DevtownEvolutionApi {
     UUID caseId = caseResolver.resolve(tenancyId);
     engineApi.resetCircuitBreaker(caseId);
   }
+
+    public ConductorOriginResponse getConductorOrigin(String tenancyId, String caseId) {
+        UUID evolutionCaseId = caseResolver.resolve(tenancyId);
+        var  streams         = engineApi.getStreamProgress(evolutionCaseId, tenancyId);
+        return streams.stream()
+                      .filter(s -> caseId.equals(s.target()))
+                      .findFirst()
+                      .map(s -> ConductorOriginResponse.conductorDriven(s.category()))
+                      .orElse(ConductorOriginResponse.notConductorDriven());
+    }
+
 }

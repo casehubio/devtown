@@ -4,4 +4,4 @@ import io.casehub.api.view.EvolutionStateSnapshot.ImprovementStreamView;
 import jakarta.annotation.Nullable;
 
 public record DevtownImprovementStreamView(
-    ImprovementStreamView stream, @Nullable String enrichedTarget) {}
+        ImprovementStreamView stream, @Nullable String enrichedTarget, @Nullable String deepLink) {}

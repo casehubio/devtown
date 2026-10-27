@@ -1,23 +1,24 @@
 package io.casehub.devtown.app.evolution;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-
 import io.casehub.api.model.improvement.ComplianceLevel;
 import io.casehub.api.model.stigmergy.CircuitBreakerState;
 import io.casehub.api.model.stigmergy.ConductorInboxEntry;
 import io.casehub.api.spi.improvement.EngineEvolutionApi;
 import io.casehub.api.view.EvolutionStateSnapshot;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
+
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 class DevtownEvolutionApiTest {
 
@@ -91,7 +92,31 @@ class DevtownEvolutionApiTest {
     verify(engineApi).resetCircuitBreaker(caseId);
   }
 
-  private EvolutionStateSnapshot createState() {
+    @Test
+    void getConductorOrigin_returns_driven_when_stream_targets_case() {
+        var stream = new EvolutionStateSnapshot.ImprovementStreamView(
+                UUID.randomUUID(), "ci-reliability", "target-case-id", "analyze",
+                List.of(), null, false, Instant.now());
+        when(engineApi.getStreamProgress(caseId, tenancyId)).thenReturn(List.of(stream));
+
+        ConductorOriginResponse result = api.getConductorOrigin(tenancyId, "target-case-id");
+
+        assertThat(result.conductorDriven()).isTrue();
+        assertThat(result.streamCategory()).isEqualTo("ci-reliability");
+    }
+
+    @Test
+    void getConductorOrigin_returns_not_driven_when_no_match() {
+        when(engineApi.getStreamProgress(caseId, tenancyId)).thenReturn(List.of());
+
+        ConductorOriginResponse result = api.getConductorOrigin(tenancyId, "unknown-case-id");
+
+        assertThat(result.conductorDriven()).isFalse();
+        assertThat(result.streamCategory()).isNull();
+    }
+
+
+    private EvolutionStateSnapshot createState() {
     return new EvolutionStateSnapshot(
         caseId, Instant.now(), 0.75, Map.of(), 0.0, 1440,
         CircuitBreakerState.CLOSED, Map.of(), ComplianceLevel.L0_INERT, null, Map.of(),

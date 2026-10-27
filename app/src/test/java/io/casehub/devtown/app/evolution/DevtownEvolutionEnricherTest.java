@@ -1,17 +1,18 @@
 package io.casehub.devtown.app.evolution;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
 import io.casehub.api.model.improvement.ComplianceLevel;
 import io.casehub.api.model.stigmergy.CircuitBreakerState;
 import io.casehub.api.view.EvolutionStateSnapshot;
 import io.casehub.api.view.EvolutionStateSnapshot.ImprovementStreamView;
 import io.casehub.api.view.EvolutionStateSnapshot.StageProgress;
+import org.junit.jupiter.api.Test;
+
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import org.junit.jupiter.api.Test;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 class DevtownEvolutionEnricherTest {
 
@@ -85,7 +86,29 @@ class DevtownEvolutionEnricherTest {
         .isEqualTo("SLA: sla:code-review");
   }
 
-  private ImprovementStreamView createStream(String category, String target) {
+    @Test
+    void sets_deep_link_for_stream_with_target() {
+        var stream = createStream("ci-reliability", "pr-123-target");
+        var state  = createState(List.of(stream));
+
+        DevtownEvolutionStateSnapshot result = enricher.enrich(state);
+
+        assertThat(result.enrichedStreams().get(0).deepLink()).isNotNull();
+        assertThat(result.enrichedStreams().get(0).deepLink()).contains("caseId=");
+    }
+
+    @Test
+    void sets_null_deep_link_for_stream_without_target() {
+        var stream = createStream("ci-reliability", null);
+        var state  = createState(List.of(stream));
+
+        DevtownEvolutionStateSnapshot result = enricher.enrich(state);
+
+        assertThat(result.enrichedStreams().get(0).deepLink()).isNull();
+    }
+
+
+    private ImprovementStreamView createStream(String category, String target) {
     return new ImprovementStreamView(
         UUID.randomUUID(), category, target, "analyze",
         List.of(new StageProgress("analyze", StageProgress.StageStatus.IN_PROGRESS,

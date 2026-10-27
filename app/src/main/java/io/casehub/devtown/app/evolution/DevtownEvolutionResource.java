@@ -114,4 +114,13 @@ public class DevtownEvolutionResource {
   public void resetCircuitBreaker(@QueryParam("tenancyId") String tenancyId) {
     api.resetCircuitBreaker(tenancyId);
   }
+
+    @GET
+    @Path("/conductor-origin/{caseId}")
+    public ConductorOriginResponse getConductorOrigin(
+            @PathParam("caseId") String caseId,
+            @QueryParam("tenancyId") String tenancyId) {
+        return api.getConductorOrigin(tenancyId, caseId);
+    }
+
 }

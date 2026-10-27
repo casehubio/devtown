@@ -1,15 +1,10 @@
-import { loadSite, registerPanel } from "@casehubio/pages-runtime";
-import type { SiteOptions } from "@casehubio/pages-runtime";
-import { page, tabs, hostPanel } from "@casehubio/pages-ui";
+import { registerPanel } from "@casehubio/pages-runtime";
 import type { PermissionContext } from "@casehubio/pages-component";
 import "@casehubio/mosaic-session-workbench";
 import "./components/reviewer-workbench";
 import "./components/contributor-workbench";
 import "./components/pr-cases-workbench";
 import "./components/system-workbench";
-import { createDatasets } from "./datasets";
-import { reviewersView } from "./views/reviewers";
-import { definitionsView } from "./views/definitions";
 
 const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
 
@@ -47,47 +42,37 @@ async function start() {
   const userRes = await fetch("/api/userinfo");
   if (userRes.status === 401 || !userRes.ok) {
     window.location.href = "/api/userinfo";
-    return; // browser navigation triggers OIDC redirect to GitHub login
+    return;
   }
   const user: UserInfo = await userRes.json();
 
-  const prefs = await authFetch("/api/devtown/governance/preferences")
-    .then(r => r.ok ? r.json() : {})
-    .then(json => {
-      const flat: Record<string, string> = {};
-      for (const [section, values] of Object.entries(json)) {
-        for (const [key, val] of Object.entries(values as Record<string, string>)) {
-          flat[`${section}.${key}`] = val;
-        }
-      }
-      return flat;
-    })
-    .catch(() => ({}));
-
-  const app = page("DevTown",
-    tabs(
-      ["PR Cases", hostPanel("pr-cases-workbench", { endpoint: "/api/devtown/governance" })],
-      ["Reviewers", reviewersView],
-      ["Contributors", hostPanel("contributor-workbench", { endpoint: "/api/devtown/reviews" })],
-      ["Workers", hostPanel("session-workbench", { endpoint: "/api/sessions" })],
-      ["System", hostPanel("system-workbench", { endpoint: "/api/devtown/governance" })],
-      ["Definitions", definitionsView],
-    ),
-    { settings: { mode: prefersDark ? "dark" : "light" }, datasets: createDatasets(prefs) },
-  );
-
   const container = document.getElementById("app");
-  if (container) {
-    const siteOptions: SiteOptions = {
+  if (!container) return;
+
+  if (window.location.pathname.startsWith("/evolution")) {
+    const { mountEvolutionPage } = await import("./views/evolution");
+    mountEvolutionPage(container, user.tenancyId, prefersDark);
+  } else {
+    const prefs = await authFetch("/api/devtown/governance/preferences")
+      .then(r => r.ok ? r.json() : {})
+      .then(json => {
+        const flat: Record<string, string> = {};
+        for (const [section, values] of Object.entries(json)) {
+          for (const [key, val] of Object.entries(values as Record<string, string>)) {
+            flat[`${section}.${key}`] = val;
+          }
+        }
+        return flat;
+      })
+      .catch(() => ({}));
+
+    const initialCaseId = new URLSearchParams(window.location.search).get("caseId");
+
+    const { mountReviewDashboard } = await import("./views/review");
+    await mountReviewDashboard(container, {
       permissions: permissionsFrom(user),
       fetch: authFetch,
-    };
-    const site = await loadSite(container, app, siteOptions);
-    site.setTheme(prefersDark ? "dark" : "light");
-
-    window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", (e) => {
-      site.setTheme(e.matches ? "dark" : "light");
-    });
+    }, prefs, prefersDark, initialCaseId);
   }
 }
 

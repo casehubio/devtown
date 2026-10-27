@@ -16,6 +16,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import static io.casehub.devtown.app.evolution.worker.EvolutionWorkerConstants.STATUS_APPLIED;
 import static io.casehub.devtown.app.evolution.worker.EvolutionWorkerConstants.TARGET_HEALTH;
 
 @ApplicationScoped
@@ -98,8 +99,7 @@ public class GateStrictnessWorker {
     output.put("target", "ci-reliability");
     output.put("adjustments", adjustments);
     output.put("healthBefore", health);
-    output.put("status", "MERGED");
-    output.put("reviewOutcome", "approved");
+    output.put("status", STATUS_APPLIED);
     output.put("requiresPr", false);
     return WorkerResult.of(output);
   }

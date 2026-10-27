@@ -426,7 +426,7 @@ Case definitions:
 
 `CodeReviewComplianceService` produces `CodeReviewComplianceEvidence` by aggregating data from ledger (audit chain, Merkle proofs), work module (SLA compliance), engine-ledger (trust routing), and identity service (GDPR state).
 
-`DevtownComplianceSupplement` provides devtown-specific compliance data to the blocks framework.
+`DevtownComplianceSupplement` provides devtown-specific compliance data to the agency framework.
 
 ---
 

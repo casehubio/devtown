@@ -48,7 +48,7 @@ class QueuePriorityWorkerTest {
     var result = worker.apply(
         Map.of("category", "queue-optimization", "target", "merge-queue-health"), scope);
     assertInstanceOf(WorkerOutcome.Success.class, result.outcome());
-    assertEquals("MERGED", result.output().get("status"));
+    assertEquals("APPLIED", result.output().get("status"));
   }
 
   @Test
@@ -79,5 +79,13 @@ class QueuePriorityWorkerTest {
     var result = worker.apply(
         Map.of("category", "queue-optimization", "target", "merge-queue-health"), scope);
     assertInstanceOf(WorkerOutcome.Declined.class, result.outcome());
+  }
+
+  @Test
+  void missingTenancyId_fails() {
+    when(scope.accumulatedState()).thenReturn(Map.of());
+    var result = worker.apply(
+        Map.of("category", "queue-optimization", "target", "merge-queue-health"), scope);
+    assertInstanceOf(WorkerOutcome.Failed.class, result.outcome());
   }
 }

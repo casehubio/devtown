@@ -23,8 +23,8 @@ aliases:
     chain:
       - tier: FAST
         max-cost: LOW
-      - backend-key: ollama
+      - tier: FAST
       - backend-key: simulation
 
 defaults:
-  backend: claude
+  backend: simulation

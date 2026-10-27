@@ -71,11 +71,22 @@ public class GitHubSecurityAugmentor implements SecurityIdentityAugmentor {
             return cached;
         }
 
-        boolean isOrgMember = checkOrgMembership(login);
-        boolean isAdmin = isOrgMember && checkTeamMembership(login, adminTeam);
+        boolean isOrgMember;
+        boolean isAdmin;
+        try {
+            isOrgMember = checkOrgMembership(login);
+            isAdmin = isOrgMember && checkTeamMembership(login, adminTeam);
+        } catch (WebApplicationException e) {
+            if (cached != null) {
+                LOG.warnf("GitHub API error for %s (HTTP %d) — using cached result",
+                        login, e.getResponse().getStatus());
+                return cached;
+            }
+            throw e;
+        }
+
         CachedMembership result = new CachedMembership(isOrgMember, isAdmin, Instant.now());
 
-        // Transient GitHub failure: keep cached membership to avoid revoking access
         if (cached != null && !isOrgMember && cached.isOrgMember) {
             LOG.warnf("GitHub API returned non-member for %s but cache had member — using cached result", login);
             return cached;
@@ -91,9 +102,7 @@ public class GitHubSecurityAugmentor implements SecurityIdentityAugmentor {
             return true;
         } catch (WebApplicationException e) {
             if (e.getResponse().getStatus() == 404) return false;
-            LOG.warnf("GitHub org membership check failed for %s: HTTP %d %s",
-                    username, e.getResponse().getStatus(), e.getMessage());
-            return false;
+            throw e;
         }
     }
 
@@ -103,9 +112,7 @@ public class GitHubSecurityAugmentor implements SecurityIdentityAugmentor {
             return true;
         } catch (WebApplicationException e) {
             if (e.getResponse().getStatus() == 404) return false;
-            LOG.warnf("GitHub team membership check failed for %s/%s: HTTP %d %s",
-                    team, username, e.getResponse().getStatus(), e.getMessage());
-            return false;
+            throw e;
         }
     }
 

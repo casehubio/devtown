@@ -6,6 +6,7 @@ public final class EvolutionWorkerConstants {
   public static final String META_HEALTH_AFTER = "evolution.healthAfter";
   public static final String META_ADJUSTMENTS = "evolution.adjustments";
   public static final String META_CATEGORY = "evolution.category";
+  public static final String STATUS_APPLIED = "APPLIED";
 
   private EvolutionWorkerConstants() {}
 }

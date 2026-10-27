@@ -61,7 +61,7 @@ class ReviewerCalibrationWorkerTest {
     assertInstanceOf(WorkerOutcome.Success.class, result.outcome());
     Map<String, Object> output = result.output();
     assertEquals("reviewer-calibration", output.get("category"));
-    assertEquals("MERGED", output.get("status"));
+    assertEquals("APPLIED", output.get("status"));
     assertEquals(false, output.get("requiresPr"));
 
     @SuppressWarnings("unchecked")
@@ -99,5 +99,19 @@ class ReviewerCalibrationWorkerTest {
     WorkerResult<Map<String, Object>> result = worker.apply(input, scope);
 
     assertEquals(0.45, result.output().get("healthBefore"));
+  }
+
+  @Test
+  void missingTenancyId_fails() {
+    when(scope.accumulatedState()).thenReturn(Map.of());
+    var result = worker.apply(
+        Map.of("category", "reviewer-calibration", "target", "security-review"), scope);
+    assertInstanceOf(WorkerOutcome.Failed.class, result.outcome());
+  }
+
+  @Test
+  void missingTarget_fails() {
+    var result = worker.apply(Map.of("category", "reviewer-calibration"), scope);
+    assertInstanceOf(WorkerOutcome.Failed.class, result.outcome());
   }
 }

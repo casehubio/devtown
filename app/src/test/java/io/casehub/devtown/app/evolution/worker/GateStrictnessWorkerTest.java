@@ -47,13 +47,29 @@ class GateStrictnessWorkerTest {
     var result = worker.apply(
         Map.of("category", "gate-tightening", "target", "ci-reliability"), scope);
     assertInstanceOf(WorkerOutcome.Success.class, result.outcome());
-    assertEquals("MERGED", result.output().get("status"));
+    assertEquals("APPLIED", result.output().get("status"));
     verify(preferenceWriter, atLeastOnce()).write(anyString(), anyString(), anyString(), anyString());
   }
 
   @Test
   void declinesWhenHealthAboveTarget() {
     when(capabilityArea.assess(any(), anyString())).thenReturn(assessment(0.75));
+    var result = worker.apply(
+        Map.of("category", "gate-tightening", "target", "ci-reliability"), scope);
+    assertInstanceOf(WorkerOutcome.Declined.class, result.outcome());
+  }
+
+  @Test
+  void missingTenancyId_fails() {
+    when(scope.accumulatedState()).thenReturn(Map.of());
+    var result = worker.apply(
+        Map.of("category", "gate-tightening", "target", "ci-reliability"), scope);
+    assertInstanceOf(WorkerOutcome.Failed.class, result.outcome());
+  }
+
+  @Test
+  void healthAtTarget_declines() {
+    when(capabilityArea.assess(any(), anyString())).thenReturn(assessment(0.6));
     var result = worker.apply(
         Map.of("category", "gate-tightening", "target", "ci-reliability"), scope);
     assertInstanceOf(WorkerOutcome.Declined.class, result.outcome());

@@ -16,6 +16,7 @@ import java.security.Principal;
 import java.time.Instant;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
@@ -114,6 +115,30 @@ class GitHubSecurityAugmentorTest {
         SecurityIdentity result = augmentSync(input);
 
         assertThat(result.getRoles()).contains("pre-existing-role", DevtownRoles.ENGINEER);
+    }
+
+    @Test
+    void coldCache_githubServerError_throwsException() {
+        doThrow(new WebApplicationException(Response.status(500).build()))
+                .when(orgApi).checkMembership(eq("casehubio"), eq("newuser"));
+
+        assertThatThrownBy(() -> augmentSync(identity("newuser")))
+                .isInstanceOf(WebApplicationException.class);
+    }
+
+    @Test
+    void warmCache_githubServerError_usesCachedResult() {
+        SecurityIdentity first = augmentSync(identity("eve"));
+        assertThat(first.getRoles()).contains(DevtownRoles.ENGINEER);
+
+        injectExpiredCache("eve", true, false);
+
+        doThrow(new WebApplicationException(Response.status(500).build()))
+                .when(orgApi).checkMembership(eq("casehubio"), eq("eve"));
+        SecurityIdentity second = augmentSync(identity("eve"));
+
+        assertThat(second.getRoles()).as("server error should preserve cached membership")
+                .contains(DevtownRoles.ENGINEER);
     }
 
     @Test

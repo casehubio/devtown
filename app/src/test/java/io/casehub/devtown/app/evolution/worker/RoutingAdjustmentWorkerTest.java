@@ -47,7 +47,7 @@ class RoutingAdjustmentWorkerTest {
     var result = worker.apply(
         Map.of("category", "routing-adjustment", "target", "security-review"), scope);
     assertInstanceOf(WorkerOutcome.Success.class, result.outcome());
-    assertEquals("MERGED", result.output().get("status"));
+    assertEquals("APPLIED", result.output().get("status"));
     verify(preferenceWriter, atLeastOnce()).write(anyString(), anyString(), anyString(), anyString());
   }
 
@@ -57,5 +57,19 @@ class RoutingAdjustmentWorkerTest {
     var result = worker.apply(
         Map.of("category", "routing-adjustment", "target", "security-review"), scope);
     assertInstanceOf(WorkerOutcome.Declined.class, result.outcome());
+  }
+
+  @Test
+  void missingTenancyId_fails() {
+    when(scope.accumulatedState()).thenReturn(Map.of());
+    var result = worker.apply(
+        Map.of("category", "routing-adjustment", "target", "security-review"), scope);
+    assertInstanceOf(WorkerOutcome.Failed.class, result.outcome());
+  }
+
+  @Test
+  void missingTarget_fails() {
+    var result = worker.apply(Map.of("category", "routing-adjustment"), scope);
+    assertInstanceOf(WorkerOutcome.Failed.class, result.outcome());
   }
 }

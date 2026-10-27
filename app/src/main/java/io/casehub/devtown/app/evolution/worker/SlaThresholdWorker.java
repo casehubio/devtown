@@ -11,11 +11,13 @@ import io.casehub.worker.api.WorkerScope;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import static io.casehub.devtown.app.evolution.worker.EvolutionWorkerConstants.STATUS_APPLIED;
 import static io.casehub.devtown.app.evolution.worker.EvolutionWorkerConstants.TARGET_HEALTH;
 
 @ApplicationScoped
@@ -120,19 +122,13 @@ public class SlaThresholdWorker {
     output.put("target", "sla-compliance");
     output.put("adjustments", adjustments);
     output.put("healthBefore", health);
-    output.put("status", "MERGED");
-    output.put("reviewOutcome", "approved");
+    output.put("status", STATUS_APPLIED);
     output.put("requiresPr", false);
     return WorkerResult.of(output);
   }
 
   static String minutesToDuration(double minutes) {
-    long totalMinutes = Math.round(minutes);
-    long hours = totalMinutes / 60;
-    long mins = totalMinutes % 60;
-    if (mins == 0) return "PT" + hours + "H";
-    if (hours == 0) return "PT" + mins + "M";
-    return "PT" + hours + "H" + mins + "M";
+    return Duration.ofMinutes(Math.round(minutes)).toString();
   }
 
   private static Map<String, Object> withClamped(AdjustmentResult adj, double clampedValue) {

@@ -48,7 +48,7 @@ class SlaThresholdWorkerTest {
     var result = worker.apply(
         Map.of("category", "sla-tuning", "target", "sla-compliance"), scope);
     assertInstanceOf(WorkerOutcome.Success.class, result.outcome());
-    assertEquals("MERGED", result.output().get("status"));
+    assertEquals("APPLIED", result.output().get("status"));
   }
 
   @Test
@@ -83,5 +83,13 @@ class SlaThresholdWorkerTest {
     var result = worker.apply(
         Map.of("category", "sla-tuning", "target", "sla-compliance"), scope);
     assertInstanceOf(WorkerOutcome.Declined.class, result.outcome());
+  }
+
+  @Test
+  void missingTenancyId_fails() {
+    when(scope.accumulatedState()).thenReturn(Map.of());
+    var result = worker.apply(
+        Map.of("category", "sla-tuning", "target", "sla-compliance"), scope);
+    assertInstanceOf(WorkerOutcome.Failed.class, result.outcome());
   }
 }

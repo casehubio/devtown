@@ -28,7 +28,7 @@ jobs:
           server-username: GITHUB_ACTOR
           server-password: GITHUB_TOKEN
 
-      # blocks-ui 0.3 references this parent, which is unavailable in GitHub Packages.
+      # mosaic 0.3 references this parent, which is unavailable in GitHub Packages.
       - name: Check out CaseHub parent 0.3
         uses: actions/checkout@v4
         with:

@@ -10,7 +10,6 @@ import org.eclipse.microprofile.rest.client.annotation.RegisterClientHeaders;
 import org.eclipse.microprofile.rest.client.inject.RegisterRestClient;
 
 import java.util.List;
-import java.util.Map;
 
 @RegisterRestClient(configKey = "github-api")
 @RegisterClientHeaders(GitHubAuthHeadersFactory.class)
@@ -25,9 +24,9 @@ public interface GitHubOrgApi {
 
     @GET
     @Path("/{org}/teams/{team}/members")
-    List<Map<String, Object>> listTeamMembers(@PathParam("org") String org,
-                                               @PathParam("team") String team,
-                                               @QueryParam("per_page") int perPage);
+    List<GitHubTeamMember> listTeamMembers(@PathParam("org") String org,
+                                          @PathParam("team") String team,
+                                          @QueryParam("per_page") int perPage);
 
     @GET
     @Path("/{org}/teams/{team}/members/{username}")

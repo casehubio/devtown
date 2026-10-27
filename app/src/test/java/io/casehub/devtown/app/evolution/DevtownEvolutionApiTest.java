@@ -93,6 +93,14 @@ class DevtownEvolutionApiTest {
   }
 
     @Test
+    void addWatchPattern_delegates_to_engine() {
+        api.addWatchPattern(tenancyId, "ci-reliability", "area-1", "*.yml", 50);
+
+        verify(engineApi).addWatchPattern(caseId, tenancyId, "ci-reliability", "area-1", "*.yml", 50);
+    }
+
+
+    @Test
     void getConductorOrigin_returns_driven_when_stream_targets_case() {
         var stream = new EvolutionStateSnapshot.ImprovementStreamView(
                 UUID.randomUUID(), "ci-reliability", "target-case-id", "analyze",

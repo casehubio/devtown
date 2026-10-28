@@ -13,7 +13,11 @@ public abstract class EventRatioCapabilityArea extends AbstractCapabilityArea {
     private static final Collection<CaseHubEventType> EVENT_TYPES =
             List.of(CaseHubEventType.CASE_COMPLETED, CaseHubEventType.CASE_FAULTED);
 
-    protected final EventLogRepository eventLog;
+    protected EventLogRepository eventLog;
+
+
+    protected EventRatioCapabilityArea() {
+    }
 
     protected EventRatioCapabilityArea() { this.eventLog = null; }
 

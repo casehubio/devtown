@@ -6,6 +6,10 @@ import jakarta.enterprise.context.ApplicationScoped;
 @ApplicationScoped
 public class CiReliabilityCapabilityArea extends EventRatioCapabilityArea {
 
+
+    CiReliabilityCapabilityArea() {
+    }
+
     public CiReliabilityCapabilityArea(EventLogRepository eventLog) {
         super(eventLog);
     }

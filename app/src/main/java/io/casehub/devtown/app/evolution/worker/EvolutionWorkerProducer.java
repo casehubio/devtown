@@ -1,6 +1,7 @@
 package io.casehub.devtown.app.evolution.worker;
 
 import io.casehub.devtown.domain.evolution.AdjustmentStrategy;
+import io.casehub.devtown.domain.evolution.PreferenceReader;
 import io.casehub.devtown.domain.evolution.PreferenceWriter;
 import io.casehub.devtown.domain.evolution.ProportionalAdjustmentStrategy;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -25,4 +26,11 @@ public class EvolutionWorkerProducer {
         LOG.infof("Evolution preference write: scope=%s ns=%s key=%s value=%s",
             scope, namespace, key, value);
   }
+
+    @Produces
+    @ApplicationScoped
+    PreferenceReader preferenceReader() {
+        return (scope, namespace, key) -> java.util.OptionalDouble.empty();
+    }
+
 }

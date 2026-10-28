@@ -2,6 +2,7 @@ package io.casehub.devtown.app.evolution.worker;
 
 import io.casehub.api.model.stigmergy.CapabilityAreaAssessment;
 import io.casehub.devtown.app.evolution.MergeQueueHealthCapabilityArea;
+import io.casehub.devtown.domain.evolution.PreferenceReader;
 import io.casehub.devtown.domain.evolution.PreferenceWriter;
 import io.casehub.devtown.domain.evolution.ProportionalAdjustmentStrategy;
 import io.casehub.worker.api.WorkerOutcome;
@@ -30,7 +31,8 @@ class QueuePriorityWorkerTest {
   void setUp() {
     preferenceWriter = mock(PreferenceWriter.class);
     capabilityArea = mock(MergeQueueHealthCapabilityArea.class);
-    worker = new QueuePriorityWorker(preferenceWriter, capabilityArea,
+    PreferenceReader preferenceReader = (s, n, k) -> java.util.OptionalDouble.empty();
+    worker = new QueuePriorityWorker(preferenceWriter, preferenceReader, capabilityArea,
         new ProportionalAdjustmentStrategy());
     scope = mock(WorkerScope.class);
     when(scope.caseId()).thenReturn(UUID.randomUUID());

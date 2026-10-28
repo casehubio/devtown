@@ -3,6 +3,7 @@ package io.casehub.devtown.app.evolution.worker;
 import io.casehub.api.model.stigmergy.CapabilityAreaAssessment;
 import io.casehub.devtown.app.evolution.ReviewerTrustCapabilityArea;
 import io.casehub.devtown.domain.evolution.AdjustmentStrategy;
+import io.casehub.devtown.domain.evolution.PreferenceReader;
 import io.casehub.devtown.domain.evolution.PreferenceWriter;
 import io.casehub.devtown.domain.evolution.ProportionalAdjustmentStrategy;
 import io.casehub.worker.api.WorkerOutcome;
@@ -35,7 +36,8 @@ class ReviewerCalibrationWorkerTest {
     capabilityArea = mock(ReviewerTrustCapabilityArea.class);
     AdjustmentStrategy strategy = new ProportionalAdjustmentStrategy();
 
-    worker = new ReviewerCalibrationWorker(preferenceWriter, capabilityArea, strategy);
+    PreferenceReader preferenceReader = (s, n, k) -> java.util.OptionalDouble.empty();
+    worker = new ReviewerCalibrationWorker(preferenceWriter, preferenceReader, capabilityArea, strategy);
 
     scope = mock(WorkerScope.class);
     when(scope.caseId()).thenReturn(caseId);

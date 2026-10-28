@@ -15,11 +15,7 @@ public abstract class EventRatioCapabilityArea extends AbstractCapabilityArea {
 
     protected EventLogRepository eventLog;
 
-
-    protected EventRatioCapabilityArea() {
-    }
-
-    protected EventRatioCapabilityArea() { this.eventLog = null; }
+    protected EventRatioCapabilityArea() {}
 
     protected EventRatioCapabilityArea(EventLogRepository eventLog) {
         this.eventLog = eventLog;

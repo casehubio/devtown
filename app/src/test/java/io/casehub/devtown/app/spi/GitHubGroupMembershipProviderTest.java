@@ -33,7 +33,7 @@ class GitHubGroupMembershipProviderTest {
 
     @Test
     void membersOf_returnsGroupMembers() {
-        when(orgApi.listTeamMembers(eq("casehubio"), eq("pr-reviewers"), anyInt()))
+        when(orgApi.listTeamMembers(eq("casehubio"), eq("pr-reviewers"), anyInt(), eq(1)))
                 .thenReturn(List.of(
                         new GitHubTeamMember("alice", 1L),
                         new GitHubTeamMember("bob", 2L)));
@@ -47,7 +47,7 @@ class GitHubGroupMembershipProviderTest {
 
     @Test
     void membersOf_nonexistentTeam_returnsEmpty() {
-        when(orgApi.listTeamMembers(eq("casehubio"), eq("nonexistent"), anyInt()))
+        when(orgApi.listTeamMembers(eq("casehubio"), eq("nonexistent"), anyInt(), eq(1)))
                 .thenThrow(new WebApplicationException(Response.status(404).build()));
 
         Set<GroupMember> members = provider.membersOf("nonexistent", "casehubio");
@@ -57,7 +57,7 @@ class GitHubGroupMembershipProviderTest {
 
     @Test
     void membersOf_apiError_returnsEmpty() {
-        when(orgApi.listTeamMembers(eq("casehubio"), eq("failing-team"), anyInt()))
+        when(orgApi.listTeamMembers(eq("casehubio"), eq("failing-team"), anyInt(), eq(1)))
                 .thenThrow(new WebApplicationException(Response.status(500).build()));
 
         Set<GroupMember> members = provider.membersOf("failing-team", "casehubio");
@@ -67,13 +67,36 @@ class GitHubGroupMembershipProviderTest {
 
     @Test
     void membersOf_emptyTeam_returnsEmpty() {
-        when(orgApi.listTeamMembers(eq("casehubio"), eq("empty-team"), anyInt()))
+        when(orgApi.listTeamMembers(eq("casehubio"), eq("empty-team"), anyInt(), eq(1)))
                 .thenReturn(List.of());
 
         Set<GroupMember> members = provider.membersOf("empty-team", "casehubio");
 
         assertThat(members).isEmpty();
     }
+
+    @Test
+    void membersOf_paginatesWhenPageFull() {
+        List<GitHubTeamMember> page1 = new java.util.ArrayList<>();
+        for (int i = 0; i < 100; i++) {
+            page1.add(new GitHubTeamMember("user" + i, (long) i));
+        }
+        List<GitHubTeamMember> page2 = List.of(
+                new GitHubTeamMember("user100", 100L),
+                new GitHubTeamMember("user101", 101L));
+
+        when(orgApi.listTeamMembers(eq("casehubio"), eq("big-team"), anyInt(), eq(1)))
+                .thenReturn(page1);
+        when(orgApi.listTeamMembers(eq("casehubio"), eq("big-team"), anyInt(), eq(2)))
+                .thenReturn(page2);
+
+        Set<GroupMember> members = provider.membersOf("big-team", "casehubio");
+
+        assertThat(members).hasSize(102);
+        assertThat(members).contains(new GroupMember("user0", "user0"),
+                                     new GroupMember("user101", "user101"));
+    }
+
 
     private void setField(String name, Object value) throws Exception {
         Field f = GitHubGroupMembershipProvider.class.getDeclaredField(name);

@@ -14,7 +14,6 @@ import org.jboss.logging.Logger;
 
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 @ApplicationScoped
 @UnlessBuildProfile("dev")
@@ -32,21 +31,24 @@ public class GitHubGroupMembershipProvider implements GroupMembershipProvider {
     @Override
     public Set<GroupMember> membersOf(String groupName, String tenancyId) {
         try {
-            List<GitHubTeamMember> members = orgApi.listTeamMembers(githubOrg, groupName, PAGE_SIZE);
-            if (members.size() == PAGE_SIZE) {
-                LOG.warnf("GitHub team %s/%s returned %d members (page limit) — results may be truncated",
-                        githubOrg, groupName, PAGE_SIZE);
-            }
-            return members.stream()
-                    .map(m -> new GroupMember(m.login(), m.login()))
-                    .collect(Collectors.toSet());
+            Set<GroupMember>       result = new java.util.HashSet<>();
+            int                    page   = 1;
+            List<GitHubTeamMember> batch;
+            do {
+                batch = orgApi.listTeamMembers(githubOrg, groupName, PAGE_SIZE, page);
+                for (GitHubTeamMember m : batch) {
+                    result.add(new GroupMember(m.login(), m.login()));
+                }
+                page++;
+            } while (batch.size() == PAGE_SIZE);
+            return result;
         } catch (WebApplicationException e) {
             if (e.getResponse().getStatus() == 404) {
                 LOG.debugf("GitHub team not found: %s/%s", githubOrg, groupName);
                 return Set.of();
             }
             LOG.warnf("GitHub team lookup failed for %s/%s: HTTP %d %s",
-                    githubOrg, groupName, e.getResponse().getStatus(), e.getMessage());
+                      githubOrg, groupName, e.getResponse().getStatus(), e.getMessage());
             return Set.of();
         }
     }

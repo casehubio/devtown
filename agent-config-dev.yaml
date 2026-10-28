@@ -12,6 +12,9 @@ aliases:
       - backendKey: simulation
   cheap-fast:
     chain:
+      - tier: FAST
+        max-cost: LOW
+      - tier: FAST
       - backendKey: ollama
       - backendKey: simulation
 defaults:

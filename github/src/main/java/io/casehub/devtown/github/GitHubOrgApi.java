@@ -25,8 +25,9 @@ public interface GitHubOrgApi {
     @GET
     @Path("/{org}/teams/{team}/members")
     List<GitHubTeamMember> listTeamMembers(@PathParam("org") String org,
-                                          @PathParam("team") String team,
-                                          @QueryParam("per_page") int perPage);
+                                           @PathParam("team") String team,
+                                           @QueryParam("per_page") int perPage,
+                                           @QueryParam("page") int page);
 
     @GET
     @Path("/{org}/teams/{team}/members/{username}")

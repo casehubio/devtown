@@ -6,6 +6,8 @@ import jakarta.enterprise.context.ApplicationScoped;
 @ApplicationScoped
 public class ReviewQualityCapabilityArea extends EventRatioCapabilityArea {
 
+    protected ReviewQualityCapabilityArea() {}
+
     public ReviewQualityCapabilityArea(EventLogRepository eventLog) {
         super(eventLog);
     }

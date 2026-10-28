@@ -6,6 +6,8 @@ import jakarta.enterprise.context.ApplicationScoped;
 @ApplicationScoped
 public class SlaComplianceCapabilityArea extends EventRatioCapabilityArea {
 
+    protected SlaComplianceCapabilityArea() {}
+
     public SlaComplianceCapabilityArea(EventLogRepository eventLog) {
         super(eventLog);
     }

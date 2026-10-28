@@ -6,6 +6,8 @@ import jakarta.enterprise.context.ApplicationScoped;
 @ApplicationScoped
 public class MergeQueueHealthCapabilityArea extends EventRatioCapabilityArea {
 
+    protected MergeQueueHealthCapabilityArea() {}
+
     public MergeQueueHealthCapabilityArea(EventLogRepository eventLog) {
         super(eventLog);
     }

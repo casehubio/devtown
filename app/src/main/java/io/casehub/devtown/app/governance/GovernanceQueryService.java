@@ -9,7 +9,6 @@ import io.casehub.devtown.app.mcp.PrReviewCaseTracker;
 import io.casehub.devtown.app.mcp.TrackedEvent;
 import io.casehub.devtown.domain.ContributorIntakePolicy;
 import io.casehub.devtown.domain.ContributorTrustCapability;
-import io.casehub.platform.api.identity.ActorType;
 import io.casehub.devtown.domain.ContributorTrustDimension;
 import io.casehub.devtown.domain.sla.SlaPreferenceKeys;
 import io.casehub.devtown.domain.trust.ContributorIntakePreferenceKeys;
@@ -20,6 +19,7 @@ import io.casehub.devtown.review.sla.SlaCalibrationRecord;
 import io.casehub.devtown.review.sla.SlaCalibrationStore;
 import io.casehub.ledger.core.trust.TrustGateService;
 import io.casehub.ledger.runtime.service.federation.TrustExportService;
+import io.casehub.platform.api.identity.ActorType;
 import io.casehub.platform.api.preferences.PreferenceProvider;
 import io.casehub.platform.api.preferences.Preferences;
 import io.casehub.platform.api.preferences.SettingsScope;
@@ -119,7 +119,8 @@ public class GovernanceQueryService {
 
     public record RoutingSummary(List<RoutingDecision> decisions, String featureVector) {}
 
-    public record RoutingDecision(String capability, String reason, double confidence, String bindingName) {}
+    public record RoutingDecision(String capability, String reason, double confidence, String bindingName,
+                                  UUID entryId) {}
 
     public record FindingEntry(String severity, String category, String filePath, String message,
                                double confidence, Integer startLine, Integer endLine) {}
@@ -374,16 +375,31 @@ public class GovernanceQueryService {
             capabilityMap.put(capName, new CapabilityStatus(capName, status, null, event.timestamp()));
         }
 
-        // Extract routing decisions from AGENT_ROUTED events
+        // Extract routing decisions from AGENT_ROUTED events, enriched with WorkerDecisionEntry IDs
+        Map<String, UUID> entryIdByCapability = new HashMap<>();
+        try {
+            var wdeQuery = em.createQuery(
+                "SELECT e FROM WorkerDecisionEntry e WHERE e.caseId = :caseId",
+                io.casehub.ledger.model.WorkerDecisionEntry.class);
+            wdeQuery.setParameter("caseId", caseId);
+            for (var wde : wdeQuery.getResultList()) {
+                if (wde.capabilityTag != null) {
+                    entryIdByCapability.put(wde.capabilityTag, wde.id);
+                }
+            }
+        } catch (Exception ignored) {}
+
         List<RoutingDecision> routingDecisions = allEvents.stream()
                                                           .filter(e -> e.eventType() == CaseHubEventType.AGENT_ROUTED)
                                                           .map(e -> {
                                                               var meta = e.metadata();
+                                                              String cap = meta != null && meta.has("capabilityName") ? meta.get("capabilityName").asText() : "unknown";
                                                               return new RoutingDecision(
-                                                                      meta != null && meta.has("capabilityName") ? meta.get("capabilityName").asText() : "unknown",
+                                                                      cap,
                                                                       meta != null && meta.has("reason") ? meta.get("reason").asText() : "",
                                                                       meta != null && meta.has("confidence") ? meta.get("confidence").asDouble(0.0) : 0.0,
-                                                                      meta != null && meta.has("bindingName") ? meta.get("bindingName").asText() : ""
+                                                                      meta != null && meta.has("bindingName") ? meta.get("bindingName").asText() : "",
+                                                                      entryIdByCapability.get(cap)
                                                               );
                                                           })
                                                           .toList();

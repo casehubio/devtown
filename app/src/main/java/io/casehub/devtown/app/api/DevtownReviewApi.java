@@ -3,8 +3,10 @@ package io.casehub.devtown.app.api;
 import io.casehub.devtown.app.governance.GovernanceQueryService;
 import io.casehub.devtown.app.governance.PagedResult;
 import io.casehub.devtown.app.ledger.IncidentFeedbackService;
+import io.casehub.devtown.domain.DevtownRoles;
 import io.casehub.devtown.domain.IncidentFeedback;
 import io.casehub.devtown.domain.IncidentFeedbackResult;
+import io.casehub.devtown.review.CbrRetrievalService;
 import io.casehub.devtown.review.PrPayload;
 import io.casehub.devtown.review.PrReviewApplicationService;
 import io.casehub.devtown.review.PrReviewOutcome;
@@ -13,7 +15,6 @@ import io.casehub.platform.api.mcp.PathParam;
 import io.casehub.platform.api.mcp.PlatformMutation;
 import io.casehub.platform.api.mcp.PlatformQuery;
 import io.casehub.platform.api.mcp.RestPath;
-import io.casehub.devtown.domain.DevtownRoles;
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -29,6 +30,9 @@ public class DevtownReviewApi {
     @Inject GovernanceQueryService queryService;
     @Inject PrReviewApplicationService prReviewService;
     @Inject IncidentFeedbackService feedbackService;
+    @Inject
+            CbrRetrievalService     cbrService;
+
 
     @PlatformQuery("List code reviews")
     @RestPath("/")
@@ -71,6 +75,24 @@ public class DevtownReviewApi {
     public GovernanceQueryService.ContributorDetail contributorDetail(@PathParam String actorId) {
         return queryService.contributorDetail(actorId);
     }
+
+    @PlatformQuery("Find similar cases by CBR")
+    @RestPath("/{caseId}/similar-cases")
+    public java.util.List<io.casehub.devtown.domain.cbr.Precedent> similarCases(@PathParam UUID caseId) {
+        GovernanceQueryService.ReviewDetail detail;
+        try {
+            detail = queryService.reviewDetail(caseId);
+        } catch (IllegalArgumentException e) {
+            return java.util.List.of();
+        }
+        var pr = detail.pr();
+        var vector = io.casehub.devtown.domain.cbr.PrFeatureVector.from(
+                pr.repo(), pr.prNumber(), pr.contributor(),
+                pr.linesChanged(), pr.changedPaths() != null ? pr.changedPaths() : java.util.List.of()
+                                                                       );
+        return cbrService.findSimilar(vector, pr.repo(), "default");
+    }
+
 
     @PlatformMutation("Submit a PR for review")
     @RestPath("/submit")

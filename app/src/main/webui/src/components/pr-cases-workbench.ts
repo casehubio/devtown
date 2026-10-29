@@ -206,10 +206,14 @@ const BATCH_TABLE_CONFIG: readonly TableColumnConfig[] = [
 export class PrCasesWorkbench extends LitElement {
   @property({ type: String }) endpoint = '';
   @property({ type: String, attribute: 'initial-case-id' }) initialCaseId = '';
+  @property({ type: String, attribute: 'filter-mode' }) filterMode = '';
 
   @state() private _filter: FilterKey = 'all';
   @state() private _selectedCaseId = '';
   @state() private _selectionKind: 'pr' | 'batch' = 'pr';
+  @state() private _viewMode: 'spine' | 'table' = 'spine';
+  @state() private _selectedNodeType = '';
+  @state() private _selectedNodeData: Record<string, unknown> = {};
 
   @state() private _reviews: ReviewEntry[] = [];
   @state() private _queuedPrs: QueuedPrEntry[] = [];
@@ -294,6 +298,8 @@ export class PrCasesWorkbench extends LitElement {
           this._selectionKind = 'pr';
           this._selectedCaseId = caseId;
           this._selectedBatch = null;
+          this._selectedNodeType = (detail?.nodeType as string) ?? 'case-header';
+          this._selectedNodeData = (detail?.nodeData as Record<string, unknown>) ?? {};
         }
       }),
     );
@@ -307,6 +313,7 @@ export class PrCasesWorkbench extends LitElement {
 
   configure(props: Record<string, unknown>): void {
     if (props.endpoint) this.endpoint = String(props.endpoint);
+    if (props.filterMode) this.filterMode = String(props.filterMode);
   }
 
   private async _fetchAll(): Promise<void> {
@@ -456,11 +463,17 @@ export class PrCasesWorkbench extends LitElement {
   }
 
   private _filteredRows(): UnifiedPrRow[] {
+    let rows = this._unified;
+    if (this.filterMode === 'queued') {
+      rows = rows.filter(r => r.stage === 'QUEUED' || r.stage === 'BATCHED');
+    } else {
+      rows = rows.filter(r => r.stage !== 'QUEUED' && r.stage !== 'BATCHED');
+    }
     switch (this._filter) {
-      case 'review': return this._unified.filter(r => r.stage === 'REVIEW' || r.stage === 'HUMAN_GATE');
-      case 'decision': return this._unified.filter(r => r.stage === 'HUMAN_GATE');
-      case 'queued': return this._unified.filter(r => r.stage === 'QUEUED' || r.stage === 'BATCHED');
-      default: return this._unified;
+      case 'review': return rows.filter(r => r.stage === 'REVIEW' || r.stage === 'HUMAN_GATE');
+      case 'decision': return rows.filter(r => r.stage === 'HUMAN_GATE');
+      case 'queued': return rows.filter(r => r.stage === 'QUEUED' || r.stage === 'BATCHED');
+      default: return rows;
     }
   }
 
@@ -562,13 +575,17 @@ export class PrCasesWorkbench extends LitElement {
     const selectedRow = this._unified.find(r => r.caseId === this._selectedCaseId) ?? null;
 
     return html`
-      <pages-split-workbench selection-topic="review" title="PR Cases">
+      <pages-split-workbench selection-topic="review" title="${this.filterMode === 'queued' ? 'Merge Queue' : 'Review Workbench'}">
         <div slot="list" class="list-panel">
           <div class="filter-chips">
             ${this._renderChip('all', 'All', counts.all)}
             ${this._renderChip('review', 'In Review', counts.review)}
             ${this._renderChip('decision', 'Needs Decision', counts.decision)}
-            ${this._renderChip('queued', 'Queued', counts.queued)}
+            ${this.filterMode !== 'queued' ? html`
+              <button class="filter-chip" @click=${() => { this._viewMode = this._viewMode === 'spine' ? 'table' : 'spine'; }}>
+                ${this._viewMode === 'spine' ? '☰ Table' : '◆ Spine'}
+              </button>
+            ` : nothing}
           </div>
 
           ${renderVitals(vitals)}
@@ -584,29 +601,37 @@ export class PrCasesWorkbench extends LitElement {
             </div>
           ` : nothing}
 
-          <h3>${this._filterLabel()} (${this._filteredRows().length})</h3>
-          ${this._listData ? html`
-            <pages-table
-              .dataSet=${this._listData}
-              .columnConfig=${FILTER_COLUMNS[this._filter]}
-              @row-activate=${this._handleRowActivate}
-            ></pages-table>
-          ` : nothing}
-
-          ${this._filter === 'queued' && this._batches.length > 0 ? html`
-            <h3>
-              <button class="batch-toggle" @click=${() => { this._batchesExpanded = !this._batchesExpanded; }}>
-                ${this._batchesExpanded ? '▾' : '▸'} Active Batches (${this._batches.length})
-              </button>
-            </h3>
-            ${this._batchesExpanded && this._batchData ? html`
+          ${this._viewMode === 'spine' && this.filterMode !== 'queued' ? html`
+            <review-spine
+              .cases=${this._filteredRows()}
+              endpoint="/api/devtown/reviews"
+              selected-case-id=${this._selectedCaseId}
+            ></review-spine>
+          ` : html`
+            <h3>${this._filterLabel()} (${this._filteredRows().length})</h3>
+            ${this._listData ? html`
               <pages-table
-                .dataSet=${this._batchData}
-                .columnConfig=${BATCH_TABLE_CONFIG}
-                @row-activate=${this._handleBatchRowActivate}
+                .dataSet=${this._listData}
+                .columnConfig=${FILTER_COLUMNS[this._filter]}
+                @row-activate=${this._handleRowActivate}
               ></pages-table>
             ` : nothing}
-          ` : nothing}
+
+            ${(this._filter === 'queued' || this.filterMode === 'queued') && this._batches.length > 0 ? html`
+              <h3>
+                <button class="batch-toggle" @click=${() => { this._batchesExpanded = !this._batchesExpanded; }}>
+                  ${this._batchesExpanded ? '▾' : '▸'} Active Batches (${this._batches.length})
+                </button>
+              </h3>
+              ${this._batchesExpanded && this._batchData ? html`
+                <pages-table
+                  .dataSet=${this._batchData}
+                  .columnConfig=${BATCH_TABLE_CONFIG}
+                  @row-activate=${this._handleBatchRowActivate}
+                ></pages-table>
+              ` : nothing}
+            ` : nothing}
+          `}
         </div>
         <div slot="detail" class="detail-panel">
           ${this._selectionKind === 'batch' && this._selectedBatch
@@ -615,13 +640,20 @@ export class PrCasesWorkbench extends LitElement {
                 endpoint="${this.endpoint}"
                 .batch=${this._selectedBatch}
               ></devtown-pr-detail>`
-            : html`<devtown-pr-detail
-                case-id=${this._selectedCaseId}
-                endpoint="/api/devtown/reviews"
-                .stage=${selectedRow?.stage ?? ''}
-                .queueContext=${{ priorityLane: selectedRow?.priorityLane ?? '', trustScore: selectedRow?.trustScore ?? 0, waitMinutes: selectedRow?.waitMinutes ?? 0, headSha: selectedRow?.headSha ?? '', dependsOn: selectedRow?.dependsOn ?? [] }}
-                .triageContext=${{ caseId: selectedRow?.caseId ?? '', decisionType: selectedRow?.decisionType ?? '', candidateGroup: selectedRow?.candidateGroup ?? '', expiresAt: selectedRow?.expiresAt ?? '', escalationStage: selectedRow?.escalationStage ?? '' }}
-              ></devtown-pr-detail>`
+            : this.filterMode === 'queued'
+              ? html`<devtown-pr-detail
+                  case-id=${this._selectedCaseId}
+                  endpoint="/api/devtown/reviews"
+                  .stage=${selectedRow?.stage ?? ''}
+                  .queueContext=${{ priorityLane: selectedRow?.priorityLane ?? '', trustScore: selectedRow?.trustScore ?? 0, waitMinutes: selectedRow?.waitMinutes ?? 0, headSha: selectedRow?.headSha ?? '', dependsOn: selectedRow?.dependsOn ?? [] }}
+                  .triageContext=${{ caseId: selectedRow?.caseId ?? '', decisionType: selectedRow?.decisionType ?? '', candidateGroup: selectedRow?.candidateGroup ?? '', expiresAt: selectedRow?.expiresAt ?? '', escalationStage: selectedRow?.escalationStage ?? '' }}
+                ></devtown-pr-detail>`
+              : html`<intelligence-pane
+                  node-type=${this._selectedNodeType}
+                  .nodeData=${this._selectedNodeData}
+                  endpoint="/api/devtown/reviews"
+                  case-id=${this._selectedCaseId}
+                ></intelligence-pane>`
           }
         </div>
       </pages-split-workbench>

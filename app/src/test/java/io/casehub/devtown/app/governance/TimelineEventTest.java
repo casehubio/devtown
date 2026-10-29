@@ -60,12 +60,13 @@ class TimelineEventTest {
     @Test
     void routingDecisionRecord() {
         var decision = new GovernanceQueryService.RoutingDecision(
-                "security-review", "auth paths detected", 0.85, "initial-analysis");
+                "security-review", "auth paths detected", 0.85, "initial-analysis", null);
 
         assertEquals("security-review", decision.capability());
         assertEquals("auth paths detected", decision.reason());
         assertEquals(0.85, decision.confidence());
         assertEquals("initial-analysis", decision.bindingName());
+        assertNull(decision.entryId());
     }
 
     @Test

@@ -22,7 +22,13 @@ export function createDatasets(prefs: Record<string, string>) {
   const caseRefresh = prefs["refresh.caseDetail"] ?? "30second";
 
   return [
-    rest("queue-status", "/api/devtown/governance/queue-status", { dataPath: "reviews", refreshTime: opRefresh }),
+    rest("queue-status", "/api/devtown/governance/queue-status", {
+      dataPath: "reviews",
+      refreshTime: opRefresh,
+      triggerUrl: wsUrl,
+      triggerFilter: (e: WsTriggerEvent) =>
+        e.topic === "case.state" || e.topic === "planitem.state" || e.topic === "workitem.lifecycle",
+    }),
     rest("problems", "/api/devtown/governance/problems?threshold_minutes=0", { dataPath: "items", refreshTime: opRefresh }),
     rest("merge-queue", "/api/devtown/governance/merge-queue", { dataPath: "queuedPrs", refreshTime: opRefresh }),
     rest("active-batches", "/api/devtown/governance/merge-queue", { dataPath: "activeBatches", refreshTime: opRefresh }),

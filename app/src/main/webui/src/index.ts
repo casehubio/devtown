@@ -1,18 +1,22 @@
 import { registerPanel } from "@casehubio/pages-runtime";
 import type { PermissionContext } from "@casehubio/pages-component";
-import "@casehubio/mosaic-session-workbench";
 import "./components/reviewer-workbench";
 import "./components/contributor-workbench";
 import "./components/pr-cases-workbench";
 import "./components/system-workbench";
+import "./components/operations-workbench";
+import "./components/review-spine";
+import "./components/intelligence-pane";
+import "./components/merge-queue-workbench";
 
 const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
 
-registerPanel("session-workbench", "agency-session-workbench");
 registerPanel("reviewer-workbench", "devtown-reviewer-workbench");
 registerPanel("contributor-workbench", "devtown-contributor-workbench");
 registerPanel("pr-cases-workbench", "devtown-pr-cases-workbench");
 registerPanel("system-workbench", "devtown-system-workbench");
+registerPanel("operations-workbench", "devtown-operations-workbench");
+registerPanel("merge-queue-workbench", "devtown-merge-queue-workbench");
 
 interface UserInfo {
   actorId: string;

@@ -1,7 +1,7 @@
 import { html, type TemplateResult } from 'lit';
 import type { TimelineStrategy, TimelineNode } from '@casehubio/mosaic-agency-timeline';
 
-interface TimelineEvent {
+export interface TimelineEvent {
   timestamp: string;
   category: string;
   eventType: string;
@@ -10,7 +10,7 @@ interface TimelineEvent {
   metadata: Record<string, unknown> | null;
 }
 
-const CATEGORY_ICONS: Record<string, string> = {
+export const CATEGORY_ICONS: Record<string, string> = {
   LIFECYCLE: '●',
   ORCHESTRATION: '◆',
   AGENT: '▶',
@@ -20,7 +20,7 @@ const CATEGORY_ICONS: Record<string, string> = {
   SIGNAL: '→',
 };
 
-const CATEGORY_STATUS: Record<string, 'completed' | 'active' | 'pending'> = {
+export const CATEGORY_STATUS: Record<string, 'completed' | 'active' | 'pending'> = {
   LIFECYCLE: 'completed',
   ORCHESTRATION: 'active',
   AGENT: 'completed',

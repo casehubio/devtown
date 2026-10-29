@@ -2,7 +2,6 @@ import { page, tabs, hostPanel } from "@casehubio/pages-ui";
 import type { SiteOptions } from "@casehubio/pages-runtime";
 import { loadSite } from "@casehubio/pages-runtime";
 import { reviewersView } from "./reviewers";
-import { definitionsView } from "./definitions";
 import { createDatasets } from "../datasets";
 
 export async function mountReviewDashboard(
@@ -14,15 +13,15 @@ export async function mountReviewDashboard(
 ): Promise<void> {
   const app = page("DevTown",
     tabs(
-      ["PR Cases", hostPanel("pr-cases-workbench", {
+      ["Review Workbench", hostPanel("pr-cases-workbench", {
         endpoint: "/api/devtown/governance",
         ...(initialCaseId ? { initialCaseId } : {}),
       })],
+      ["Operations", hostPanel("operations-workbench", { endpoint: "/api/devtown/governance" })],
+      ["Merge Queue", hostPanel("merge-queue-workbench", { endpoint: "/api/devtown/governance" })],
       ["Reviewers", reviewersView],
       ["Contributors", hostPanel("contributor-workbench", { endpoint: "/api/devtown/reviews" })],
-      ["Workers", hostPanel("session-workbench", { endpoint: "/api/sessions" })],
       ["System", hostPanel("system-workbench", { endpoint: "/api/devtown/governance" })],
-      ["Definitions", definitionsView],
     ),
     { settings: { mode: prefersDark ? "dark" : "light" }, datasets: createDatasets(prefs) },
   );

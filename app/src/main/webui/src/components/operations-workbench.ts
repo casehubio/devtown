@@ -163,11 +163,10 @@ export class OperationsWorkbench extends LitElement {
   }
 
   private _navigateToReview(caseId: string): void {
-    emitPagesEvent(document, 'review:selected', { caseId });
-    const reviewTab = document.querySelector('button[data-tab="Reviews"], [role="tab"]');
+    emitPagesEvent(document, 'review:selected', { caseId, nodeType: 'case-header', nodeData: { caseId } });
     const allTabs = document.querySelectorAll('[role="tab"]');
     for (const tab of allTabs) {
-      if (tab.textContent?.trim() === 'Reviews') {
+      if (tab.textContent?.trim() === 'Review Workbench') {
         (tab as HTMLElement).click();
         break;
       }

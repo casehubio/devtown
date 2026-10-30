@@ -21,6 +21,8 @@ export async function mountReviewDashboard(
       ["Merge Queue", hostPanel("merge-queue-workbench", { endpoint: "/api/devtown/governance" })],
       ["Reviewers", reviewersView],
       ["Contributors", hostPanel("contributor-workbench", { endpoint: "/api/devtown/reviews" })],
+      ["Trust", hostPanel("trust-workbench-view", { endpoint: "/api/devtown" })],
+      ["Compliance", hostPanel("compliance-workbench", { endpoint: "/api/devtown/compliance" })],
       ["System", hostPanel("system-workbench", { endpoint: "/api/devtown/governance" })],
     ),
     { settings: { mode: prefersDark ? "dark" : "light" }, datasets: createDatasets(prefs) },

@@ -1,5 +1,6 @@
 import { LitElement, html, css, nothing } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
+import { emitPagesEvent } from '@casehubio/pages-data';
 import { trustFillClass } from './shared/helpers.js';
 import { renderDimensionGrid } from './shared/dimension-grid.js';
 import { renderStatusCard } from './shared/status-card.js';
@@ -43,6 +44,8 @@ export class ReviewerDetail extends LitElement {
       .cap-fill.low { background: var(--pages-warning-9, #d97706); }
       .cap-fill.very-low { background: var(--pages-danger-9, #dc2626); }
       .cap-score { font-size: 13px; font-weight: 600; min-width: 36px; text-align: right; }
+      .trust-link { all: unset; cursor: pointer; font-size: 11px; color: var(--pages-primary-9, #1d4ed8); margin-left: 8px; }
+      .trust-link:hover { text-decoration: underline; }
     `,
   ];
 
@@ -114,7 +117,7 @@ export class ReviewerDetail extends LitElement {
     const status = this._buildStatus(d);
 
     return html`
-      <div class="header">${d.reviewerId} ${renderBadge(this.maturityPhase, this.maturityPhase.toLowerCase() === 'active' ? 'active' : this.maturityPhase.toLowerCase() === 'emerging' ? 'emerging' : 'bootstrap')}</div>
+      <div class="header">${d.reviewerId} ${renderBadge(this.maturityPhase, this.maturityPhase.toLowerCase() === 'active' ? 'active' : this.maturityPhase.toLowerCase() === 'emerging' ? 'emerging' : 'bootstrap')} <button class="trust-link" @click=${() => emitPagesEvent(document, 'trust:show-detail', { actorId: d.reviewerId })}>Trust detail &#x2192;</button></div>
       <div class="sub-header">${d.totalDecisions} decisions · ${d.openCommitments} open commitments</div>
 
       <div class="narrative">${this._buildNarrative(d)}</div>

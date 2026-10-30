@@ -8,6 +8,8 @@ import "./components/operations-workbench";
 import "./components/review-spine";
 import "./components/intelligence-pane";
 import "./components/merge-queue-workbench";
+import "./components/compliance-workbench";
+import "./components/trust-workbench-view";
 
 const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
 
@@ -17,6 +19,8 @@ registerPanel("pr-cases-workbench", "devtown-pr-cases-workbench");
 registerPanel("system-workbench", "devtown-system-workbench");
 registerPanel("operations-workbench", "devtown-operations-workbench");
 registerPanel("merge-queue-workbench", "devtown-merge-queue-workbench");
+registerPanel("compliance-workbench", "devtown-compliance-workbench");
+registerPanel("trust-workbench-view", "devtown-trust-workbench-view");
 
 interface UserInfo {
   actorId: string;

@@ -9,6 +9,11 @@ const staticDir = process.argv[2] || join(__dir, '..', '..', '..', '..', 'target
 const port = parseInt(process.argv[3] || '8280', 10);
 
 const template = fixtures['_review_detail_template'];
+const complianceTemplate = fixtures['_compliance_evidence_template'];
+const trustScoreTemplate = fixtures['_trust_score_template'];
+const trustRoutingHistory = fixtures['_trust_routing_history'];
+const trustRoutingDetailTemplate = fixtures['_trust_routing_detail_template'];
+const batchStatusTemplate = fixtures['_batch_status_template'];
 const reviewDetails = {};
 for (const r of (fixtures['/api/devtown/governance/queue-status']?.reviews ?? [])) {
   reviewDetails[r.caseId] = {
@@ -67,6 +72,44 @@ createServer((req, res) => {
     const detail = reviewDetails[id] || { ...template, caseId: id, pr: { repo: 'unknown', prNumber: 0, contributor: 'unknown', linesChanged: 0, headSha: '0000000' } };
     res.writeHead(200, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
     res.end(JSON.stringify(detail));
+    return;
+  }
+
+  if (path.startsWith('/api/devtown/compliance/code-review/')) {
+    const caseId = path.split('/').pop();
+    res.writeHead(200, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
+    res.end(JSON.stringify({ ...complianceTemplate, caseId }));
+    return;
+  }
+
+  if (path.startsWith('/api/devtown/trust/')) {
+    const parts = path.replace('/api/devtown/trust/', '').split('/');
+    const actorId = parts[0];
+    if (parts.length === 1) {
+      res.writeHead(200, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
+      res.end(JSON.stringify({ ...trustScoreTemplate, actorId }));
+      return;
+    }
+    if (parts[1] === 'routing-history' && parts.length === 2) {
+      res.writeHead(200, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
+      res.end(JSON.stringify(trustRoutingHistory));
+      return;
+    }
+    if (parts[1] === 'routing-history' && parts.length === 3) {
+      res.writeHead(200, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
+      res.end(JSON.stringify(trustRoutingDetailTemplate));
+      return;
+    }
+    if (parts[1] === 'trend') {
+      res.writeHead(200, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
+      res.end(JSON.stringify([]));
+      return;
+    }
+  }
+
+  if (path.startsWith('/api/devtown/governance/merge-queue/batch/')) {
+    res.writeHead(200, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
+    res.end(JSON.stringify(batchStatusTemplate));
     return;
   }
 

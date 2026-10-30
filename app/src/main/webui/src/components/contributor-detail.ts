@@ -1,5 +1,6 @@
 import { LitElement, html, css, nothing } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
+import { emitPagesEvent } from '@casehubio/pages-data';
 import { renderTrustBar } from './shared/trust-bar.js';
 import { renderDimensionGrid } from './shared/dimension-grid.js';
 import { renderStatusCard } from './shared/status-card.js';
@@ -44,6 +45,8 @@ export class ContributorDetail extends LitElement {
       .outcome-result.merged { color: var(--pages-success-9, #166534); }
       .outcome-result.closed { color: var(--pages-danger-9, #dc2626); }
       .outcome-date { color: var(--pages-neutral-6, #737373); }
+      .trust-link { all: unset; cursor: pointer; font-size: 11px; color: var(--pages-primary-9, #1d4ed8); margin-left: 8px; }
+      .trust-link:hover { text-decoration: underline; }
     `,
   ];
 
@@ -151,7 +154,7 @@ export class ContributorDetail extends LitElement {
     const proximity = this._buildProximity(d);
 
     return html`
-      <div class="header">${d.actorId} ${renderBadge(ic.lane, ic.lane === 'FAST_TRACK' ? 'fast-track' : ic.lane === 'TRIAGE' ? 'triage' : 'standard')}</div>
+      <div class="header">${d.actorId} ${renderBadge(ic.lane, ic.lane === 'FAST_TRACK' ? 'fast-track' : ic.lane === 'TRIAGE' ? 'triage' : 'standard')} <button class="trust-link" @click=${() => emitPagesEvent(document, 'trust:show-detail', { actorId: d.actorId })}>Trust detail &#x2192;</button></div>
 
       <div class="narrative">${this._buildSummary(d)}</div>
 

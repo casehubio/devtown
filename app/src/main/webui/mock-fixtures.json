@@ -264,5 +264,83 @@
         {"severity": "WARNING", "category": "auth", "filePath": "auth/TokenHandler.java", "message": "Token expiry not validated before refresh", "confidence": 0.85, "startLine": 42, "endLine": 45}
       ]
     }
+  },
+  "_compliance_evidence_template": {
+    "caseId": "TEMPLATE",
+    "generatedAt": "2026-10-09T10:00:00Z",
+    "auditChain": {
+      "requirementId": "AC-001", "citation": "EU AI Act Art.12 — Logging Requirements",
+      "mechanism": "Merkle-tree tamper-evident ledger", "status": "MET",
+      "treeRoot": "3f8a7b2c9d4e5f6a1b2c3d4e5f6a7b8c", "chainVerified": true,
+      "events": [
+        {"entryId": "le-001", "eventType": "CASE_OPENED", "actorId": "system", "actorRole": "SYSTEM", "occurredAt": "2026-10-09T08:00:00Z", "digest": "a1b2c3d4"},
+        {"entryId": "le-002", "eventType": "AGENT_ROUTED", "actorId": "code-01", "actorRole": "AGENT", "occurredAt": "2026-10-09T08:01:00Z", "digest": "b2c3d4e5"},
+        {"entryId": "le-003", "eventType": "REVIEW_COMPLETE", "actorId": "code-01", "actorRole": "AGENT", "occurredAt": "2026-10-09T08:30:00Z", "digest": "c3d4e5f6"},
+        {"entryId": "le-004", "eventType": "HUMAN_GATE", "actorId": "dev-user", "actorRole": "HUMAN", "occurredAt": "2026-10-09T09:00:00Z", "digest": "d4e5f6a7"},
+        {"entryId": "le-005", "eventType": "CASE_CLOSED", "actorId": "system", "actorRole": "SYSTEM", "occurredAt": "2026-10-09T09:15:00Z", "digest": "e5f6a7b8"}
+      ]
+    },
+    "reviewSla": {
+      "requirementId": "SLA-001", "citation": "Internal Engineering SLA — Human Oversight",
+      "mechanism": "WorkItem SLA tracking", "status": "MET",
+      "taskId": "wi-001", "claimDeadline": "2026-10-09T12:00:00Z",
+      "completedAt": "2026-10-09T09:00:00Z", "slaMet": true,
+      "candidateGroups": ["dev-team", "senior-engineers"]
+    },
+    "trustRouting": {
+      "requirementId": "TR-001", "citation": "Trust-Weighted Routing Policy",
+      "mechanism": "Bayesian trust scoring with policy thresholds", "status": "MET",
+      "decisions": [
+        {"capabilityTag": "code-analysis", "strategyId": "trust-weighted", "selectedWorkerId": "code-01", "finalScore": 0.85, "alternatives": [{"workerId": "code-02", "score": 0.72}]},
+        {"capabilityTag": "security-review", "strategyId": "trust-weighted", "selectedWorkerId": "sec-01", "finalScore": 0.78, "alternatives": [{"workerId": "code-01", "score": 0.65}]}
+      ]
+    },
+    "gdpr": {
+      "requirementId": "GDPR-001", "citation": "GDPR Art.17 Right to Erasure, Art.22 Automated Decision Records",
+      "mechanism": "Pseudonymisation + erasure pipeline", "status": "PARTIAL",
+      "erasureCapabilityWired": true, "pseudonymisationActive": true,
+      "erasurePerformed": false, "erasureReceiptIds": []
+    }
+  },
+  "_trust_score_template": {
+    "actorId": "TEMPLATE",
+    "globalScore": 0.82,
+    "capabilityScores": {"code-analysis": 0.88, "security-review": 0.78, "style-review": 0.92, "architecture-review": 0.71, "test-coverage": 0.85, "performance-analysis": 0.65},
+    "dimensionScores": {"review-thoroughness": 0.84, "false-positive-rate": 0.79, "scope-calibration": 0.83}
+  },
+  "_trust_routing_history": [
+    {"id": "rd-001", "timestamp": "2026-10-09T09:15:00Z", "capabilityTag": "code-analysis", "selectedWorkerId": "code-01", "finalScore": 0.88, "phase": "QUALIFIED"},
+    {"id": "rd-002", "timestamp": "2026-10-09T08:30:00Z", "capabilityTag": "security-review", "selectedWorkerId": "sec-01", "finalScore": 0.78, "phase": "QUALIFIED"},
+    {"id": "rd-003", "timestamp": "2026-10-08T14:00:00Z", "capabilityTag": "style-review", "selectedWorkerId": "style-01", "finalScore": 0.92, "phase": "QUALIFIED"},
+    {"id": "rd-004", "timestamp": "2026-10-08T10:00:00Z", "capabilityTag": "architecture-review", "selectedWorkerId": "arch-01", "finalScore": 0.71, "phase": "BORDERLINE"},
+    {"id": "rd-005", "timestamp": "2026-10-07T16:00:00Z", "capabilityTag": "code-analysis", "selectedWorkerId": "code-01", "finalScore": 0.85, "phase": "QUALIFIED"},
+    {"id": "rd-006", "timestamp": "2026-10-07T09:00:00Z", "capabilityTag": "test-coverage", "selectedWorkerId": "test-01", "finalScore": 0.45, "phase": "BOOTSTRAP"}
+  ],
+  "_trust_routing_detail_template": {
+    "rationale": {
+      "capabilityTag": "code-analysis",
+      "strategyId": "trust-weighted",
+      "selected": {"workerId": "code-01", "trustScore": 0.88, "workloadScore": 0.9, "phase": "QUALIFIED", "observations": 42, "finalScore": 0.88, "exclusionReason": null},
+      "alternatives": [
+        {"workerId": "code-02", "trustScore": 0.72, "workloadScore": 0.8, "phase": "QUALIFIED", "observations": 28, "finalScore": 0.72, "exclusionReason": null},
+        {"workerId": "arch-01", "trustScore": 0.65, "workloadScore": 0.95, "phase": "BORDERLINE", "observations": 12, "finalScore": 0.65, "exclusionReason": null}
+      ],
+      "policy": {"threshold": 0.60, "borderlineMargin": 0.05, "blendFactor": 0.7, "minimumObservations": 5, "qualityFloors": {"review-thoroughness": 0.5}, "cbrWeight": 0.3, "bootstrapEscalationRequired": true}
+    },
+    "feedback": [
+      {"decision": "APPROVED", "actor": "dev-user", "attestation": "ENDORSED", "trustScoreBefore": 0.85, "trustScoreAfter": 0.88, "dimension": "review-thoroughness"},
+      {"decision": "APPROVED", "actor": "senior-dev", "attestation": "ENDORSED", "trustScoreBefore": 0.88, "trustScoreAfter": 0.89, "dimension": "scope-calibration"}
+    ]
+  },
+  "_batch_status_template": {
+    "batchId": "b-7a3f2e1d",
+    "caseId": "a1b2c3d4-batch-0001-0001-000000000001",
+    "prs": [
+      {"number": 142, "repository": "casehubio/engine", "headSha": "abc1234", "author": "alice", "trustScore": 0.85, "lane": "FAST_TRACK"},
+      {"number": 218, "repository": "casehubio/devtown", "headSha": "def5678", "author": "bob", "trustScore": 0.62, "lane": "STANDARD"},
+      {"number": 97, "repository": "casehubio/ledger", "headSha": "ghi9012", "author": "carol", "trustScore": 0.78, "lane": "FAST_TRACK"}
+    ],
+    "riskLevel": "HIGH",
+    "bisectionStrategy": "trust-weighted"
   }
 }

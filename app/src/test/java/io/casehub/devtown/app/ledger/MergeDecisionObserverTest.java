@@ -8,8 +8,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.casehub.engine.common.spi.event.CaseLifecycleEvent;
 import io.casehub.ledger.api.model.LedgerEntryType;
+import io.casehub.ledger.api.model.LedgerMerkleFrontier;
 import io.casehub.ledger.api.spi.LedgerEntryRepository;
+import io.casehub.ledger.api.spi.LedgerMerkleFrontierRepository;
 import io.casehub.ledger.jpa.LedgerPersistenceUnit;
+import io.casehub.ledger.model.CaseLedgerEntry;
 import io.casehub.platform.api.identity.ActorType;
 import io.quarkus.narayana.jta.QuarkusTransaction;
 import io.quarkus.test.junit.QuarkusTest;
@@ -28,6 +31,7 @@ class MergeDecisionObserverTest {
 
     @Inject Event<CaseLifecycleEvent> caseLifecycleEvents;
     @Inject LedgerEntryRepository ledgerRepo;
+    @Inject LedgerMerkleFrontierRepository frontierRepo;
     @Inject @LedgerPersistenceUnit EntityManager em;
     @Inject ObjectMapper objectMapper;
 
@@ -124,6 +128,49 @@ class MergeDecisionObserverTest {
                     "SELECT m FROM MergeDecisionLedgerEntry m WHERE m.subjectId = :subjectId",
                     MergeDecisionLedgerEntry.class)
                 .setParameter("subjectId", caseId)
+                .getResultList()
+        );
+    }
+
+    @Test
+    void completedCase_writesCaseLedgerEntryAndAdvancesFrontier() {
+        UUID caseId = UUID.randomUUID();
+        String tenancyId = "test-tenant";
+
+        ObjectNode snapshot = buildPrSnapshot("casehubio/devtown", "55", "aaa111");
+
+        CaseLifecycleEvent event = new CaseLifecycleEvent(
+                caseId, tenancyId, "COMPLETE", "CASE_COMPLETED",
+                "COMPLETED", "system", "ORCHESTRATOR", "trace-frontier-1",
+                null, null, snapshot, null, null);
+
+        caseLifecycleEvents.fireAsync(event);
+
+        await().atMost(5, SECONDS).untilAsserted(() -> {
+            List<CaseLedgerEntry> entries = findCaseLedgerEntries(caseId, tenancyId);
+            assertThat(entries).isNotEmpty();
+
+            CaseLedgerEntry entry = entries.get(0);
+            assertThat(entry.eventType).isEqualTo("CASE_COMPLETED");
+            assertThat(entry.caseStatus).isEqualTo("COMPLETED");
+            assertThat(entry.actorId).isEqualTo("system");
+            assertThat(entry.digest).isNotNull();
+
+            List<LedgerMerkleFrontier> frontier = QuarkusTransaction.requiringNew()
+                    .call(() -> frontierRepo.findBySubjectId(caseId, tenancyId));
+            assertThat(frontier).isNotEmpty();
+            assertThat(frontier).allSatisfy(node ->
+                    assertThat(node.hash).isNotNull());
+        });
+    }
+
+    private List<CaseLedgerEntry> findCaseLedgerEntries(UUID caseId, String tenancyId) {
+        return QuarkusTransaction.requiringNew().call(() ->
+            em.createQuery(
+                    "SELECT e FROM CaseLedgerEntry e WHERE e.subjectId = :subjectId AND e.tenancyId = :tenancyId",
+                    CaseLedgerEntry.class)
+                .setParameter("subjectId", caseId)
+                .setParameter("tenancyId", tenancyId)
                 .getResultList()
         );
     }

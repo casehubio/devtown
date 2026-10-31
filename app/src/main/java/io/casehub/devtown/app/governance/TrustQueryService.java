@@ -3,15 +3,18 @@ package io.casehub.devtown.app.governance;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.casehub.ledger.api.model.LedgerAttestation;
-import io.casehub.ledger.model.WorkerDecisionEntry;
-import io.casehub.ledger.jpa.LedgerPersistenceUnit;
+import io.casehub.ledger.api.model.ScoreType;
+import io.casehub.ledger.api.model.TrustScoreSnapshotBase;
 import io.casehub.ledger.core.trust.TrustGateService;
+import io.casehub.ledger.jpa.LedgerPersistenceUnit;
+import io.casehub.ledger.model.WorkerDecisionEntry;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.persistence.EntityManager;
 import jakarta.transaction.Transactional;
 import org.jboss.logging.Logger;
 
+import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -78,10 +81,23 @@ public class TrustQueryService {
         return new TrustScoreResponse(actorId, globalScore, capabilityScores, dimensionScores);
     }
 
-    // TODO: TrustScoreSnapshot removed from ledger SNAPSHOT — restore when replacement entity available
     @Transactional
     public List<TrustTrendPoint> trustTrend(String actorId, String capabilityTag, int limit) {
-        return Collections.emptyList();
+        String queryName = capabilityTag != null
+                           ? "TrustScoreSnapshot.findByActorAndCapability"
+                           : "TrustScoreSnapshot.findByActorGlobal";
+
+        var query = em.createNamedQuery(queryName, TrustScoreSnapshotBase.class)
+                      .setParameter("actorId", actorId)
+                      .setMaxResults(Math.min(limit, 200));
+
+        if (capabilityTag != null) {
+            query.setParameter("capabilityTag", capabilityTag);
+        }
+
+        return query.getResultList().stream()
+                    .map(s -> new TrustTrendPoint(s.occurredAt, s.score, s.previousScore))
+                    .toList();
     }
 
     @Transactional
@@ -122,7 +138,7 @@ public class TrustQueryService {
             return null;
         }
 
-        List<GateDecision> feedback = loadFeedback(entryId);
+        List<GateDecision> feedback = loadFeedback(entryId, actorId);
         return new RoutingDecisionDetail(rationale, feedback);
     }
 
@@ -187,23 +203,74 @@ public class TrustQueryService {
     }
 
     @SuppressWarnings("unchecked")
-    private List<GateDecision> loadFeedback(UUID entryId) {
+    private List<GateDecision> loadFeedback(UUID entryId, String workerId) {
         List<LedgerAttestation> attestations = em
-                .createQuery("SELECT a FROM LedgerAttestation a WHERE a.ledgerEntryId = :entryId", LedgerAttestation.class)
-                .setParameter("entryId", entryId)
-                .getResultList();
+                                                       .createQuery("SELECT a FROM LedgerAttestation a WHERE a.ledgerEntryId = :entryId", LedgerAttestation.class)
+                                                       .setParameter("entryId", entryId)
+                                                       .getResultList();
 
         if (attestations.isEmpty()) {
             return Collections.emptyList();
         }
 
-        // TODO: TrustScoreSnapshot removed from ledger — before/after scores unavailable until replacement entity
-        return attestations.stream().map(a -> new GateDecision(
+        Instant minTime = attestations.stream().map(a -> a.occurredAt).filter(t -> t != null).min(Instant::compareTo).orElse(null);
+        Instant maxTime = attestations.stream().map(a -> a.occurredAt).filter(t -> t != null).max(Instant::compareTo).orElse(null);
+
+        List<TrustScoreSnapshotBase> snapshots = Collections.emptyList();
+        if (minTime != null && maxTime != null) {
+            snapshots = em.createNamedQuery("TrustScoreSnapshot.findByActorAndTimeRange", TrustScoreSnapshotBase.class)
+                          .setParameter("actorId", workerId)
+                          .setParameter("from", minTime.minusSeconds(2))
+                          .setParameter("to", maxTime.plusSeconds(2))
+                          .getResultList();
+        }
+
+        final List<TrustScoreSnapshotBase> snapshotsFinal = snapshots;
+        return attestations.stream().map(a -> {
+            double                 before = 0.0;
+            double                 after  = 0.0;
+            TrustScoreSnapshotBase match  = findMatchingSnapshot(a, snapshotsFinal);
+            if (match != null) {
+                before = match.previousScore;
+                after  = match.score;
+            }
+            return new GateDecision(
                     a.verdict != null ? a.verdict.name() : "",
                     a.attestorId,
                     a.evidence,
-                    0.0, 0.0,
-                    a.trustDimension != null ? a.trustDimension : ""))
-                .toList();
+                    before, after,
+                    a.trustDimension != null ? a.trustDimension : "");
+        }).toList();
     }
+
+    private TrustScoreSnapshotBase findMatchingSnapshot(LedgerAttestation attestation,
+                                                        List<TrustScoreSnapshotBase> snapshots) {
+        if (attestation.occurredAt == null) {
+            return null;
+        }
+        TrustScoreSnapshotBase best         = null;
+        long                   bestDistance = Long.MAX_VALUE;
+        for (var snapshot : snapshots) {
+            boolean dimensionMatch = attestation.trustDimension != null
+                                     && attestation.trustDimension.equals(snapshot.dimensionKey);
+            boolean globalMatch = snapshot.scoreType == ScoreType.GLOBAL;
+            if (!dimensionMatch && !globalMatch) {
+                continue;
+            }
+            if (snapshot.occurredAt == null) {
+                continue;
+            }
+            long distance = Math.abs(Duration.between(
+                    attestation.occurredAt, snapshot.occurredAt).toMillis());
+            if (dimensionMatch && (best == null || best.scoreType == ScoreType.GLOBAL || distance < bestDistance)) {
+                best         = snapshot;
+                bestDistance = distance;
+            } else if (globalMatch && best == null) {
+                best         = snapshot;
+                bestDistance = distance;
+            }
+        }
+        return best;
+    }
+
 }

@@ -1,9 +1,11 @@
 package io.casehub.devtown.app.governance;
 
 import io.casehub.ledger.api.model.AttestationVerdict;
-import io.casehub.ledger.model.WorkerDecisionEntry;
-import io.casehub.ledger.jpa.LedgerAttestation;
+import io.casehub.ledger.api.model.ScoreType;
+import io.casehub.ledger.api.model.TrustScoreSnapshotBase;
 import io.casehub.ledger.core.trust.TrustGateService;
+import io.casehub.ledger.jpa.LedgerAttestation;
+import io.casehub.ledger.model.WorkerDecisionEntry;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.TypedQuery;
 import org.junit.jupiter.api.BeforeEach;
@@ -67,12 +69,64 @@ class TrustQueryServiceTest {
         assertThat(result.capabilityScores()).isEmpty();
     }
 
-    // TODO: TrustScoreSnapshot removed from ledger SNAPSHOT — restore when replacement entity available
+    @SuppressWarnings("unchecked")
     @Test
-    void trustTrend_returnsEmptyUntilSnapshotEntityRestored() {
+    void trustTrend_queriesCapabilitySnapshots() {
+        var snap1 = new TrustScoreSnapshotBase("agent-1", ScoreType.CAPABILITY,
+                                               "security-review", null, 0.75, 0.70, Instant.parse("2026-08-02T10:00:00Z"));
+        var snap2 = new TrustScoreSnapshotBase("agent-1", ScoreType.CAPABILITY,
+                                               "security-review", null, 0.70, 0.65, Instant.parse("2026-08-01T10:00:00Z"));
+
+        final TypedQuery<TrustScoreSnapshotBase> mockQuery = mock(TypedQuery.class);
+        when(em.createNamedQuery("TrustScoreSnapshot.findByActorAndCapability", TrustScoreSnapshotBase.class))
+                .thenReturn(mockQuery);
+        when(mockQuery.setParameter(anyString(), any())).thenReturn(mockQuery);
+        when(mockQuery.setMaxResults(anyInt())).thenReturn(mockQuery);
+        when(mockQuery.getResultList()).thenReturn(List.of(snap1, snap2));
+
         final var result = service.trustTrend("agent-1", "security-review", 30);
+
+        assertThat(result).hasSize(2);
+        assertThat(result.get(0).score()).isEqualTo(0.75);
+        assertThat(result.get(0).previousScore()).isEqualTo(0.70);
+        assertThat(result.get(0).timestamp()).isEqualTo(Instant.parse("2026-08-02T10:00:00Z"));
+        assertThat(result.get(1).score()).isEqualTo(0.70);
+    }
+
+    @SuppressWarnings("unchecked")
+    @Test
+    void trustTrend_queriesGlobalSnapshotsWhenNoCapability() {
+        var snap = new TrustScoreSnapshotBase("agent-1", ScoreType.GLOBAL,
+                                              null, null, 0.72, 0.68, Instant.parse("2026-08-02T10:00:00Z"));
+
+        final TypedQuery<TrustScoreSnapshotBase> mockQuery = mock(TypedQuery.class);
+        when(em.createNamedQuery("TrustScoreSnapshot.findByActorGlobal", TrustScoreSnapshotBase.class))
+                .thenReturn(mockQuery);
+        when(mockQuery.setParameter(anyString(), any())).thenReturn(mockQuery);
+        when(mockQuery.setMaxResults(anyInt())).thenReturn(mockQuery);
+        when(mockQuery.getResultList()).thenReturn(List.of(snap));
+
+        final var result = service.trustTrend("agent-1", null, 30);
+
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0).score()).isEqualTo(0.72);
+    }
+
+    @SuppressWarnings("unchecked")
+    @Test
+    void trustTrend_returnsEmptyForUnknownActor() {
+        final TypedQuery<TrustScoreSnapshotBase> mockQuery = mock(TypedQuery.class);
+        when(em.createNamedQuery(anyString(), eq(TrustScoreSnapshotBase.class)))
+                .thenReturn(mockQuery);
+        when(mockQuery.setParameter(anyString(), any())).thenReturn(mockQuery);
+        when(mockQuery.setMaxResults(anyInt())).thenReturn(mockQuery);
+        when(mockQuery.getResultList()).thenReturn(List.of());
+
+        final var result = service.trustTrend("unknown", "security-review", 30);
+
         assertThat(result).isEmpty();
     }
+
 
     @SuppressWarnings("unchecked")
     @Test
@@ -223,32 +277,34 @@ class TrustQueryServiceTest {
     @Test
     void routingDetail_mapsFeedbackFromAttestations() {
         final UUID entryId = UUID.randomUUID();
-        final var entry = new WorkerDecisionEntry();
-        entry.id = entryId;
-        entry.workerId = "agent-1";
-        entry.capabilityTag = "security-review";
+        final var  entry   = new WorkerDecisionEntry();
+        entry.id               = entryId;
+        entry.workerId         = "agent-1";
+        entry.capabilityTag    = "security-review";
         entry.routingRationale = """
-                {"strategyId":"trust-weighted","selected":{"workerId":"agent-1",\
-                "trustScore":0.72,"workloadScore":0.8,"phase":"QUALIFIED",\
-                "observations":14,"finalScore":0.74},"alternatives":[],"policy":{}}""";
+                                 {"strategyId":"trust-weighted","selected":{"workerId":"agent-1",\
+                                 "trustScore":0.72,"workloadScore":0.8,"phase":"QUALIFIED",\
+                                 "observations":14,"finalScore":0.74},"alternatives":[],"policy":{}}""";
 
         final var attestation = new LedgerAttestation();
-        attestation.verdict = AttestationVerdict.FLAGGED;
-        attestation.attestorId = "devtown:incident-feedback";
-        attestation.evidence = "Incident INC-001: Security bypass";
-        attestation.occurredAt = Instant.parse("2026-08-02T15:00:00Z");
+        attestation.verdict        = AttestationVerdict.FLAGGED;
+        attestation.attestorId     = "devtown:incident-feedback";
+        attestation.evidence       = "Incident INC-001: Security bypass";
+        attestation.occurredAt     = Instant.parse("2026-08-02T15:00:00Z");
         attestation.trustDimension = "review-thoroughness";
-
-
 
         when(em.find(WorkerDecisionEntry.class, entryId)).thenReturn(entry);
 
         final TypedQuery<Object> attestationQuery = mock(TypedQuery.class, "attestationQuery");
+        final TypedQuery<Object> snapshotQuery    = mock(TypedQuery.class, "snapshotQuery");
 
-        when(em.createQuery(anyString(), any(Class.class)))
-                .thenReturn(attestationQuery);
+        when(em.createQuery(anyString(), any(Class.class))).thenReturn(attestationQuery);
         when(attestationQuery.setParameter(anyString(), any())).thenReturn(attestationQuery);
         when(attestationQuery.getResultList()).thenReturn(List.of(attestation));
+
+        when(em.createNamedQuery(anyString(), any(Class.class))).thenReturn(snapshotQuery);
+        when(snapshotQuery.setParameter(anyString(), any())).thenReturn(snapshotQuery);
+        when(snapshotQuery.getResultList()).thenReturn(List.of());
 
         final var detail = service.routingDetail("agent-1", entryId);
 
@@ -258,6 +314,93 @@ class TrustQueryServiceTest {
         assertThat(gate.actor()).isEqualTo("devtown:incident-feedback");
         assertThat(gate.dimension()).isEqualTo("review-thoroughness");
     }
+
+    @SuppressWarnings("unchecked")
+    @Test
+    void routingDetail_populatesTrustScoresFromSnapshots() {
+        final UUID entryId = UUID.randomUUID();
+        final var  entry   = new WorkerDecisionEntry();
+        entry.id               = entryId;
+        entry.workerId         = "agent-1";
+        entry.capabilityTag    = "security-review";
+        entry.routingRationale = """
+                                 {"strategyId":"trust-weighted","selected":{"workerId":"agent-1",\
+                                 "trustScore":0.72,"workloadScore":0.8,"phase":"QUALIFIED",\
+                                 "observations":14,"finalScore":0.74},"alternatives":[],"policy":{}}""";
+
+        final var attestation = new LedgerAttestation();
+        attestation.verdict        = AttestationVerdict.FLAGGED;
+        attestation.attestorId     = "devtown:incident-feedback";
+        attestation.evidence       = "Incident INC-001";
+        attestation.occurredAt     = Instant.parse("2026-08-02T15:00:00Z");
+        attestation.trustDimension = "review-thoroughness";
+
+        var snapshot = new TrustScoreSnapshotBase("agent-1", ScoreType.DIMENSION,
+                                                  null, "review-thoroughness", 0.65, 0.72,
+                                                  Instant.parse("2026-08-02T15:00:00Z"));
+
+        when(em.find(WorkerDecisionEntry.class, entryId)).thenReturn(entry);
+
+        final TypedQuery<Object> attestationQuery = mock(TypedQuery.class, "attestationQuery");
+        final TypedQuery<Object> snapshotQuery    = mock(TypedQuery.class, "snapshotQuery");
+
+        when(em.createQuery(anyString(), any(Class.class))).thenReturn(attestationQuery);
+        when(attestationQuery.setParameter(anyString(), any())).thenReturn(attestationQuery);
+        when(attestationQuery.getResultList()).thenReturn(List.of(attestation));
+
+        when(em.createNamedQuery(anyString(), any(Class.class))).thenReturn(snapshotQuery);
+        when(snapshotQuery.setParameter(anyString(), any())).thenReturn(snapshotQuery);
+        when(snapshotQuery.getResultList()).thenReturn(List.of(snapshot));
+
+        final var detail = service.routingDetail("agent-1", entryId);
+
+        assertThat(detail.feedback()).hasSize(1);
+        final var gate = detail.feedback().get(0);
+        assertThat(gate.trustScoreBefore()).isEqualTo(0.72);
+        assertThat(gate.trustScoreAfter()).isEqualTo(0.65);
+        assertThat(gate.dimension()).isEqualTo("review-thoroughness");
+    }
+
+    @SuppressWarnings("unchecked")
+    @Test
+    void routingDetail_fallsBackToZeroWhenNoSnapshots() {
+        final UUID entryId = UUID.randomUUID();
+        final var  entry   = new WorkerDecisionEntry();
+        entry.id               = entryId;
+        entry.workerId         = "agent-1";
+        entry.capabilityTag    = "security-review";
+        entry.routingRationale = """
+                                 {"strategyId":"trust-weighted","selected":{"workerId":"agent-1",\
+                                 "trustScore":0.72,"workloadScore":0.8,"phase":"QUALIFIED",\
+                                 "observations":14,"finalScore":0.74},"alternatives":[],"policy":{}}""";
+
+        final var attestation = new LedgerAttestation();
+        attestation.verdict        = AttestationVerdict.ENDORSED;
+        attestation.attestorId     = "reviewer-1";
+        attestation.evidence       = "LGTM";
+        attestation.occurredAt     = Instant.parse("2026-08-02T15:00:00Z");
+        attestation.trustDimension = "review-thoroughness";
+
+        when(em.find(WorkerDecisionEntry.class, entryId)).thenReturn(entry);
+
+        final TypedQuery<Object> attestationQuery = mock(TypedQuery.class, "attestationQuery");
+        final TypedQuery<Object> snapshotQuery    = mock(TypedQuery.class, "snapshotQuery");
+
+        when(em.createQuery(anyString(), any(Class.class))).thenReturn(attestationQuery);
+        when(attestationQuery.setParameter(anyString(), any())).thenReturn(attestationQuery);
+        when(attestationQuery.getResultList()).thenReturn(List.of(attestation));
+
+        when(em.createNamedQuery(anyString(), any(Class.class))).thenReturn(snapshotQuery);
+        when(snapshotQuery.setParameter(anyString(), any())).thenReturn(snapshotQuery);
+        when(snapshotQuery.getResultList()).thenReturn(List.of());
+
+        final var detail = service.routingDetail("agent-1", entryId);
+
+        assertThat(detail.feedback()).hasSize(1);
+        assertThat(detail.feedback().get(0).trustScoreBefore()).isEqualTo(0.0);
+        assertThat(detail.feedback().get(0).trustScoreAfter()).isEqualTo(0.0);
+    }
+
 
     @SuppressWarnings("unchecked")
     @Test

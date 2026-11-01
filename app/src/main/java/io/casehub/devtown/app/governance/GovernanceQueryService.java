@@ -13,6 +13,7 @@ import io.casehub.devtown.domain.ContributorTrustDimension;
 import io.casehub.devtown.domain.sla.SlaPreferenceKeys;
 import io.casehub.devtown.domain.trust.ContributorIntakePreferenceKeys;
 import io.casehub.devtown.merge.BatchRecord;
+import io.casehub.engine.common.spi.SubCaseGroupRepository;
 import io.casehub.devtown.queue.QueuedPr;
 import io.casehub.devtown.review.PrPayload;
 import io.casehub.devtown.review.sla.SlaCalibrationRecord;
@@ -67,6 +68,7 @@ public class GovernanceQueryService {
     private final SlaCalibrationStore slaCalibrationStore;
     private final PreferenceProvider preferenceProvider;
     private final TrustQueryService  trustQueryService;
+    private final SubCaseGroupRepository subCaseGroupRepository;
     @Inject
                   jakarta.persistence.EntityManager em;
 
@@ -82,7 +84,8 @@ public class GovernanceQueryService {
             CaseHubRuntime caseHubRuntime,
             SlaCalibrationStore slaCalibrationStore,
             PreferenceProvider preferenceProvider,
-            TrustQueryService trustQueryService) {
+            TrustQueryService trustQueryService,
+            SubCaseGroupRepository subCaseGroupRepository) {
         this.tracker             = tracker;
         this.commitmentStore     = commitmentStore;
         this.trustExportService  = trustExportService;
@@ -93,6 +96,7 @@ public class GovernanceQueryService {
         this.slaCalibrationStore = slaCalibrationStore;
         this.preferenceProvider  = preferenceProvider;
         this.trustQueryService   = trustQueryService;
+        this.subCaseGroupRepository = subCaseGroupRepository;
     }
 
     // ── Records ──────────────────────────────────────────────
@@ -148,7 +152,10 @@ public class GovernanceQueryService {
                                        Integer suspectedPr) {}
 
     public record BatchStatus(String batchId, UUID caseId, List<BatchPrEntry> prs,
-                              String riskLevel, String bisectionStrategy) {}
+                              String riskLevel, String bisectionStrategy,
+                              List<BisectionSubCase> subCases) {}
+
+    public record BisectionSubCase(UUID caseId, String role, int childCount, int completedCount) {}
 
     public record BatchPrEntry(int number, String repository, String headSha,
                                String author, double trustScore, String lane) {}
@@ -539,12 +546,20 @@ public class GovernanceQueryService {
             .findFirst()
             .orElseThrow(() -> new IllegalArgumentException("No active batch found for case: " + batchCaseId));
 
-        // BatchRecord does not carry full PR details — return PR numbers with placeholders
         List<BatchPrEntry> prEntries = batch.prNumbers().stream()
             .map(prNum -> new BatchPrEntry(prNum, batch.repository(), "", "", 0.0, ""))
             .toList();
 
-        return new BatchStatus(batch.batchId(), batchCaseId, prEntries, "ROUTINE", "trust-weighted");
+        List<BisectionSubCase> subCases = subCaseGroupRepository
+            .findAllByParentCaseId(batchCaseId, "default")
+            .stream()
+            .flatMap(group -> group.getChildCaseIds().stream()
+                .map(childId -> new BisectionSubCase(
+                    childId, group.getBindingName(),
+                    group.getChildCaseIds().size(), group.getCompletedCount())))
+            .toList();
+
+        return new BatchStatus(batch.batchId(), batchCaseId, prEntries, "ROUTINE", "trust-weighted", subCases);
     }
 
     public MergeQueueMetrics mergeQueueMetrics() {

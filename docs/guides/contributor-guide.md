@@ -473,6 +473,8 @@ Case definitions:
 | `CoordinatedChangePort` | Cross-repo coordinated change |
 | `ReviewerAgent` | Driven-port for specialist reviewers: `capability()` + `handle(PrPayload)` |
 | `SlaCalibrationStore` | SLA calibration persistence |
+| `ReviewTriageHandler` | Domain-specific failure triage — classifies DECLINED/FAULTED review outcomes and decides retry vs escalate. `@Priority(1)` to win over agency's `LlmTriageHandler` |
+| `DevtownFailureClassifier` | Review-domain failure classification — TRANSIENT/KNOWLEDGE/INFEASIBLE based on failure reason strings |
 
 ### Merge SPIs (merge/)
 
@@ -500,6 +502,16 @@ Case definitions:
 | `ContributorHistoryClient` | GitHub PR history + repo metadata for contributor trust bootstrap (#202) | `NoOpContributorHistoryClient` |
 
 All NoOp defaults are `@DefaultBean` in `app/` -- displaced by real implementations (e.g. `GitHubMergeClient`, `GitHubContributorHistoryClient`) when the `github` module is on the classpath.
+
+### Foundation SPI Wiring (app/spi/)
+
+Foundation SPIs that ship as plain classes (no CDI annotations) need CDI producers in `app/spi/` to be discovered by the engine runtime.
+
+| Producer | Produces | Purpose |
+|----------|----------|---------|
+| `PlaybookProviderProducer` | `PlaybookWorkerFunctionProvider` | Enables YAML playbook workers (workers with `steps:` blocks). Registered into `DefaultWorkerFunctionProviderRegistry` via `Instance<WorkerFunctionProvider>` collection |
+
+Playbook YAML definitions live in `review/src/main/resources/devtown/playbooks/`. See `style-review.yaml` for the pattern: agent-session steps that open, query, and close an LLM session.
 
 ---
 

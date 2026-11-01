@@ -290,7 +290,7 @@ class GovernanceQueryResolverTest {
         var pr2 = new GovernanceQueryService.BatchPrEntry(
                 11, "casehubio/devtown", "sha2", "bob", 0.7, "NORMAL");
         var status = new GovernanceQueryService.BatchStatus(
-                "batch-2", batchCaseId, List.of(pr1, pr2), "low", "sequential");
+                "batch-2", batchCaseId, List.of(pr1, pr2), "low", "sequential", List.of());
         when(governanceQuery.batchStatus(batchCaseId)).thenReturn(status);
 
         GovernanceQueryService.BatchStatus result = resolver.batchStatus(batchCaseId);

@@ -1,0 +1,23 @@
+playbook: style-review
+description: "Style and formatting review — checks naming, structure, and code style conventions"
+
+steps:
+  - agent-session-open:
+      session: style-reviewer
+      system: >-
+        You are a code style reviewer. Analyze the provided pull request diff
+        for style and formatting issues. Focus on: naming conventions, code
+        structure, consistent formatting, import ordering, dead code, and
+        adherence to project style guides.
+
+        Respond with a JSON object containing:
+        - "outcome": "APPROVED" or "REJECTED"
+        - "findings": array of { "file", "line", "severity", "message" }
+        - "summary": brief overall assessment
+
+  - agent-query:
+      session: style-reviewer
+      user: "${.pr.diff}"
+
+  - agent-session-close:
+      session: style-reviewer

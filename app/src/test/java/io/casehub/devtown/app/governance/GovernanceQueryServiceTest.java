@@ -9,6 +9,7 @@ import io.casehub.devtown.domain.sla.SlaPreferenceKeys;
 import io.casehub.devtown.review.PrPayload;
 import io.casehub.devtown.review.sla.SlaCalibrationRecord;
 import io.casehub.devtown.review.sla.SlaCalibrationStore;
+import io.casehub.engine.common.spi.SubCaseGroupRepository;
 import io.casehub.ledger.core.trust.TrustGateService;
 import io.casehub.ledger.core.federation.ActorExport;
 import io.casehub.ledger.core.federation.TrustExportPayload;
@@ -47,6 +48,7 @@ class GovernanceQueryServiceTest {
     PreferenceProvider preferenceProvider;
     Preferences prefs;
     TrustQueryService trustQueryService;
+    SubCaseGroupRepository subCaseGroupRepository;
 
 
     GovernanceQueryService service;
@@ -64,11 +66,13 @@ class GovernanceQueryServiceTest {
         preferenceProvider  = mock(PreferenceProvider.class);
         prefs               = mock(Preferences.class);
         trustQueryService   = mock(TrustQueryService.class);
+        subCaseGroupRepository = mock(SubCaseGroupRepository.class);
 
         service = new GovernanceQueryService(
                 tracker, commitmentStore, trustExportService, trustGateService,
                 workItemStore, mergeQueueService, caseHubRuntime,
-                slaCalibrationStore, preferenceProvider, trustQueryService
+                slaCalibrationStore, preferenceProvider, trustQueryService,
+                subCaseGroupRepository
         );
     }
 

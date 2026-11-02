@@ -12,7 +12,10 @@ import io.casehub.devtown.review.LifecycleResult;
 import io.casehub.devtown.review.PrClosePayload;
 import io.casehub.devtown.review.PrLifecycleEvent;
 import io.casehub.devtown.review.PrPayload;
+import io.casehub.devtown.domain.ReviewDomain;
 import io.casehub.devtown.review.PrReviewApplicationService;
+import io.casehub.engine.common.internal.model.PlanItemRecord;
+import io.casehub.engine.common.spi.PlanItemStore;
 import io.casehub.devtown.review.PrReviewOutcome;
 import io.casehub.devtown.review.SupersedeResult;
 import io.casehub.platform.api.identity.CurrentPrincipal;
@@ -31,7 +34,10 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @ApplicationScoped
 @Alternative
@@ -57,6 +63,9 @@ public class PrReviewCaseService implements PrReviewApplicationService {
 
     @Inject
     CiStatusClient ciStatusClient;
+    @Inject
+    PlanItemStore planItemStore;
+
 
     @Inject
     PreferenceProvider preferenceProvider;
@@ -205,13 +214,14 @@ public class PrReviewCaseService implements PrReviewApplicationService {
         String contributorId = "github-id:" + close.contributorNumericId();
         int    reviewRounds  = readReviewRounds(caseId);
 
+        Set<String> domains = resolveActivatedDomains(caseId);
         if (close.merged()) {
             mergedEvent.fire(new PrLifecycleEvent.Merged(
-                    close.repo(), close.prNumber(), contributorId, caseId, reviewRounds));
+                    close.repo(), close.prNumber(), contributorId, caseId, reviewRounds, domains));
         } else {
             rejectedEvent.fire(new PrLifecycleEvent.Rejected(
                     close.repo(), close.prNumber(), contributorId, caseId,
-                    close.senderLogin(), close.senderNumericId(), close.senderType(), reviewRounds));
+                    close.senderLogin(), close.senderNumericId(), close.senderType(), reviewRounds, domains));
         }
 
         caseHub.signal(caseId, "pr.status", close.merged() ? "merged" : "closed");
@@ -238,8 +248,9 @@ public class PrReviewCaseService implements PrReviewApplicationService {
                            java.time.Instant.now().toString());
 
             String contributorId = "github-id:" + review.contributorNumericId();
+            Set<String> domains = resolveActivatedDomains(caseId);
             changesRequestedEvent.fire(new PrLifecycleEvent.ChangesRequested(
-                    review.repo(), review.prNumber(), contributorId, caseId));
+                    review.repo(), review.prNumber(), contributorId, caseId, domains));
             return LifecycleResult.UPDATED;
         }
 
@@ -332,4 +343,13 @@ public class PrReviewCaseService implements PrReviewApplicationService {
         return new SupersedeResult(oldCase.caseId(), newCaseId, reviewOutcome);
     }
 
+
+    private Set<String> resolveActivatedDomains(UUID caseId) {
+        return planItemStore.findByCaseId(caseId, principal.tenancyId())
+                            .stream()
+                            .map(PlanItemRecord::capabilityName)
+                            .filter(Objects::nonNull)
+                            .filter(ReviewDomain.FINDINGS_CAPABILITIES::contains)
+                            .collect(Collectors.toUnmodifiableSet());
+    }
 }

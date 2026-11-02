@@ -169,7 +169,8 @@ public class GovernanceQueryService {
                                      String maturityPhase, int openCommitments, int totalDecisions) {}
 
     public record ContributorFleetEntry(String actorId, Double trustScore, String intakeLane,
-                                        int observationCount, Double mergeRate, Double firstAttemptQuality) {}
+                                        int observationCount, Double mergeRate, Double firstAttemptQuality,
+                                        Map<String, Double> domainScores) {}
 
     public record ContributorDetail(String actorId, Double globalScore,
                                     Map<String, Double> capabilityScores, Map<String, Double> dimensionScores,
@@ -647,10 +648,18 @@ public class GovernanceQueryService {
             var    classification = policy.classify(score != null ? OptionalDouble.of(score) : OptionalDouble.empty(), observations);
             var    dimScores      = trustGateService.allDimensionScores(actor.actorId());
 
+            Map<String, Double> domainScores = new java.util.LinkedHashMap<>();
+            for (var entry : capScores.entrySet()) {
+                if (ContributorTrustCapability.isDomainScoped(entry.getKey())) {
+                    domainScores.put(entry.getKey(), entry.getValue());
+                }
+            }
+
             entries.add(new ContributorFleetEntry(
                     actor.actorId(), score, classification.lane().name(), observations,
                     dimScores.get(ContributorTrustDimension.MERGE_RATE),
-                    dimScores.get(ContributorTrustDimension.FIRST_ATTEMPT_QUALITY)));
+                    dimScores.get(ContributorTrustDimension.FIRST_ATTEMPT_QUALITY),
+                    domainScores.isEmpty() ? Map.of() : Map.copyOf(domainScores)));
         }
 
         for (var caseInfo : tracker.activeCases()) {
@@ -658,7 +667,7 @@ public class GovernanceQueryService {
             if (contributor != null && !seen.contains(contributor)) {
                 seen.add(contributor);
                 var classification = policy.classify(OptionalDouble.empty(), 0);
-                entries.add(new ContributorFleetEntry(contributor, null, classification.lane().name(), 0, null, null));
+                entries.add(new ContributorFleetEntry(contributor, null, classification.lane().name(), 0, null, null, Map.of()));
             }
         }
 

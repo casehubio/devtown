@@ -11,8 +11,10 @@ import io.casehub.platform.api.identity.ActorType;
 import jakarta.enterprise.context.ApplicationScoped;
 
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 @ApplicationScoped
@@ -27,55 +29,79 @@ public class ContributorAttestationPolicy {
     public List<AttestationIntent> evaluate(PrLifecycleEvent event,
                                              String outcome,
                                              Integer reviewRounds) {
-        UUID entryId = deterministicEntryId(event.repo(), event.prNumber(), outcome);
-        UUID subjectId = resolveSubjectId(event);
+        return evaluate(event, outcome, reviewRounds, Set.of());
+    }
 
-        return switch (outcome) {
-            case "MERGED" -> List.of(intent(entryId, subjectId,
+    public List<AttestationIntent> evaluate(PrLifecycleEvent event,
+                                             String outcome,
+                                             Integer reviewRounds,
+                                             Set<String> reviewDomains) {
+        UUID subjectId = resolveSubjectId(event);
+        List<AttestationIntent> result = new ArrayList<>();
+
+        UUID aggregateEntryId = deterministicEntryId(event.repo(), event.prNumber(), outcome);
+        addOutcomeIntent(result, aggregateEntryId, subjectId,
+                ContributorTrustCapability.PR_CONTRIBUTION, outcome, event);
+
+        for (String domain : reviewDomains) {
+            UUID domainEntryId = deterministicDomainEntryId(
+                    event.repo(), event.prNumber(), outcome, domain);
+            addOutcomeIntent(result, domainEntryId, subjectId,
+                    ContributorTrustCapability.forDomain(domain), outcome, event);
+        }
+        return result;
+    }
+
+    private void addOutcomeIntent(List<AttestationIntent> result, UUID entryId,
+                                   UUID subjectId, String capabilityTag,
+                                   String outcome, PrLifecycleEvent event) {
+        switch (outcome) {
+            case "MERGED" -> result.add(intent(entryId, subjectId, capabilityTag,
                     AttestationVerdict.SOUND, 1.0,
                     Map.of(ContributorTrustDimension.MERGE_RATE, 1.0,
                            ContributorTrustDimension.FIRST_ATTEMPT_QUALITY, 1.0),
                     evidence(event, outcome)));
-
-            case "MERGED_WITH_REWORK" -> List.of(intent(entryId, subjectId,
+            case "MERGED_WITH_REWORK" -> result.add(intent(entryId, subjectId, capabilityTag,
                     AttestationVerdict.SOUND, 0.7,
                     Map.of(ContributorTrustDimension.MERGE_RATE, 1.0),
                     evidence(event, outcome)));
-
-            case "CHANGES_REQUESTED" -> List.of(intent(entryId, subjectId,
+            case "CHANGES_REQUESTED" -> result.add(intent(entryId, subjectId, capabilityTag,
                     AttestationVerdict.FLAGGED, 0.5,
                     Map.of(ContributorTrustDimension.FIRST_ATTEMPT_QUALITY, 0.0),
                     evidence(event, outcome)));
-
-            case "REJECTED" -> List.of(intent(entryId, subjectId,
+            case "REJECTED" -> result.add(intent(entryId, subjectId, capabilityTag,
                     AttestationVerdict.FLAGGED, 1.0,
                     Map.of(ContributorTrustDimension.MERGE_RATE, 0.0),
                     evidence(event, outcome)));
-
-            case "TRIAGE_REJECTED" -> List.of(intent(entryId, subjectId,
+            case "TRIAGE_REJECTED" -> result.add(intent(entryId, subjectId, capabilityTag,
                     AttestationVerdict.FLAGGED, 0.3,
                     Map.of(ContributorTrustDimension.MERGE_RATE, 0.0),
                     evidence(event, outcome)));
-
-            case "ABANDONED_AFTER_REVIEW" -> List.of(intent(entryId, subjectId,
+            case "ABANDONED_AFTER_REVIEW" -> result.add(intent(entryId, subjectId, capabilityTag,
                     AttestationVerdict.FLAGGED, 0.3,
                     Map.of(ContributorTrustDimension.FIRST_ATTEMPT_QUALITY, 0.0),
                     evidence(event, outcome)));
-
-            default -> List.of();
-        };
+            default -> { }
+        }
     }
 
-    private AttestationIntent intent(UUID entryId, UUID subjectId,
+    private AttestationIntent intent(UUID entryId, UUID subjectId, String capabilityTag,
                                       AttestationVerdict verdict, double confidence,
                                       Map<String, Double> dimensions, String evidence) {
         return new AttestationIntent(
                 entryId, subjectId,
                 verdict, confidence,
-                ContributorTrustCapability.PR_CONTRIBUTION,
+                capabilityTag,
                 ATTESTOR_ID, ActorType.SYSTEM, ATTESTOR_ROLE,
                 dimensions, evidence,
                 CONTRIBUTOR_OUTCOME_NS, null);
+    }
+
+    public static UUID deterministicDomainEntryId(String repo, int prNumber,
+                                                   String outcome, String domain) {
+        String key = CONTRIBUTOR_OUTCOME_NS + "|" + repo + ":" + prNumber
+                + ":" + outcome + ":" + domain;
+        return UUID.nameUUIDFromBytes(key.getBytes(StandardCharsets.UTF_8));
     }
 
     public static UUID deterministicEntryId(String repo, int prNumber, String outcome) {

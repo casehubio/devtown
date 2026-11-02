@@ -42,7 +42,7 @@ public class DevtownSubscriptionRegistrar {
             new NotificationTemplate("PR #{prNumber} assigned for {capability} review",
                 "{prTitle} by {authorName} — deadline {deadline}",
                 NotificationSeverity.INFO, "devtown.review.assigned",
-                "/api/workitems/{workItemId}", "devtown.review", "prNumber", "assigneeId"),
+                "/api/workitems/{workItemId}", "devtown.review", "prNumber", "assigneeId", null),
             true, SubscriptionScope.SYSTEM));
 
         registerIfAbsent(existing, tenancyId, new SubscriptionInput(
@@ -52,7 +52,7 @@ public class DevtownSubscriptionRegistrar {
             false,
             new NotificationTemplate("Batch merged: {prCount} PRs", "{prList}",
                 NotificationSeverity.INFO, "devtown.merge.succeeded",
-                "/api/reviews/{prNumber}", "devtown.merge", "prNumber", "actorId"),
+                "/api/reviews/{prNumber}", "devtown.merge", "prNumber", "actorId", null),
             true, SubscriptionScope.SYSTEM));
 
         registerIfAbsent(existing, tenancyId, new SubscriptionInput(
@@ -65,7 +65,7 @@ public class DevtownSubscriptionRegistrar {
             new NotificationTemplate("Merge rejected: {prTitle}",
                 "CI failure: {failureReason} — author: {authorName}",
                 NotificationSeverity.URGENT, "devtown.merge.failed",
-                "/api/reviews/{prNumber}", "devtown.merge", "prNumber", "authorId"),
+                "/api/reviews/{prNumber}", "devtown.merge", "prNumber", "authorId", null),
             true, SubscriptionScope.SYSTEM));
 
         registerIfAbsent(existing, tenancyId, new SubscriptionInput(
@@ -76,7 +76,7 @@ public class DevtownSubscriptionRegistrar {
             new NotificationTemplate("Stalled: {conditionType} on {targetName}",
                 "{summary} — fired at {firedAt}",
                 NotificationSeverity.WARNING, "devtown.commitment.stalled",
-                null, "devtown.watchdog", "targetName", "actorId"),
+                null, "devtown.watchdog", "targetName", "actorId", null),
             true, SubscriptionScope.SYSTEM));
 
         registerIfAbsent(existing, tenancyId, new SubscriptionInput(
@@ -87,7 +87,7 @@ public class DevtownSubscriptionRegistrar {
             new NotificationTemplate("Case faulted: {caseDefinitionName}",
                 "Case {caseId} in state {caseStatus}",
                 NotificationSeverity.URGENT, "devtown.case.faulted",
-                "/api/compliance/code-review/{caseId}", "devtown.case", "caseId", "actorId"),
+                "/api/compliance/code-review/{caseId}", "devtown.case", "caseId", "actorId", null),
             true, SubscriptionScope.SYSTEM));
 
         registerIfAbsent(existing, tenancyId, new SubscriptionInput(
@@ -98,7 +98,7 @@ public class DevtownSubscriptionRegistrar {
             new NotificationTemplate("SLA breach: {taskTitle}",
                 "{breachType} — escalated to {escalationGroups}",
                 NotificationSeverity.URGENT, "devtown.sla.escalated",
-                "/api/workitems/{taskId}", "devtown.sla", "taskId", "callerRef"),
+                "/api/workitems/{taskId}", "devtown.sla", "taskId", "callerRef", null),
             true, SubscriptionScope.SYSTEM));
 
         registerIfAbsent(existing, tenancyId, new SubscriptionInput(
@@ -109,7 +109,7 @@ public class DevtownSubscriptionRegistrar {
             new NotificationTemplate("Agent dispatched: {agentId}",
                 "Capability {capability} on channel {channelName}",
                 NotificationSeverity.INFO, "devtown.review.agent-dispatched",
-                null, "devtown.review", "agentId", "agentId"),
+                null, "devtown.review", "agentId", "agentId", null),
             true, SubscriptionScope.SYSTEM));
     }
 

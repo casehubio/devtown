@@ -252,4 +252,53 @@ class DevtownCapabilityRegistryTest {
     void implementsCapabilityRegistrySpi() {
         assertThat(registry).isInstanceOf(CapabilityRegistry.class);
     }
+
+    @Test
+    void securityReviewContributorDomain_minimumObservationsIs10() {
+        RoutingPolicy policy = registry.policy(
+                ContributorTrustCapability.forDomain(ReviewDomain.SECURITY_REVIEW)).orElseThrow();
+        assertThat(policy.minimumObservations().getAsInt()).isEqualTo(10);
+    }
+
+    @Test
+    void architectureReviewContributorDomain_minimumObservationsIs8() {
+        RoutingPolicy policy = registry.policy(
+                ContributorTrustCapability.forDomain(ReviewDomain.ARCHITECTURE_REVIEW)).orElseThrow();
+        assertThat(policy.minimumObservations().getAsInt()).isEqualTo(8);
+    }
+
+    @Test
+    void styleReviewContributorDomain_minimumObservationsIs5() {
+        RoutingPolicy policy = registry.policy(
+                ContributorTrustCapability.forDomain(ReviewDomain.STYLE_REVIEW)).orElseThrow();
+        assertThat(policy.minimumObservations().getAsInt()).isEqualTo(5);
+    }
+
+    @Test
+    void testCoverageContributorDomain_minimumObservationsIs5() {
+        RoutingPolicy policy = registry.policy(
+                ContributorTrustCapability.forDomain(ReviewDomain.TEST_COVERAGE)).orElseThrow();
+        assertThat(policy.minimumObservations().getAsInt()).isEqualTo(5);
+    }
+
+    @Test
+    void performanceAnalysisContributorDomain_minimumObservationsIs5() {
+        RoutingPolicy policy = registry.policy(
+                ContributorTrustCapability.forDomain(ReviewDomain.PERFORMANCE_ANALYSIS)).orElseThrow();
+        assertThat(policy.minimumObservations().getAsInt()).isEqualTo(5);
+    }
+
+    @Test
+    void contributorDomainPolicies_haveNoThreshold() {
+        RoutingPolicy policy = registry.policy(
+                ContributorTrustCapability.forDomain(ReviewDomain.SECURITY_REVIEW)).orElseThrow();
+        assertThat(policy.threshold()).isEmpty();
+    }
+
+    @Test
+    void contributorDomainPolicies_haveNoFallback() {
+        RoutingPolicy policy = registry.policy(
+                ContributorTrustCapability.forDomain(ReviewDomain.SECURITY_REVIEW)).orElseThrow();
+        assertThat(policy.fallbackType()).isEmpty();
+    }
 }

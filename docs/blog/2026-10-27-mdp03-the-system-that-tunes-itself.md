@@ -2,7 +2,7 @@
 layout: post
 title: "The System That Tunes Itself"
 date: 2026-10-27
-entry_type: article
+entry_type: note
 subtype: diary
 projects: [casehubio/devtown]
 tags: [evolution, cbr, adaptive-systems, trust-routing, casehub, domain-model]

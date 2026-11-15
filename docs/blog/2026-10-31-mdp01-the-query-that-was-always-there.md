@@ -2,7 +2,7 @@
 layout: post
 title: "The Query That Was Always There"
 date: 2026-10-31
-entry_type: article
+entry_type: note
 subtype: diary
 projects: [casehubio/devtown]
 tags: [trust, visibility, accountability, trust-routing, governance, attestation]

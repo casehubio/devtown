@@ -2,7 +2,7 @@
 layout: post
 title: "Two Experiences, One Backend"
 date: 2026-10-27
-entry_type: article
+entry_type: note
 subtype: diary
 projects: [casehubio/devtown]
 tags: [frontend, architecture, evolution, routing, casehub]

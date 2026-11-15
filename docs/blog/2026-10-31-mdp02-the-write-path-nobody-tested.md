@@ -2,7 +2,7 @@
 layout: post
 title: "The Write Path Nobody Tested"
 date: 2026-10-31
-entry_type: article
+entry_type: note
 subtype: diary
 projects: [casehubio/devtown]
 tags: [ledger, merkle, tamper-evidence, testing, integration, audit, compliance]

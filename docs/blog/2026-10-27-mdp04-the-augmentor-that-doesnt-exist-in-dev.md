@@ -2,7 +2,7 @@
 layout: post
 title: "The Augmentor That Doesn't Exist in Dev"
 date: 2026-10-27
-entry_type: article
+entry_type: note
 subtype: diary
 projects: [casehubio/devtown]
 tags: [authentication, oidc, cdi, github-oauth, quarkus, security, casehub]

@@ -2,7 +2,7 @@
 layout: post
 title: "The Review Intelligence Workbench: What GitHub Can't Show You About Your PR"
 date: 2026-10-29
-entry_type: article
+entry_type: note
 subtype: diary
 projects: [casehubio/devtown]
 tags: [ui, architecture, review-intelligence, timeline, cbr, trust-routing]

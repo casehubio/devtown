@@ -2,7 +2,7 @@
 layout: post
 title: "The Audit Trail Nobody Reads"
 date: 2026-10-30
-entry_type: article
+entry_type: note
 subtype: diary
 projects: [casehubio/devtown]
 tags: [ui, compliance, trust, gdpr, accountability, mosaic-components]

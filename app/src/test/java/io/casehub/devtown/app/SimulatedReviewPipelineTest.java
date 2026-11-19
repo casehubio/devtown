@@ -14,7 +14,7 @@ import io.casehub.eidos.api.AgentRegistry;
 import io.casehub.platform.agent.AgentEvent;
 import io.casehub.platform.agent.AgentProvider;
 import io.casehub.platform.agent.AgentSessionConfig;
-import io.casehub.platform.agent.config.ManifestResult;
+import io.casehub.platform.agent.config.AgentManifestResult;
 import io.casehub.platform.agent.simulation.AgentCorpus;
 import io.casehub.platform.simulation.ExhaustionPolicy;
 import io.casehub.platform.simulation.MapSimulationConfig;
@@ -46,7 +46,7 @@ class SimulatedReviewPipelineTest {
     @Inject
     ReviewerAgentRegistry       reviewerAgentRegistry;
     @Inject
-    Instance<ManifestResult>    manifestResult;
+    Instance<AgentManifestResult>    manifestResult;
     @Inject
     AgentProvider               agentProvider;
     @Inject
@@ -84,7 +84,7 @@ class SimulatedReviewPipelineTest {
     @Test
     void manifestAliasResolutionAvailable() {
         assertThat(manifestResult.isResolvable())
-                .as("TestManifestResultProducer should provide ManifestResult")
+                .as("TestAgentManifestResultProducer should provide AgentManifestResult")
                 .isTrue();
 
         var manifest = manifestResult.get();

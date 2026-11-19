@@ -1,3 +1,12 @@
+---
+layout: post
+title: "CaseHub DevTown — Wiring the Merge Queue to Git"
+date: 2026-07-15
+entry_type: note
+subtype: diary
+projects: [casehubio/devtown]
+---
+
 # CaseHub DevTown — Wiring the Merge Queue to Git
 
 **Date:** 2026-07-15

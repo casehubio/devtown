@@ -4,6 +4,8 @@ date: 2026-06-22
 author: Mark Proctor
 projects: [casehub-devtown]
 tags: [casehub, devtown, github-integration, ci-status, merge-execution, engine-internals]
+entry_type: note
+subtype: diary
 ---
 
 ## Seven Issues, Three Specs, and the Engine's Actual Dispatch Chain

@@ -1,3 +1,12 @@
+---
+layout: post
+title: "Teaching routing to remember"
+date: 2026-07-14
+entry_type: note
+subtype: diary
+projects: [casehubio/devtown]
+---
+
 # Teaching routing to remember
 
 Trust-weighted routing picks the best reviewer by accumulated trust scores. Two agents both QUALIFIED for security review, one with 0.85 trust, the other with 0.87 — the higher number wins. Every time, regardless of context. The routing engine knows these agents' track records across all past work, but has no concept of *this kind of work*. A security specialist who consistently catches auth vulnerabilities in similar PRs scores the same as a generalist who's never seen one.

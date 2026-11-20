@@ -39,6 +39,23 @@ class TrustGatedAttestationPolicyActivationTest {
     @Inject LedgerEntryRepository ledgerRepo;
     @Inject TrustScoreSource trustScoreSource;
     @Inject io.casehub.ledger.runtime.service.TrustScoreJob trustScoreJob;
+    @Inject
+    @io.casehub.ledger.jpa.LedgerPersistenceUnit
+            jakarta.persistence.EntityManager               em;
+
+    @org.junit.jupiter.api.BeforeEach
+    void cleanDatabase() {
+        QuarkusTransaction.requiringNew().run(() -> {
+            em.createNativeQuery("SET REFERENTIAL_INTEGRITY FALSE").executeUpdate();
+            em.createNativeQuery("TRUNCATE TABLE ledger_attestation").executeUpdate();
+            em.createNativeQuery("TRUNCATE TABLE worker_decision_entry").executeUpdate();
+            em.createNativeQuery("TRUNCATE TABLE ledger_entry").executeUpdate();
+            em.createNativeQuery("TRUNCATE TABLE actor_trust_score").executeUpdate();
+            em.createNativeQuery("TRUNCATE TABLE trust_score_snapshot").executeUpdate();
+            em.createNativeQuery("SET REFERENTIAL_INTEGRITY TRUE").executeUpdate();
+        });
+    }
+
 
     @Test
     void policyIsEvidentialWrappingTrustGated() {
@@ -58,9 +75,10 @@ class TrustGatedAttestationPolicyActivationTest {
         // Recompute trust scores
         QuarkusTransaction.requiringNew().run(() -> trustScoreJob.runComputation());
 
-        // Both agents send DONE for security-review
+        // Both agents send DONE for security-review — null channelId avoids
+        // V2 evidential check (no real channel messages in trust-scoring test)
         var context = new CommitmentContext(
-                UUID.randomUUID().toString(), UUID.randomUUID(), "test-channel",
+                UUID.randomUUID().toString(), null, null,
                 UUID.randomUUID(), SECURITY_REVIEW, null, null, null);
 
         Optional<CommitmentAttestationPolicy.AttestationOutcome> highTrustResult =

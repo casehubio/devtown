@@ -19,6 +19,7 @@ import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 class PrReviewCaseServiceLifecycleTest {
 
@@ -30,19 +31,26 @@ class PrReviewCaseServiceLifecycleTest {
     @BeforeEach
     void setUp() {
         tracker = new PrReviewCaseTracker();
-        caseId = UUID.randomUUID();
+        caseId  = UUID.randomUUID();
 
         var payload = new PrPayload("casehubio/devtown", 42, "oldsha", "main", 100, "octocat", 0L, List.of());
         tracker.register(caseId, "default", payload);
 
         caseHub = mock(PrReviewCaseHub.class);
 
+        var principal = mock(io.casehub.platform.api.identity.CurrentPrincipal.class);
+        when(principal.tenancyId()).thenReturn("test-tenant");
 
-        service = new PrReviewCaseService();
-        service.caseHub = caseHub;
-        service.caseTracker = tracker;
-        service.mergedEvent = mock(jakarta.enterprise.event.Event.class);
-        service.rejectedEvent = mock(jakarta.enterprise.event.Event.class);
+        var planItemStore = mock(io.casehub.engine.common.spi.PlanItemStore.class);
+        when(planItemStore.findByCaseId(any(), any())).thenReturn(List.of());
+
+        service                       = new PrReviewCaseService();
+        service.caseHub               = caseHub;
+        service.caseTracker           = tracker;
+        service.principal             = principal;
+        service.planItemStore         = planItemStore;
+        service.mergedEvent           = mock(jakarta.enterprise.event.Event.class);
+        service.rejectedEvent         = mock(jakarta.enterprise.event.Event.class);
         service.changesRequestedEvent = mock(jakarta.enterprise.event.Event.class);
     }
 

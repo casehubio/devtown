@@ -6,7 +6,7 @@
     "dev": "node esbuild.config.mjs --watch",
     "typecheck": "tsc --noEmit",
     "dev:mock": "node esbuild.config.mjs && node mock-server.mjs",
-    "postinstall": "node ../../../../scripts/link-casehub-packages.mjs"
+    "postinstall": "node .casehub-packages/scripts/link-casehub-packages.mjs"
   },
   "dependencies": {
     "@casehubio/diagram-core": "file:.casehub-packages/packages/diagram-core",
